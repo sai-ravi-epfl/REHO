@@ -6,7 +6,7 @@ import platform
 if platform.system() == 'Darwin':
     os.environ["R_HOME"] = '/Library/Frameworks/R.framework/Resources'
 else:
-    os.environ["R_HOME"] = r"C:\Program Files\R\R-4.1.3"
+    os.environ["R_HOME"] = r'C:\\Users\\ghuysn\\AppData\\Local\\Programs\\R\\R-4.3.0'
 from rpy2.robjects.packages import importr
 import rpy2.robjects as ro
 from rpy2.robjects import pandas2ri

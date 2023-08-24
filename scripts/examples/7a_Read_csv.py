@@ -11,7 +11,7 @@ if __name__ == '__main__':
 
     # Set building parameters
     reader = QBuildingsReader()
-    qbuildings_data = reader.read_csv('multiple_buildings.csv', nb_buildings=2) # you can as well define your district from a csv file instead of reading the database
+    qbuildings_data = reader.read_csv('multiple_buildings.csv', nb_buildings=36) # you can as well define your district from a csv file instead of reading the database
 
     # Set specific parameters
     parameters = {}
@@ -28,7 +28,6 @@ if __name__ == '__main__':
     # Initialize available units and grids
     grids = structure.initialize_grids()
     units = structure.initialize_units(scenario, grids)
-
     # Run optimization
     reho_model = reho(qbuildings_data=qbuildings_data, units=units, grids=grids, parameters=parameters, cluster=cluster, scenario=scenario, method=method)
     reho_model.single_optimization()
