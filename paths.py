@@ -9,7 +9,7 @@ from pathlib import Path
 if platform.system() == 'Darwin':
     AMPL_PATH = "/Users/lepour/Applications/ampl"
 else:
-    AMPL_PATH = "C:/AMPL"
+    AMPL_PATH = os.environ.get('AMPL')
 
 path_to_reho = os.path.dirname(__file__)
 path_to_data = os.path.join(path_to_reho, 'data')
