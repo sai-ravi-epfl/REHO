@@ -9,9 +9,10 @@ if __name__ == '__main__':
     scenario['Objective'] = 'TOTEX'
     scenario['name'] = 'totex'
 
-    # Set building parameters
-    reader = QBuildingsReader()
-    qbuildings_data = reader.read_csv('multiple_buildings.csv', nb_buildings=2) # you can as well define your district from a csv file instead of reading the database
+    # Set building parameters. We can consider the roofs orientations and add PV on facades.
+    reader = QBuildingsReader(load_facades=True, load_roofs=True)       # specify to import as well buildings' roofs and facades data
+    reader.establish_connection('Suisse')
+    qbuildings_data = reader.read_db(3658, nb_buildings=2)
 
     # Set specific parameters
     parameters = {}
@@ -23,7 +24,7 @@ if __name__ == '__main__':
     scenario['exclude_units'] = ['Battery', 'NG_Cogeneration', 'DataHeat_DHW', 'OIL_Boiler', 'DHN_hex', 'HeatPump_DHN']
     scenario['enforce_units'] = []
 
-    method = {'decentralized': True}
+    method = {'use_pv_orientation': True, 'use_facades': False, 'decentralized': False}     # select PV orientation and/or facades methods
 
     # Initialize available units and grids
     grids = infrastructure.initialize_grids()
@@ -34,4 +35,4 @@ if __name__ == '__main__':
     reho_model.single_optimization()
 
     # Save results
-    SR.save_results(reho_model, save=['xlsx', 'pickle'], filename='7a')
+    SR.save_results(reho_model, save=['xlsx', 'pickle'], filename='6a')

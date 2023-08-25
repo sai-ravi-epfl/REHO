@@ -1,5 +1,5 @@
 from model.reho import *
-from model.preprocessing.QBuildings import QBuildingsReader
+from model.preprocessing.QBuildings import *
 
 
 if __name__ == '__main__':
@@ -11,7 +11,8 @@ if __name__ == '__main__':
 
     # Set building parameters
     reader = QBuildingsReader()
-    qbuildings_data = reader.read_csv('multiple_buildings.csv', nb_buildings=2) # you can as well define your district from a csv file instead of reading the database
+    reader.establish_connection('Suisse')
+    qbuildings_data = reader.read_db(3658, nb_buildings=2)
 
     # Set specific parameters
     parameters = {}
@@ -23,15 +24,18 @@ if __name__ == '__main__':
     scenario['exclude_units'] = ['Battery', 'NG_Cogeneration', 'DataHeat_DHW', 'OIL_Boiler', 'DHN_hex', 'HeatPump_DHN']
     scenario['enforce_units'] = []
 
-    method = {'decentralized': True}
+    # to obtain a district scale design with many buildings, a decomposition of the problem is needed
+    method = {'decomposed': True}
 
     # Initialize available units and grids
     grids = infrastructure.initialize_grids()
     units = infrastructure.initialize_units(scenario, grids)
 
     # Run optimization
-    reho_model = reho(qbuildings_data=qbuildings_data, units=units, grids=grids, parameters=parameters, cluster=cluster, scenario=scenario, method=method)
+    DW_params = {'max_iter': 2}
+    reho_model = reho(qbuildings_data=qbuildings_data, units=units, grids=grids, parameters=parameters,
+                    cluster=cluster, scenario=scenario, method=method, DW_params=DW_params)
     reho_model.single_optimization()
 
     # Save results
-    SR.save_results(reho_model, save=['xlsx', 'pickle'], filename='7a')
+    SR.save_results(reho_model, save=['xlsx', 'pickle'], filename='3a')

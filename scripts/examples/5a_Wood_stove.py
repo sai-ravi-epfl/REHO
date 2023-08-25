@@ -11,7 +11,8 @@ if __name__ == '__main__':
 
     # Set building parameters
     reader = QBuildingsReader()
-    qbuildings_data = reader.read_csv('multiple_buildings.csv', nb_buildings=2) # you can as well define your district from a csv file instead of reading the database
+    reader.establish_connection('Suisse')
+    qbuildings_data = reader.read_db(3658, nb_buildings=2)
 
     # Set specific parameters
     parameters = {}
@@ -23,10 +24,14 @@ if __name__ == '__main__':
     scenario['exclude_units'] = ['Battery', 'NG_Cogeneration', 'DataHeat_DHW', 'OIL_Boiler', 'DHN_hex', 'HeatPump_DHN']
     scenario['enforce_units'] = []
 
-    method = {'decentralized': True}
+    method = {}
 
-    # Initialize available units and grids
-    grids = infrastructure.initialize_grids()
+    # Initialize available units and grids. You can add more resources layer than simply electricity and gas
+    grids = infrastructure.initialize_grids({'Electricity': {"Cost_demand_cst": 0.10, "Cost_supply_cst": 0.26},
+                                        'Wood': {}, 'Oil': {},
+                                        'NaturalGas': {'NaturalGas': {"Cost_demand_cst": 0.06, "Cost_supply_cst": 0.20}}})
+
+
     units = infrastructure.initialize_units(scenario, grids)
 
     # Run optimization
@@ -34,4 +39,4 @@ if __name__ == '__main__':
     reho_model.single_optimization()
 
     # Save results
-    SR.save_results(reho_model, save=['xlsx', 'pickle'], filename='7a')
+    SR.save_results(reho_model, save=['xlsx', 'pickle'], filename='5a')

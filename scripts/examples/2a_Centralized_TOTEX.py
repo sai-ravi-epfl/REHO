@@ -11,7 +11,8 @@ if __name__ == '__main__':
 
     # Set building parameters
     reader = QBuildingsReader()
-    qbuildings_data = reader.read_csv('multiple_buildings.csv', nb_buildings=2) # you can as well define your district from a csv file instead of reading the database
+    reader.establish_connection('Suisse')
+    qbuildings_data = reader.read_db(3658, nb_buildings=1)
 
     # Set specific parameters
     parameters = {}
@@ -20,10 +21,11 @@ if __name__ == '__main__':
     cluster = {'Location': 'Geneva', 'Attributes': ['I', 'T', 'W'], 'Periods': 10, 'PeriodDuration': 24}
 
     # Choose energy system structure options
-    scenario['exclude_units'] = ['Battery', 'NG_Cogeneration', 'DataHeat_DHW', 'OIL_Boiler', 'DHN_hex', 'HeatPump_DHN']
+    scenario['exclude_units'] = ['Battery', 'NG_Cogeneration', 'DataHeat_DHW', 'DHN_hex', 'HeatPump_DHN']
     scenario['enforce_units'] = []
 
-    method = {'decentralized': True}
+    # by default a district scale design is performed with a compact optimization. Watch out the maximum number of buildings is around 10 due to computational costs
+    method = {}
 
     # Initialize available units and grids
     grids = infrastructure.initialize_grids()
@@ -34,4 +36,4 @@ if __name__ == '__main__':
     reho_model.single_optimization()
 
     # Save results
-    SR.save_results(reho_model, save=['xlsx', 'pickle'], filename='7a')
+    SR.save_results(reho_model, save=['xlsx', 'pickle'], filename='2a')

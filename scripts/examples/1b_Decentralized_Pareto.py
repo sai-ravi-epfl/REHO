@@ -6,12 +6,14 @@ if __name__ == '__main__':
 
     # Set scenario
     scenario = dict()
-    scenario['Objective'] = 'TOTEX'
-    scenario['name'] = 'totex'
+    scenario['Objective'] = ['OPEX', 'CAPEX']   # for multi-objective optimization we need two objectives
+    scenario['nPareto'] = 2     # the number of points we want per objective (number of optimizations = nPareto * 2 + 2)
+    scenario['name'] = 'pareto'
 
     # Set building parameters
     reader = QBuildingsReader()
-    qbuildings_data = reader.read_csv('multiple_buildings.csv', nb_buildings=2) # you can as well define your district from a csv file instead of reading the database
+    reader.establish_connection('Suisse')
+    qbuildings_data = reader.read_db(3658, nb_buildings=2)
 
     # Set specific parameters
     parameters = {}
@@ -31,7 +33,7 @@ if __name__ == '__main__':
 
     # Run optimization
     reho_model = reho(qbuildings_data=qbuildings_data, units=units, grids=grids, parameters=parameters, cluster=cluster, scenario=scenario, method=method)
-    reho_model.single_optimization()
+    reho_model.generate_pareto_curve()  # instead of single_optimization() we run a multi-objective optimization
 
     # Save results
-    SR.save_results(reho_model, save=['xlsx', 'pickle'], filename='7a')
+    SR.save_results(reho_model, save=['pickle'], filename='1b')
