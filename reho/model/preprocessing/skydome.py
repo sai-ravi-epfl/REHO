@@ -37,7 +37,7 @@ def convert_results_txt_to_csv(load_timesteps):
     df = df.set_index('time')
     output_file = os.path.join(path_to_skydome, 'total_irradiation.csv')
     df.to_csv(output_file)
-    print(df)
+    #print(df)
 
 
 def skydome_to_df(csv_data):
@@ -208,7 +208,7 @@ def calc_orientation_profiles(azimuth, tilt, design_lim_angle, csv_data, irradia
     sin_a = round(math.sin(math.radians(azimuth)), 8)
     sin_y = round(math.sin(math.radians(tilt)), 8)
     cos_y = round(math.cos(math.radians(tilt)), 8)
-    print('PANEL ORIENTATION: azimuth ', azimuth, ', tilt ', tilt)
+    #print('PANEL ORIENTATION: azimuth ', azimuth, ', tilt ', tilt)
 
     df_dome = skydome_to_df(csv_data)
     df_IRR = irradiation_to_df_general(irradiation_file)
@@ -254,9 +254,9 @@ def calc_orientation_profiles(azimuth, tilt, design_lim_angle, csv_data, irradia
             df_irr_neg[pt] = irradiation_patch
         else:
             df_irr_pos[pt] = irradiation_patch
-    print('Limiting angle design', design_lim_angle)
-    print(len(df_irr_pos.columns), 'patches can NOT be seen')
-    print(len(df_irr_neg.columns), 'patches can be seen')
+    #print('Limiting angle design', design_lim_angle)
+    #print(len(df_irr_pos.columns), 'patches can NOT be seen')
+    #print(len(df_irr_neg.columns), 'patches can be seen')
 
     df_irr_panel_t = df_irr_neg.sum(axis=1)
 
@@ -291,7 +291,7 @@ def calc_orientated_surface(azimuth, tilt, design_lim_angle, csv_data, irradiati
 
     annual_irr = round(df_period.sum().values[0] / 1000, 2)
 
-    print('Sum of typical days is', annual_irr, 'kWh/m2')
+    #print('Sum of typical days is', annual_irr, 'kWh/m2')
 
     return azimuth, tilt, annual_irr
 
@@ -306,10 +306,10 @@ def construct_annual_orientation_df(limiting_angle, csv_data):
         azimuth, tilt, annual_irr = calc_orientated_surface(a, t, limiting_angle, csv_data)
         d = {'azimuth': azimuth, 'tilt': tilt, 'irr': annual_irr}
         df = df.append(d, ignore_index=True)
-    print(df)
+    #print(df)
     filename = 'orientated_irr_linearized' + str(limiting_angle) + '.csv'
     df.to_csv(filename)
-    print('Data saved in: ' + filename)
+    #print('Data saved in: ' + filename)
 
 
 def limiting_angle_for_tilt():
@@ -327,10 +327,10 @@ def limiting_angle_for_tilt():
 
         d = {'tilt': tilt, 'limit_angle': l, 'irr': annual_irr}
         df = df.append(d, ignore_index=True)
-    print(df)
+    #print(df)
     filename = 'irr_tilt_limiting_angle_azi' + str(a) + '.csv'
     df.to_csv(filename)
-    print('Data saved in: ' + filename)
+    #print('Data saved in: ' + filename)
 
 
 def plot_irr(save_fig):

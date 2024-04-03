@@ -620,11 +620,11 @@ class compact_optimization:
                 ampl.getObjective(self.scenario_compact['Objective']).restore()
             except KeyError:
                 ampl.getObjective('TOTEX').restore()
-                print('Objective function "', self.scenario_compact['Objective'],
-                      '" was not found in ampl model, TOTEX minimization was set instead.')
+                #print('Objective function "', self.scenario_compact['Objective'],
+                #      '" was not found in ampl model, TOTEX minimization was set instead.')
         else:
             ampl.getObjective('TOTEX').restore()
-            print('No objective function was found in scenario dictionary, TOTEX minimization was set instead.')
+            #print('No objective function was found in scenario dictionary, TOTEX minimization was set instead.')
 
         # Set epsilon constraints
         ampl.getConstraint('EMOO_CAPEX_constraint').drop()

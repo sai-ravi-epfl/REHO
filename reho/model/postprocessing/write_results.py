@@ -60,7 +60,7 @@ def get_df_Results_from_SP(ampl, scenario, method, buildings_data, filter=True):
 
         df_Performance = pd.concat([df_Performance, df_Epsilon], axis=1)
         df_Performance.index.names = ['Hub']
-        print(df_Performance)
+        #print(df_Performance)
 
         return df_Performance.sort_index()
 
@@ -130,7 +130,7 @@ def get_df_Results_from_SP(ampl, scenario, method, buildings_data, filter=True):
         df_Unit = pd.concat([df1, df2, df3, df4, df5], axis=1)
         df_Unit.index.names = ['Unit']
         df_Unit = df_Unit.sort_index()
-        print(df_Unit)
+        #print(df_Unit)
 
         # Unit_t
         df1 = get_variable_in_pandas(df, 'Units_demand')
@@ -493,7 +493,7 @@ def get_df_Results_from_MP(ampl, binary=False, method=None, district=None, read_
         df_Unit = pd.concat([df_Unit, df_DHN], axis=0)
     df_Unit.index.names = ['Unit']
     df_Results["df_Unit"] = df_Unit.sort_index()
-    print(df_Results["df_Unit"])
+    #print(df_Results["df_Unit"])
 
     # Unit_t
     df1 = get_variable_in_pandas(df, 'Units_demand')

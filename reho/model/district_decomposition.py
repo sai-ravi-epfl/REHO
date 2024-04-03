@@ -267,7 +267,7 @@ class district_decomposition:
         attr : results of the optimization process (CPU time, objective value, nb variables or constraints, ...)
         """
 
-        print('INITIATE HOUSE: ', h)
+        #print('INITIATE HOUSE: ', h)
 
         # find district structure and parameter for one single building
         buildings_data_SP, parameters_SP, infrastructure_SP = self.__split_parameter_sets_per_building(h)
@@ -565,8 +565,8 @@ class district_decomposition:
             elif isinstance(MP_parameters[i], pd.DataFrame):
                 if not MP_parameters[i].empty:
                     ampl_MP.setData(MP_parameters[i])
-                else:
-                    print("DataFrame", i,"is empty.")
+                #else:
+                    #print("DataFrame", i,"is empty.")
 
             elif isinstance(MP_parameters[i], pd.Series):
                 MP_parameters[i].name = i
@@ -593,7 +593,7 @@ class district_decomposition:
         ampl_MP.solve()
 
         df_Results_MP = WR.get_df_Results_from_MP(ampl_MP, binary, self.method, self.infrastructure, read_DHN=read_DHN)
-        print(ampl_MP.getCurrentObjective().getValues().toPandas())
+        #print(ampl_MP.getCurrentObjective().getValues().toPandas())
 
         df = self.get_solver_attributes(Scn_ID, Pareto_ID, ampl_MP)
         self.add_df_Results_MP(Scn_ID, Pareto_ID, self.iter, df_Results_MP, df)
@@ -655,7 +655,7 @@ class district_decomposition:
         ------
         If the SP optimization did not converge
         """
-        print('iterate HOUSE: ', House, 'iteration: ', self.iter)
+        #print('iterate HOUSE: ', House, 'iteration: ', self.iter)
 
         # Give dual variables to Subproblem
         pi = self.get_dual_values_SPs(Scn_ID, Pareto_ID, self.iter - 1, House, 'pi').reorder_levels(['Layer', 'Period', 'Time'])
