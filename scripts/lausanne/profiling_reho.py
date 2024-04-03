@@ -7,11 +7,10 @@ warnings.filterwarnings("ignore")
 tic = time.perf_counter()
 
 scenarios_list = ['totex']
-#nb_buildings_list = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000]
-nb_buildings_list = [2, 5, 10]#, 20, 50, 100, 200, 500, 1000, 2000, 5000]
+nb_buildings_list = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000]
 nb_excl_list = [1, 2, 3, 4, 5, 6, 7, 8]
 nb_excl_list.reverse()
-excluded_list = ['Battery', 'OIL_Boiler', 'NG_Cogeneration', 'NG_boiler', 'ThermalSolar', 'WaterTankSH', 'HeatPump', 'PV']
+excluded_list = ['NG_Cogeneration', 'Battery', 'OIL_Boiler', 'NG_boiler', 'ThermalSolar', 'WaterTankSH', 'HeatPump', 'PV']
 
 results = {}  # Dictionary to store results
 

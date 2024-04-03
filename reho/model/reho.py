@@ -23,7 +23,7 @@ class reho(district_decomposition):
     """
 
     def __init__(self, qbuildings_data, units, grids, parameters=None, set_indexed=None,
-                 cluster=None, method=None, scenario=None, solver="highs", DW_params=None):
+                 cluster=None, method=None, scenario=None, solver="highs", DW_params=None, **args):
 
         super().__init__(qbuildings_data, units, grids, parameters, set_indexed, cluster, method, solver, DW_params)
         self.initialize_optimization_tracking_attributes()
@@ -55,6 +55,8 @@ class reho(district_decomposition):
 
         self.solver_attributes = pd.DataFrame()
         self.epsilon_constraints = {}
+
+        self.args = args
 
     def add_constraints_from_self_scenario(self):
         scenario = {}
@@ -447,6 +449,16 @@ class reho(district_decomposition):
         self.initiate_decomposition(SP_scenario_init, Scn_ID=Scn_ID, Pareto_ID=Pareto_ID, epsilon_init=epsilon_init)
         #print('MASTER INITIATION, ', 'Iter:', self.iter)
         self.MP_iteration(scenario, Scn_ID=Scn_ID, binary=False, Pareto_ID=Pareto_ID)
+
+        self.MP_iteration(scenario, Scn_ID=Scn_ID, binary=True, Pareto_ID=Pareto_ID)
+        self.add_df_Results(None, Scn_ID, Pareto_ID, self.scenario)
+        self.get_KPIs(Scn_ID, Pareto_ID=Pareto_ID)
+        try:
+            reho.save_results(self, format=['xlsx'], filename=f'BS_{self.args["scenarios"]}_{self.args["nb_buildings"]}_{self.args["nb_excl"]}')
+        except NameError:
+            reho.save_results(self, format=['xlsx'],
+                              filename=f'building_scale')
+
 
         # -----------------------------------------------------------------------------------------------------------
         # ITERATION
