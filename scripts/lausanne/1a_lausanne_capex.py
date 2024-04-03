@@ -1,4 +1,7 @@
 from reho.model.reho import *
+import time
+
+tic = time.perf_counter()
 
 results = {}  # Dictionary to store results for each district
 dist = ['Le Vallon', 'Hôpitaux']
@@ -10,7 +13,7 @@ if __name__ == '__main__':
     for name_district in dist:
         # Set building parameters
         reader = QBuildingsReader()
-        qbuildings_data = reader.read_csv(buildings_filename='../lausanne/QBuildings/Lausanne_sectors.csv', district=name_district, nb_buildings=2)
+        qbuildings_data = reader.read_csv(buildings_filename='../lausanne/QBuildings/Lausanne_sectors.csv', district=name_district, nb_buildings=10)
 
         # Select weather data
         cluster = {'Location': 'Pully', 'Attributes': ['I', 'T', 'W'], 'Periods': 10, 'PeriodDuration': 24}
@@ -45,3 +48,6 @@ if __name__ == '__main__':
 # Save all results outside the loop
 for district, result in results.items():
     reho.save_results(result, format=['xlsx', 'pickle'], filename='lausanne_' + district)
+
+toc = time.perf_counter()
+#print(f"Took {(toc-tic)/60:.4f} minutes")
