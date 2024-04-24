@@ -13,8 +13,8 @@ if __name__ == '__main__':
 
     # Set scenario
     scenario = dict()
-    scenario['Objective'] = 'TOTEX'
-    scenario['name'] = 'totex'
+    scenario['Objective'] = 'Human_toxicity'
+    scenario['name'] = 'Human_toxicity'
     scenario['exclude_units'] = ['Battery', 'NG_Cogeneration']
     scenario['enforce_units'] = []
 
@@ -30,4 +30,4 @@ if __name__ == '__main__':
     reho.single_optimization()
 
     # Save results
-    reho.save_results(format=['xlsx', 'pickle'], filename='1a')
+    reho.save_results(format=['xlsx', 'pickle'], filename='1a_Human_toxicity')

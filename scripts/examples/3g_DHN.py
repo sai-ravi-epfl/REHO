@@ -21,7 +21,7 @@ if __name__ == '__main__':
     # Initialize available units and grids
     grids = infrastructure.initialize_grids({'Electricity': {},
                                              'NaturalGas': {},
-                                             'Heat': {}})
+                                             'Heat': {'Cost_supply_cst = 0.05'}})
     units = infrastructure.initialize_units(scenario, grids, district_data=True)
 
     # Set method options
@@ -30,16 +30,30 @@ if __name__ == '__main__':
 
     # Set specific parameters
     # specify the temperature of the DHN
-    parameters = {'T_DHN_supply_cst': np.repeat(20.0, 4), "T_DHN_return_cst": np.repeat(15.0, 4)}
-
+    parameters = {'T_DHN_supply_cst': np.repeat(20.0, 4), "T_DHN_return_cst": np.repeat(15.0, 4), "TransformerCapacity": np.array([1e6,10,1e6])}
+    parameters_1 = {'T_DHN_supply_cst': np.repeat(20.0, 4), "T_DHN_return_cst": np.repeat(15.0, 4), "TransformerCapacity": np.array([1e6,5,1e6])}
+    parameters_3 = {'T_DHN_supply_cst': np.repeat(20.0, 4), "T_DHN_return_cst": np.repeat(15.0, 4), "TransformerCapacity": np.array([1e6,2,1e6])}
     # Run optimization
-    reho = reho(qbuildings_data=qbuildings_data, units=units, grids=grids, parameters=parameters, cluster=cluster, scenario=scenario, method=method, solver="gurobi")
-    reho.get_DHN_costs()  # run one optimization forcing DHN to find costs DHN connection per house
-    reho.single_optimization()  # run optimization with DHN costs
-
+    reho0 = reho(qbuildings_data=qbuildings_data, units=units, grids=grids, parameters=parameters, cluster=cluster,scenario=scenario, method=method, solver="gurobi")
+    reho1 = reho(qbuildings_data=qbuildings_data, units=units, grids=grids, parameters=parameters_1, cluster=cluster,scenario=scenario, method=method, solver="gurobi")
+    reho2 = reho(qbuildings_data=qbuildings_data, units=units, grids=grids, parameters=parameters_3, cluster=cluster,scenario=scenario, method=method, solver="gurobi")
+    reho0.get_DHN_costs()
+    reho1.get_DHN_costs()
+    reho2.get_DHN_costs()# run one optimization forcing DHN to find costs DHN connection per house
+    reho0.single_optimization()  # run optimization with DHN costs
+    reho1.single_optimization()
+    reho2.single_optimization()
     # Save results
-    reho.save_results(format=['xlsx', 'pickle'], filename='3g')
+    reho0.save_results(format=['xlsx', 'pickle'], filename='3g')
+    reho1.save_results(format=['xlsx', 'pickle'], filename='3g_5kw')
+    reho2.save_results(format=['xlsx', 'pickle'], filename='3g_2kW')
 
     # Plot results
-    plotting.plot_performance(reho.results, plot='costs').show()
+    plotting.plot_performance(reho0.results, plot='costs').show()
     plotting.plot_sankey(reho.results["totex"][0]).show()
+
+    plotting.plot_performance(reho1.results, plot='costs').show()
+    plotting.plot_sankey(reho1.results["totex"][0]).show()
+
+    plotting.plot_performance(reho2.results, plot='costs').show()
+    plotting.plot_sankey(reho2.results["totex"][0]).show()

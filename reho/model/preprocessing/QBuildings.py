@@ -300,7 +300,7 @@ class QBuildingsReader:
             reindex = []
             for i, building in self.data['buildings'].iterrows():
                 # Only execute optimization for complete dictionary else skip and count
-                if re.search('XIII', building['id_class']) is None:
+                if re.search('XIIIiii', building['id_class']) is None:
                     selected_buildings.append(building['id_building'])
                     nb_select += 1
                     reindex.append("Building" + str(nb_select))

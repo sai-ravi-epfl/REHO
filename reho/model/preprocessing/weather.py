@@ -56,6 +56,7 @@ def get_cluster_file_ID(cluster):
         W = ''
     if 'E' in cluster['Attributes']:
         E = '_E'
+        attributes.append('Emissions')
     else:
         E = ''
 
@@ -87,6 +88,8 @@ def read_hourly_dat(location):
     df = df.drop([5,6,7,8], axis=1)
     df.columns = ['id', 'Month', 'Day', 'Hour', 'Irr', 'Text']
     df2 = pd.read_csv(os.path.join(path_to_weather, 'Weekday_2005.txt'), index_col=[0], header=None)
+    df3 = pd.read_csv(os.path.join(path_to_weather, 'Elec_CO2_2023.txt'), index_col=[0], header=None)
+    df['Emissions'] = df3
     df['Weekday'] = df2
 
     return df

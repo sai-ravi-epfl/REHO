@@ -1131,7 +1131,8 @@ def plot_profiles(df, units_to_plot, style='plotly', label='EN_long', color='Col
             return fig
 
 
-def plot_composite_curve(results, cluster, plot=True, periods=["Yearly"]):
+def plot_composite_curve(results, cluster, plot=True, periods=["January", "February", "March", "April", "May", "June", "July", "August",
+             "September", "October", "November", "December", "Yearly"]):
     # process results data
     df_heat = results["df_Buildings_t"][["House_Q_heating", "House_Q_cooling", "Th_supply"]]
     df_heat_T = pd.DataFrame(np.round(df_heat['Th_supply'], 1).values, columns=["temperature"])
