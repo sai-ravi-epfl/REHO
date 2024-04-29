@@ -585,7 +585,7 @@ def calculate_id_building_shadows(df_angles, id_building, local_data):
         df = df_angles.loc[(df_angles['cosa2'] > 0)].copy()
         # filter buildings which are more than 180 degree apart from patch with az
         df.loc[:, 'tanba'] = df.tanb * df.cosa2
-        # calculate tan(beta) for all buildings. Assumption: dxy is shortest distance and buildings infinite wide
+        # calculate tan(beta) for all buildings. Assumption: dxy is the shortest distance and buildings infinite wide
 
         max_tanba = df['tanba'].max()  # get max obscurance tan(beta, alpha)
         max_b = math.degrees(math.atan(max_tanba))  # get angle
@@ -616,7 +616,7 @@ def neighbourhood_angles(buildings, facades):
         # exclude current building to avoid division with zero
         facades_build = facades[facades.id_building == id_building]  # facades of building
         for f in facades_build.index:
-            df_c = pd.DataFrame(index=df_district.index)  # df for calculating values for each facades
+            df_c = pd.DataFrame(index=df_district.index)  # df for calculating values for each facade
             df_c['dx'] = df_district.x.values - facades_build.loc[f]['CX']
             df_c['dy'] = df_district.y.values - facades_build.loc[f]['CY']
             df_c['dxy'] = (df_c.dx * df_c.dx + df_c.dy * df_c.dy) ** 0.5

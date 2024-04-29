@@ -13,7 +13,7 @@ if __name__ == '__main__':
     # location can be chosen among the files available in preprocessing > weatherData > data > hour
     # I refers to Irradiance, T to Temperature, and W to Weekday
     # specify the desired number of typical days
-    cluster = {'Location': qbuildings_data['Location'], 'Attributes': ['I', 'T', 'W'], 'Periods': 10, 'PeriodDuration': 24}
+    cluster = {'Location': qbuildings_data['Location'], 'Attributes': ['T', 'I', 'W'], 'Periods': 10, 'PeriodDuration': 24}
 
     # Set scenario
     scenario = dict()
