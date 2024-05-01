@@ -1,11 +1,14 @@
 import reho.model.infrastructure as infrastructure
 from reho.model.compact_optimization import *
 import reho.model.postprocessing.write_results as WR
+from reho.model.preprocessing.local_data import *
 from itertools import groupby
 import warnings
 import time
 import gc
 import pandas as pd
+import logging
+import coloredlogs
 
 
 class district_decomposition:
@@ -29,6 +32,7 @@ class district_decomposition:
         The indexes used in the model.
     cluster : dict, optional
         Define location district, number of periods, and number of timesteps.
+        To use your own weather file, you can add a key ``custom_weather`` with the corresponding path.
     method : dict, optional
         The different methods to run the optimization (refer to :ref:`tbl-methods`).
     solver : str, optional
@@ -50,29 +54,48 @@ class district_decomposition:
 
         # methods
         self.method = initialize_default_methods(method)
+        self.logger = logging.getLogger(__name__)
+        if method['print_logs']:
+            coloredlogs.install(level=logging.INFO, logger=self.logger, isatty=True,
+                                fmt="%(message)s", stream=sys.stdout)
 
-        # District attributes / used also in REHO
+        # infrastructure
         if method['use_facades'] or method['use_pv_orientation']:
             self.qbuildings_data = qbuildings_data
         self.buildings_data = qbuildings_data['buildings_data']
         self.ERA = sum([self.buildings_data[house]['ERA'] for house in self.buildings_data.keys()])
+        
         self.infrastructure = infrastructure.infrastructure(qbuildings_data, units, grids)
+        self.infrastructure_SP = dict()
+        self.build_infrastructure_SP()
 
         if cluster is None:
-            self.cluster = {'Location': 'Geneva', 'Attributes': ['I', 'T', 'W'], 'Periods': 10, 'PeriodDuration': 24}
+            self.cluster = {'Location': 'Geneva', 'Attributes': ['T', 'I', 'W'], 'Periods': 10, 'PeriodDuration': 24}
         else:
             self.cluster = cluster
-        self.File_ID = WD.get_cluster_file_ID(self.cluster)
+
+        # load SIA norms
+        sia_data = dict()
+        sia_data["df_SIA_380"] = pd.read_csv(path_to_sia_equivalence, sep=';', index_col=[0], header=[0])
+        sia_data["df_SIA_2024"] = pd.read_excel(path_to_sia_norms, sheet_name=['profiles', 'calculs', 'data'],
+                                                engine='openpyxl', index_col=[0], skiprows=[0, 2, 3, 4], header=[0])
+
+        # retrieve location data
+        self.local_data = return_local_data(cluster, qbuildings_data)
 
         if parameters is None:
             self.parameters = {}
         else:
             self.parameters = parameters
 
-        # Heat gains from electricity and people, domestic hot water demand, domestic electricity demand
+        # build end use demands profile
         self.parameters['HeatGains'], self.parameters['DHW_flowrate'], self.parameters['Domestic_electricity'] = \
-            DGF.build_eud_profiles(self.buildings_data, self.File_ID, self.cluster, self.method['include_stochasticity'],
-                                   self.method['sd_stochasticity'], self.method['use_custom_profiles'])
+            BP.eud_profiles(self.buildings_data, self.cluster, sia_data["df_SIA_380"], sia_data["df_SIA_2024"], self.local_data["df_Timestamp"],
+                                   self.method['include_stochasticity'], self.method['sd_stochasticity'], self.method['use_custom_profiles'])
+
+        # build solar gains profile
+        self.parameters['SolarGains'] = BP.solar_gains_profile(self.buildings_data, sia_data, self.local_data)
+
 
         if set_indexed is None:
             self.set_indexed = {}
@@ -129,9 +152,7 @@ class district_decomposition:
 
     def select_SP_obj_decomposition(self, scenario):
         """
-        Description
-        -----------
-        the SPs in decomposition have another objective than in the compact formulation because their
+        The SPs in decomposition have another objective than in the compact formulation because their
         objective function is formulated as a reduced cost
         Also adding global linking constraints, like Epsilon, changes the scenario to choose.
         3: min OPEX,epsilon_CAPEX -> 12
@@ -140,14 +161,17 @@ class district_decomposition:
         11: min CAPEx, epsilon_OPEX -> 15
         for CAPEX (1), OPEX (2), TOTEX (4) and CO2 emissions (9) the same objective is taken
 
-        Inputs
+        Parameters
         ------
-        scenario: dictionary, objective function
+        scenario : dictionary
+            objective function
 
-        Outputs
+        Returns
         -------
-        SP_scenario: dictionary, scenario for the SP (iterations)
-        SP_scenario_init: dictionary, scenario for the SP (initiation)
+        SP_scenario : dictionary
+            scenario for the SP (iterations)
+        SP_scenario_init : dictionary
+            scenario for the SP (initiation)
 
         """
         SP_scenario = scenario.copy()
@@ -178,8 +202,6 @@ class district_decomposition:
 
     def initiate_decomposition(self, scenario, Scn_ID=0, Pareto_ID=1, epsilon_init=None):
         """
-        Description
-        -----------
         The SPs are initialized for the given objective.
         In case the optimization includes an epsilon constraint, there are two ways to initialize.
         Either the epsilon constraint is applied on the SPs, or the initialization is done with beta.
@@ -187,12 +209,16 @@ class district_decomposition:
         Three beta values are given to mark the extreme points and an average point.
         Set up the parallel optimization if needed
 
-        Inputs
-        ------
-        scenario : dictionary, Which objective function to optimize and the value of epsilon constraints to apply
-        Scn_ID : int, ID of the optimization scenario
-        Pareto_ID : int,  Id of the pareto point. For single objective optimization it is 1 by default
-        epsilon_init : array, Epsilon constraints to apply for the initialization
+        Parameters
+        ----------
+        scenario : dictionary
+            Which objective function to optimize and the value of epsilon constraints to apply
+        Scn_ID : int
+            ID of the optimization scenario
+        Pareto_ID : int
+            Id of the pareto point. For single objective optimization it is 1 by default
+        epsilon_init : array
+            Epsilon constraints to apply for the initialization
         """
         # check if TOTEX, OPEX or multi-objective optimization -> init with beta
         if self.method['building-scale']:
@@ -217,7 +243,6 @@ class district_decomposition:
                 for h in self.infrastructure.houses:
                     (df_Results, attr) = results[h].get()
                     self.add_df_Results_SP(Scn_ID, Pareto_ID, self.iter, h, df_Results, attr)
-
             else:
                 for id, h in enumerate(self.infrastructure.houses):
                     df_Results, attr = self.SP_initiation_execution(scenario, Scn_ID=Scn_ID, Pareto_ID=Pareto_ID, h=h, epsilon_init=epsilon_init, beta=beta)
@@ -228,29 +253,35 @@ class district_decomposition:
 
     def SP_initiation_execution(self, scenario, Scn_ID=0, Pareto_ID=1, h=None, epsilon_init=None, beta=None):
         """
-        Description
-        -----------
         Adapt the model depending on the method, execute the optimization and get the results
 
-        Inputs
-        ------
-        scenario : dictionary, Which objective function to optimize and the value of epsilon constraints to apply
-        Scn_ID : int, scenario ID
-        Pareto_ID : int, Id of the pareto point. For single objective optimization it is 1 by default
-        h : string,House id
-        epsilon_init : float, Epsilon constraint to apply for the initialization
-        beta : float, Beta initial value used for initialization
+        Parameters
+        ----------
+        scenario : dictionary
+            Which objective function to optimize and the value of epsilon constraints to apply
+        Scn_ID : int
+            scenario ID
+        Pareto_ID : int
+            Id of the pareto point. For single objective optimization it is 1 by default
+        h : string
+            House id
+        epsilon_init : float
+            Epsilon constraint to apply for the initialization
+        beta : float
+            Beta initial value used for initialization
 
-        Outputs
+        Returns
         -------
-        df_Results : results of the optimization (unit installed, power exchanged, costs, GWP emissions, ...)
-        attr : results of the optimization process (CPU time, objective value, nb variables or constraints, ...)
+        df_Results :
+            results of the optimization (unit installed, power exchanged, costs, GWP emissions, ...)
+        attr :
+            results of the optimization process (CPU time, objective value, nb variables or constraints, ...)
         """
-
-        print('INITIATE HOUSE: ', h)
+        if self.method["print_logs"]:
+            print('INITIATE HOUSE: ' + h)
 
         # find district structure and parameter for one single building
-        buildings_data_SP, parameters_SP, infrastructure_SP = self.__split_parameter_sets_per_building(h)
+        buildings_data_SP, parameters_SP = self.__split_parameter_sets_per_building(h)
 
         # epsilon constraints on districts may lead to infeasibilities on building level -> apply them in MP only
         if epsilon_init is not None and self.method['building-scale']:
@@ -268,9 +299,9 @@ class district_decomposition:
             parameters_SP['beta_duals'] = beta_list
 
         if self.method['use_facades'] or self.method['use_pv_orientation']:
-            REHO = compact_optimization(infrastructure_SP, buildings_data_SP, parameters_SP, self.set_indexed, self.cluster, scenario, self.method, self.solver, self.qbuildings_data)
+            REHO = compact_optimization(self.infrastructure_SP[h], buildings_data_SP, self.local_data, parameters_SP, self.set_indexed, self.cluster, scenario, self.method, self.solver, self.qbuildings_data)
         else:
-            REHO = compact_optimization(infrastructure_SP, buildings_data_SP, parameters_SP, self.set_indexed, self.cluster, scenario, self.method, self.solver)
+            REHO = compact_optimization(self.infrastructure_SP[h], buildings_data_SP, self.local_data, parameters_SP, self.set_indexed, self.cluster, scenario, self.method, self.solver)
         ampl = REHO.build_model_without_solving()
 
         if self.method['fix_units']:
@@ -299,9 +330,9 @@ class district_decomposition:
 
     def MP_iteration(self, scenario, binary, Scn_ID=0, Pareto_ID=1, read_DHN=False):
         """
-        Description
-        -----------
+
         Run the optimisation of the Master Problem (MP):
+
         - Create the ampl_MP master problem
         - Set the sets and the parameters in ampl
         - Actualise the grid exchanges and the costs of each sub problem (house) without the grid costs
@@ -309,17 +340,19 @@ class district_decomposition:
         - Extract the results (lambda, dual variables pi and mu, objective value of the MP (TOTEX, grid exchanges, ...)
         - Delete the ampl_MP model
 
-        Inputs
-        ------
-        scenario: dictionary
-        binary: bool, if the decision variable 'lambda' is binary or continuous
-        Scn_ID: scenario ID
-        Pareto_ID: int, pareto ID
+        Parameters
+        -----------
+        scenario : dictionary
+
+        binary : boolean
+            if the decision variable 'lambda' is binary or continuous
+        Scn_ID : int
+
+        Pareto_ID: int
 
         Raises
         ------
-        ValueError: If the sets are not arrays or if the parameters are not arrays or floats or dataframes.
-        If the MP optimization did not converge
+        ValueError: If the sets are not arrays or if the parameters are not arrays or floats or dataframes. Or if the MP optimization did not converge
         """
 
         ### Create the ampl Master Problem (MP)
@@ -334,13 +367,14 @@ class district_decomposition:
                 raise Exception("AMPL_PATH is not defined. Please include a .env file at the project root (e.g., AMPL_PATH='C:/AMPL')")
 
         # AMPL (GNU) OPTIONS
-        ampl_MP.setOption('show_stats', 2)
         ampl_MP.setOption('solution_round', 11)
         ampl_MP.setOption('rel_boundtol', 1e-12)
         ampl_MP.setOption('presolve_eps', 1e-4)  # -ignore difference between upper and lower bound by this tolerance
         ampl_MP.setOption('presolve_inteps', 1e-6)  # -tolerance added/substracted to each upper/lower bound
         ampl_MP.setOption('presolve_fixeps', 1e-9)
-        ampl_MP.setOption('show_stats', 1)
+        if not self.method['print_logs']:
+            ampl_MP.setOption('show_stats', 0)
+            ampl_MP.setOption('solver_msg', 0)
 
         # -SOLVER OPTIONS
         ampl_MP.setOption('solver', self.solver)
@@ -378,7 +412,7 @@ class district_decomposition:
             ampl_MP.read('DHN.mod')
 
         ampl_MP.cd(path_to_clustering)
-        ampl_MP.readData('frequency_' + self.File_ID + '.dat')
+        ampl_MP.readData('frequency_' + self.local_data['File_ID'] + '.dat')
         ampl_MP.cd(path_to_ampl_model)
 
         # -------------------------------------------------------------------------------------------------------------
@@ -392,13 +426,13 @@ class district_decomposition:
         # prepare df to have the same index as AMPL model
         if not self.method['include_all_solutions']:
             df_Performance = df_Performance.xs((Scn_ID, Pareto_ID), level=('Scn_ID', 'Pareto_ID'))
-            df_Grid_t = df_Grid_t.xs((Scn_ID, Pareto_ID, 'Network'), level=('Scn_ID', 'Pareto_ID', 'Hub'))
+            df_Grid_t = df_Grid_t.xs((Scn_ID, Pareto_ID), level=('Scn_ID', 'Pareto_ID'))
         else:
             df_Performance = df_Performance.droplevel(['Scn_ID', 'Pareto_ID'])
-            df_Grid_t = df_Grid_t.droplevel(['Scn_ID', 'Pareto_ID']).xs('Network', level='Hub')
+            df_Grid_t = df_Grid_t.droplevel(['Scn_ID', 'Pareto_ID'])
 
         df_Performance = df_Performance.droplevel(level='Iter')
-        df_Grid_t = df_Grid_t.droplevel(level='Iter').reorder_levels(['Layer', 'FeasibleSolution', 'house', 'Period', 'Time'])
+        df_Grid_t = df_Grid_t.droplevel(level=['Iter', 'Hub']).reorder_levels(['Layer', 'FeasibleSolution', 'house', 'Period', 'Time'])
 
         # assign data
         MP_parameters = {}
@@ -436,7 +470,7 @@ class district_decomposition:
         if 'EV_plugged_out' not in MP_parameters:
             if len(self.infrastructure.UnitsOfDistrict) != 0:
                 if 'EV_district' in self.infrastructure.UnitsOfDistrict:
-                    MP_parameters['EV_plugged_out'], MP_parameters['EV_plugging_in'] = EV_gen.generate_EV_plugged_out_profiles_district(self.cluster)
+                    MP_parameters['EV_plugged_out'], MP_parameters['EV_plugging_in'] = EV_gen.generate_EV_plugged_out_profiles_district(self.cluster, self.local_data["df_Timestamp"])
 
         if read_DHN:
             if 'T_DHN_supply_cst' and 'T_DHN_return_cst' in self.parameters:
@@ -544,8 +578,6 @@ class district_decomposition:
             elif isinstance(MP_parameters[i], pd.DataFrame):
                 if not MP_parameters[i].empty:
                     ampl_MP.setData(MP_parameters[i])
-                else:
-                    print("DataFrame", i,"is empty.")
 
             elif isinstance(MP_parameters[i], pd.Series):
                 MP_parameters[i].name = i
@@ -571,8 +603,8 @@ class district_decomposition:
         # Solve ampl_MP
         ampl_MP.solve()
 
-        df_Results_MP = WR.get_df_Results_from_MP(ampl_MP, binary, self.method, self.infrastructure, read_DHN=read_DHN)
-        print(ampl_MP.getCurrentObjective().getValues().toPandas())
+        df_Results_MP = WR.get_df_Results_from_MP(ampl_MP, binary, self.method, self.infrastructure, read_DHN=read_DHN, scenario=scenario)
+        self.logger.info(str(ampl_MP.getCurrentObjective().getValues().toPandas()))
 
         df = self.get_solver_attributes(Scn_ID, Pareto_ID, ampl_MP)
         self.add_df_Results_MP(Scn_ID, Pareto_ID, self.iter, df_Results_MP, df)
@@ -584,15 +616,16 @@ class district_decomposition:
 
     def SP_iteration(self, scenario, Scn_ID=0, Pareto_ID=1):
         """
-        Description
-        -----------
-        Set up the parallel optimization if needed
+        Set up the parallel optimization if needed.
 
-        Inputs
-        ------
-        scenario: dictionary
-        Scn_ID: scenario ID
-        Pareto_ID: int, pareto ID
+        Parameters
+        ----------
+        scenario : dictionary
+
+        Scn_ID : int
+            scenario ID
+        Pareto_ID: int
+            pareto ID
         """
 
         if self.method['parallel_computation']:
@@ -614,27 +647,31 @@ class district_decomposition:
 
     def SP_execution(self, scenario, Scn_ID, Pareto_ID, House):
         """
-        Description
-        -----------
-        Insert dual variables in ampl model, apply scenario, adapt model depending on the methods and get results
+        Insert dual variables in ampl model, apply scenario, adapt model depending on the methods and get results.
 
-        Inputs
-        ------
+        Parameters
+        ----------
         scenario: dictionary
-        Scn_ID: scenario ID
-        Pareto_ID: int, pareto ID
-        House: string, house ID
 
-        Outputs
+        Scn_ID : int
+            scenario ID
+        Pareto_ID : int
+            pareto ID
+        House : string
+            house ID
+
+        Returns
         -------
-        df_Results : results of the optimization (unit installed, power exchanged, costs, GWP emissions, ...)
-        attr : results of the optimization process (CPU time, objective value, nb variables or constraints, ...)
+        df_Results :
+            results of the optimization (unit installed, power exchanged, costs, GWP emissions, ...)
+        attr :
+            results of the optimization process (CPU time, objective value, nb variables or constraints, ...)
 
         Raises
         ------
-        If the SP optimization did not converge
+        ValueError: If the SP optimization did not converge
         """
-        print('iterate HOUSE: ', House, 'iteration: ', self.iter)
+        self.logger.info('iterate HOUSE: ' + House + 'iteration: '+ str(self.iter))
 
         # Give dual variables to Subproblem
         pi = self.get_dual_values_SPs(Scn_ID, Pareto_ID, self.iter - 1, House, 'pi').reorder_levels(['Layer', 'Period', 'Time'])
@@ -654,16 +691,18 @@ class district_decomposition:
         parameters_SP['lca_kpi_demand'] = pi_lca.mul(0)
 
         # find district structure, objective, beta and parameter for one single building
-        buildings_data_SP, parameters_SP, infrastructure_SP = self.__split_parameter_sets_per_building(House, parameters_SP)
+        buildings_data_SP, parameters_SP = self.__split_parameter_sets_per_building(House, parameters_SP)
         beta = - self.get_dual_values_SPs(Scn_ID, Pareto_ID, self.iter - 1, House, 'beta')
         scenario, beta_list = self.get_beta_values(scenario, beta)
         parameters_SP['beta_duals'] = beta_list
 
         # Execute optimization
         if self.method['use_facades'] or self.method['use_pv_orientation']:
-            REHO = compact_optimization(infrastructure_SP, buildings_data_SP, parameters_SP, self.set_indexed, self.cluster, scenario, self.method, self.solver, self.qbuildings_data)
+            REHO = compact_optimization(self.infrastructure_SP[House], buildings_data_SP, self.local_data, parameters_SP, self.set_indexed, self.cluster,
+                                        scenario, self.method, self.solver, self.qbuildings_data)
         else:
-            REHO = compact_optimization(infrastructure_SP, buildings_data_SP, parameters_SP, self.set_indexed, self.cluster, scenario, self.method, self.solver)
+            REHO = compact_optimization(self.infrastructure_SP[House], buildings_data_SP, self.local_data, parameters_SP, self.set_indexed, self.cluster,
+                                        scenario, self.method, self.solver)
 
         ampl = REHO.build_model_without_solving()
 
@@ -694,21 +733,16 @@ class district_decomposition:
 
     def check_Termination_criteria(self, scenario, Scn_ID=0, Pareto_ID=1):
         """
-        Description
-        -----------
         Verify a number of termination criteria:
-            - optimal solution found based on reduced costs -> last solutions proposed by the SPs did not improve the MP
-            - no improvements
 
-        Inputs
-        ------
-        scenario: dictionary, scenario of the optimization
-        Scn_ID: scenario ID
-        Pareto_ID: int, pareto ID
+        - Optimal solution found based on reduced costs -> last solutions proposed by the SPs did not improve the MP
+        - No improvements
 
-        Outputs
+
+        Returns
         -------
-        df.any(axis=None): bool, if one of the stopping criteria is reached
+        df.any(axis=None) : boolean
+            If one of the stopping criteria is reached
 
         """
         # --------------------------------------------------------------
@@ -738,7 +772,7 @@ class district_decomposition:
 
         for h in last_SP_results:
             df_Grid_t = pd.concat([last_SP_results[h]["df_Grid_t"]], keys=[(self.iter, self.feasible_solutions - 1, h)], names=['Iter', 'FeasibleSolution', 'house'])
-            df_Grid_t = df_Grid_t.xs('Network', level='Hub')
+            df_Grid_t = df_Grid_t.xs(h, level='Hub')
             pi = self.get_dual_values_SPs(Scn_ID, Pareto_ID, self.iter, h, 'pi')
             pi_GWP = self.get_dual_values_SPs(Scn_ID, Pareto_ID, self.iter, h, 'pi_GWP')
             pi_lca = self.get_dual_values_SPs(Scn_ID, Pareto_ID, self.iter, h, 'pi_lca')
@@ -824,10 +858,6 @@ class district_decomposition:
     def get_final_MP_results(self, Pareto_ID=1, Scn_ID=0):
         """
         Build the final design and operating results based on the optimal set of lambdas.
-
-        Attributes
-        ----------
-        result_object_of_REHO,  List of dataframes
         """
 
         # select the result chosen by the MP
@@ -855,15 +885,19 @@ class district_decomposition:
 
     def get_annual_grid_opex(self, df_Grid_t, cost_supply=pd.Series(dtype='float'), cost_demand=pd.Series(dtype='float')):
         """
-        Inputs
-        ------
-        df_Grid_t: pandas dataframe, from result object REHO
-        Cost_supply_cst: optional, cost profile of supply
-        Cost_demand_cst: optional, cost profile of demand
+        Parameters
+        ----------
+        df_Grid_t: dataframe
+            from result object REHO
+        Cost_supply_cst : series
+            cost profile of supply
+        Cost_demand_cst : series
+            cost profile of demand
 
-        Outputs
+        Returns
         -------
-        annual_grid_costs: possibility to set tariffs/dual value pi. default: use costs from model
+        annual_grid_costs :
+            possibility to set tariffs/dual value pi. default: use costs from model
         """
         if cost_supply.empty:
             tariff_supply = df_Grid_t.Cost_supply
@@ -970,21 +1004,25 @@ class district_decomposition:
 
     def get_dual_values_SPs(self, Scn_ID, Pareto_ID, iter, House, dual_variable):
         """
-        Description
-        -----------
-        Select the right dual variables for the given Scn_ID, Pareto_ID, iter and house IDs
+        Select the right dual variables for the given Scn_ID, Pareto_ID, iter and house IDs.
 
-        Inputs
-        ------
-        Scn_ID: scenario ID
-        Pareto_ID: int, pareto ID
-        iter: int, iter ID
-        House: string, house ID
-        dual_variable: string, dual variable to get
+        Parameters
+        ----------
+        Scn_ID : int
+            scenario ID
+        Pareto_ID: int
+            pareto ID
+        iter : int
+            iter ID
+        House : string
+            house ID
+        dual_variable : string
+            dual variable to get
 
-        Outputs
+        Returns
         -------
-        dual_value : array, dual variables
+        dual_value : array
+            dual variables
         """
         attribute = None
         if dual_variable in ['pi', 'pi_GWP', 'pi_lca']:
@@ -1009,18 +1047,20 @@ class district_decomposition:
 
     def get_solver_attributes(self, Scn_ID, Pareto_ID, ampl):
         """
-        Description
-        -----------
 
-        Inputs
-        ------
-        Scn_ID: scenario ID
-        Pareto_ID: int, ID of the pareto point, default is 1
-        ampl: ampl model with results concerning one SP
+        Parameters
+        ----------
+        Scn_ID: int
+            scenario ID
+        Pareto_ID: int
+            ID of the pareto point, default is 1
+        ampl: ampl model
+            results concerning one SP
 
-        Outputs
+        Returns
         -------
-        df: Dataframe with information on the optimization (CPU time, nb constraints, ...)
+        df : dataframe
+            Information on the optimization (CPU time, nb constraints, ...)
         """
         time = ampl.getValue('_total_solve_time')
         constr = ampl.getValue('_ncons')
@@ -1102,26 +1142,27 @@ class district_decomposition:
 
     def __split_parameter_sets_per_building(self, h, parameters_SP=dict({})):
         """
-        Description
-        -----------
         Some inputs are for the district and some other for the houses. This function fuses the two
         and gives the parameters per house. This is important to run an optimization on a single building
-        Inputs
-        ------
-        h : string,  House ID
-        parameters_SP: dictionary, Parameters of the house
 
-        Outputs
+        Parameters
+        ----------
+        h : string
+            House ID
+        parameters_SP : dict
+            Parameters of the house
+
+        Returns
         -------
-        buildings_data_SP: dictionary, egid, surface area, class of the building, ...
-        parameters_SP: dictionary, Parameters from the script for a single house (f.e. tariffs)
-        infrastructure_SP: dictionary, The district structure for a single house
+        buildings_data_SP : dict
+            egid, surface area, class of the building, ...
+        parameters_SP : dict
+            Parameters from the script for a single house (f.e. tariffs)
+        infrastructure_SP : dict
+            The district structure for a single house
         """
         ID = np.where(h == self.infrastructure.House)[0][0]
-
-        single_building_data = {"buildings_data": {h: self.buildings_data[h]}}
         buildings_data_SP = {h: self.buildings_data[h]}
-        building_units = {"building_units": self.infrastructure.units}
 
         for key in self.parameters:
             if key not in self.lists_MP["list_parameters_MP"]:
@@ -1134,14 +1175,19 @@ class district_decomposition:
                         parameters_SP[key] = profile_building_x[ID]
                 else:
                     parameters_SP[key] = self.parameters[key][ID]
+        return buildings_data_SP, parameters_SP
 
-        infrastructure_SP = infrastructure.infrastructure(single_building_data, building_units, self.infrastructure.grids)  # initialize District
+    def build_infrastructure_SP(self):
+        for h in self.buildings_data:
+            single_building_data = {"buildings_data": {h: self.buildings_data[h]}}
+            building_units = {"building_units": self.infrastructure.units}
+            infrastructure_SP = infrastructure.infrastructure(single_building_data, building_units, self.infrastructure.grids)  # initialize District
 
-        # TODO: better integration Units_Parameters specific to each house
-        unit_param = self.infrastructure.Units_Parameters.loc[[string.endswith(h) for string in self.infrastructure.Units_Parameters.index]]
-        infrastructure_SP.Units_Parameters[["Units_Fmax", "Cost_inv2"]] = unit_param[["Units_Fmax", "Cost_inv2"]]
-
-        return buildings_data_SP, parameters_SP, infrastructure_SP
+            # TODO: better integration Units_Parameters specific to each house
+            unit_param = self.infrastructure.Units_Parameters.loc[[string.endswith(h) for string in self.infrastructure.Units_Parameters.index]]
+            infrastructure_SP.Units_Parameters[["Units_Fmax", "Cost_inv2"]] = unit_param[["Units_Fmax", "Cost_inv2"]]
+            self.infrastructure_SP[h] = infrastructure_SP
+        return
 
     def return_combined_SP_results(self, df_Results, df_name):
 

@@ -6,90 +6,119 @@ import calendar
 import datetime as dt
 from reho.paths import *
 from reho.model.preprocessing.clustering import ClusterClass
+import pvlib
+import geopandas as gpd
+
 
 __doc__ = """
-*Generates the meteorological data (temperature and solar irradiance).*
+Generates the meteorological data (temperature and solar irradiance).
 """
+
 
 def get_cluster_file_ID(cluster):
     """
-    Gets the weather file ID that corresponds to what was given in the reho initalization:
-    ``cluster = {'Location': 'Geneva', 'Attributes': ['I', 'T', 'W'], 'Periods': 10, 'PeriodDuration': 24}``
+    Gets the weather file ID that corresponds to the specifications provided in the reho initalization.
 
-    Looks at data/weather/clustering results.
-    If that file does not exist yet, run the ClusterClass to create the required file.
+    The file ID is built by concatenating Location_Periods_PeriodDuration_Attributes.
+    ``cluster = {'Location': 'Geneva', 'Attributes': ['T', 'I', 'W'], 'Periods': 10, 'PeriodDuration': 24}``
+    Will yield to:
+    ``File_ID = 'Geneva_10_24_T_I_W'``
 
     Parameters
     ----------
     cluster : dict
-        Dictionary that contains a 'Location' (str), some 'Attributes' (list, among 'I', 'T', 'W'), a number of periods
-        'Periods' (int) and a 'PeriodDuration' (int)
+        Dictionary that contains a 'Location' (str), some 'Attributes' (list, among 'T' (temperature), 'I' (irradiance), 'W' (weekday) and 'E' (emissions)),
+        a number of periods 'Periods' (int) and a 'PeriodDuration' (int)
 
     Returns
     -------
-    A string that is the file ID
-
-    Notes
-    -----
-    - The file ID is built by concatenating Location_Periods_PeriodDuration_Attributes.
-    - The weather file is search using the Location
-    - If one wants to use his own meteo file, he can add to the cluster dictionary a key ``weather_file`` with the path
-      to the meteo. Should be a *.dat* with the same structure as the other weather_file.
+    A string that is the file ID.
     """
-    # get correct file ID for weather file
-    attributes = []
-
-    if 'I' in cluster['Attributes']:
-        I = '_I'
-        attributes.append('Irr')
-    else:
-        I = ''
     if 'T' in cluster['Attributes']:
         T = '_T'
-        attributes.append('Text')
     else:
         T = ''
+    if 'I' in cluster['Attributes']:
+        I = '_I'
+    else:
+        I = ''
     if 'W' in cluster['Attributes']:
         W = '_W'
-        attributes.append('Weekday')
     else:
         W = ''
     if 'E' in cluster['Attributes']:
         E = '_E'
-        attributes.append('Emissions')
     else:
         E = ''
 
     File_ID = cluster['Location'] + '_' + str(cluster['Periods']) + '_' + str(cluster['PeriodDuration']) + \
               T + I + W + E
 
-    among_cl_results = os.path.exists(os.path.join(path_to_clustering, 'timestamp_' + File_ID + '.dat'))
-    if not among_cl_results or 'weather_file' in cluster.keys():
-        if 'weather_file' in cluster.keys():
-            df = read_hourly_dat(cluster['weather_file'])
-        else:
-            df = read_hourly_dat(cluster['Location'])
-        df = df[attributes]
-        cl = ClusterClass(data=df, Iter=[cluster['Periods']], option={"year-to-day": True, "extreme": []}, pd=cluster['PeriodDuration'])
-        cl.run_clustering()
-
-        generate_output_data(cl, attributes, cluster['Location'])
-
     return File_ID
 
 
-def read_hourly_dat(location):
+def generate_weather_data(cluster, qbuildings_data):
+    """
+    This function is called if the clustered weather data specified by File_ID do not exist yet.
+    Run the ClusterClass and create the required files.
+    """
 
-    if location.endswith('.dat'):
-        df = np.loadtxt(path_handler(location), unpack=True, skiprows=1)
+    if 'custom_weather' in cluster.keys():
+        df = read_custom_weather(cluster['custom_weather'])
     else:
-        df = np.loadtxt(os.path.join(path_to_weather, 'hour', location + '-hour.dat'), unpack=True, skiprows=1)
-    df = pd.DataFrame(df).transpose()
-    df = df.drop([5,6,7,8], axis=1)
-    df.columns = ['id', 'Month', 'Day', 'Hour', 'Irr', 'Text']
-    df2 = pd.read_csv(os.path.join(path_to_weather, 'Weekday_2005.txt'), index_col=[0], header=None)
-    df3 = pd.read_csv(os.path.join(path_to_weather, 'Elec_CO2_2023.txt'), index_col=[0], header=None)
-    df['Emissions'] = df3
+        df = get_weather_data(qbuildings_data).reset_index(drop=True)
+
+    attributes = []
+    if 'T' in cluster['Attributes']:
+        attributes.append('Text')
+    if 'I' in cluster['Attributes']:
+        attributes.append('Irr')
+    if 'W' in cluster['Attributes']:
+        attributes.append('Weekday')
+    if 'E' in cluster['Attributes']:
+        attributes.append('Emissions')
+
+    df = df[attributes]
+    cl = ClusterClass(data=df, nb_clusters=[cluster['Periods']], option={"year-to-day": True, "extreme": []}, pd=cluster['PeriodDuration'])
+    cl.run_clustering()
+
+    generate_output_data(cl, attributes, cluster['Location'])
+
+
+def get_weather_data(qbuildings_data):
+    """
+    Using the pvlib library, connect to the PVGIS dabatase to extract the weather data based on the building's coordinates.
+    """
+
+    coord = gpd.GeoSeries(qbuildings_data['buildings_data']['Building1']['geometry'].centroid, crs=2056).to_crs(
+        {'init': 'epsg:4326'})
+    long, lat = (coord[0].x, coord[0].y)
+    pvgis_data = pvlib.iotools.get_pvgis_tmy(lat, long, outputformat='csv', startyear=2005, endyear=2016)
+    location = pvgis_data[2]
+    weather_data = pvgis_data[0]
+    weather_data = weather_data.rename(columns={'temp_air': 'Text', 'ghi': 'Irr'})
+    weather_data['Month'] = weather_data.index.month
+    weather_data['Day'] = weather_data.index.day
+    weather_data['Hour'] = weather_data.index.hour + 1
+    weather_data['id'] = (weather_data.reset_index().index+1).to_list()
+    weekday = pd.read_csv(os.path.join(path_to_weather, 'weekday.txt'), index_col=[0], header=None)
+    weather_data['Weekday'] = weekday[1].tolist()
+
+    print(f'The weather data have been loaded from the PVGIS database for a location with coordinates {location}.')
+
+    return weather_data
+
+
+def read_custom_weather(path_to_weather_file):
+    """
+    From the current directory, looks for a custom weather file.
+    This file should be a *.csv* with the same structure as the template provided in reho/scripts/template/data/profiles/.
+    """
+
+    df = file_reader(path_handler(path_to_weather_file))
+    print(f'The weather data have been loaded from {path_handler(path_to_weather_file)}.')
+
+    df2 = pd.read_csv(os.path.join(path_to_weather, 'weekday.txt'), index_col=[0], header=None)
     df['Weekday'] = df2
 
     return df
@@ -254,7 +283,7 @@ def write_dat_files(attributes, location, values_cluster, index_inter):
     # GHI
     # -------------------------------------------------------------------------------------
     df_GHI = values_cluster['Irr']
-    filename = os.path.join(path_to_clustering, 'GHI_' + File_ID + '.dat')
+    filename = os.path.join(path_to_clustering, 'Irr_' + File_ID + '.dat')
     df_GHI.to_csv(filename, index=False, header=False)
 
     # -------------------------------------------------------------------------------------
@@ -404,7 +433,7 @@ def plot_cluster_KPI_separate(df, save_fig):
         plt.show()
 
 
-def plot_LDC(cl, location, save_fig):
+def plot_LDC(cl, save_fig):
     nbr_plot = cl.nbr_opt
     print('plotting for number of typical days: ', nbr_plot)
 
@@ -509,20 +538,21 @@ def plot_LDC(cl, location, save_fig):
     else:
         plt.show()
 
+
 if __name__ == '__main__':
     cm = plt.cm.get_cmap('Spectral_r')
 
-    # Location = ['Bern-Liebefeld', 'Geneve-Cointrin', 'La_Chaux-de-Fonds', 'Moleson', 'Zermatt', 'Zuerich-SMA'][4]
-    Location = 'Pully'
-    Attributes = ['Text', 'Irr']
-    Iter = [10]
+    weather_file = '../../../scripts/template/data/profiles/Sion.csv'
+    Attributes = ['Text', 'Irr', 'Weekday']
+    nb_clusters = [2, 4, 6, 8, 10, 12]
 
-    df = read_hourly_dat(Location)
-    df = df[Attributes]
+    df_annual = read_custom_weather(weather_file)
+    df_annual = df_annual[Attributes]
 
-    cl = ClusterClass(data=df, Iter=Iter, option={"year-to-day": True, "extreme": []}, pd=24)
+    cl = ClusterClass(data=df_annual, nb_clusters=nb_clusters, option={"year-to-day": True, "extreme": []}, pd=24)
     cl.run_clustering()
 
     plot_cluster_KPI_separate(cl.kpis_clu, save_fig=False)
-    plot_LDC(cl, Location, save_fig=False)
-    generate_output_data(cl, Attributes, Location)
+    plot_LDC(cl, save_fig=False)
+
+    generate_output_data(cl, Attributes, "Sion")

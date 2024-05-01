@@ -3,15 +3,14 @@ import reho.model.preprocessing.weather as WD
 import pandas as pd
 import numpy as np
 
+__doc__ = """
+Generates electric vehicle (EV) demand profiles.
+"""
 
-def generate_EV_plugged_out_profiles_district(cluster):
+def generate_EV_plugged_out_profiles_district(cluster, timestamp_data):
     """
-    Computes hourly electric vehicle (EV) profiles for each typical day considering weekdays and weekends. Data are taken from
-    `UK Department for Transport 2013 <https://www.gov.uk/government/collections/energy-and-environment-statistics#publications>`_
-    and `SFSO 2015 <https://www.bfs.admin.ch/asset/fr/1840478>`_. The EV occupancy profiles are used to
-    optimize EV electricity demand profiles with the evehicle.mod ampl model.
-
-
+    Computes hourly electric vehicle profiles for each typical day considering weekdays and weekends.
+    The EV demand profiles are used to optimize EV electricity demand profiles with the `evehicle.mod` ampl model.
 
     Parameters
     ----------
@@ -27,7 +26,7 @@ def generate_EV_plugged_out_profiles_district(cluster):
 
     Notes
     -----
-    - EV_plugged_out, EV_plugging_in
+    - Data are taken from `UK Department for Transport 2013 <https://www.gov.uk/government/collections/energy-and-environment-statistics#publications>`_ and `Swiss Federal Statistical Office 2015 <https://www.bfs.admin.ch/asset/fr/1840478>`_.
 
     """
     # TODO IMPLEMENTATION of flexible period duration
@@ -43,7 +42,7 @@ def generate_EV_plugged_out_profiles_district(cluster):
                                skiprows=1)
         timestamp = pd.DataFrame(timestamp, columns=("Day", "Frequency", "Weekday"))
     else:
-        df = pd.read_csv(os.path.join(path_to_clustering, 'timestamp_' + File_ID + '.dat'), delimiter='\t')
+        df = timestamp_data
         timestamp = df.fillna(1)  # only weekdays
 
     # Federal Office of Statistic, Comportement de la population en matiere de transports, 2015

@@ -11,13 +11,13 @@ if __name__ == '__main__':
     # Set building parameters
     reader = QBuildingsReader()  # load QBuildingsReader class
     reader.establish_connection('Suisse')  # connect to QBuildings database
-    qbuildings_data = reader.read_db(3658, nb_buildings=1)  # read data
+    qbuildings_data = reader.read_db(4230, nb_buildings=1, return_location=True)  # read data
 
     # Select weather data
     # location can be chosen among the files available in preprocessing > weatherData > data > hour
     # I refers to Irradiance, T to Temperature, and W to Weekday
     # specify the desired number of typical days
-    cluster = {'Location': 'Geneva', 'Attributes': ['I', 'T', 'W'], 'Periods': 10, 'PeriodDuration': 24}
+    cluster = {'Location': qbuildings_data['Location'], 'Attributes': ['T', 'I', 'W'], 'Periods': 10, 'PeriodDuration': 24}
 
     # Set scenario
     scenario = dict()
@@ -35,7 +35,7 @@ if __name__ == '__main__':
     # Set method options (as defined in compact_optimization.py > initialize_default_methods)
     # by default a district scale design is performed with a compact optimization
     # watch out the maximum number of buildings is around 10 due to exponential complexity
-    method = {}
+    method = {"print_logs": True}
 
     # Run optimization
     reho = reho(qbuildings_data=qbuildings_data, units=units, grids=grids, cluster=cluster, scenario=scenario, method=method, solver="gurobi")
