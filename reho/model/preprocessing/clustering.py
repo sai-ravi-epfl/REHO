@@ -44,7 +44,7 @@ class ClusterClass:
         self.kpis_clu = None
         self.nbr_opt = None
 
-        if pd == None:              # period duration, f.e. 1 period = 1 day => pd =  24 (default)
+        if pd == None:              # duration, f.e. 1 period = 1 day => pd =  24 (default)
             self.pd = 24
         else:
             self.pd = pd

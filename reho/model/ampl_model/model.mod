@@ -64,6 +64,9 @@ param Pi := 4 * atan(1);					#-
 
 #-TEMPORAL DATA
 param T_ext{p in Period,t in Time[p]};		#deg C
+
+
+
 param I_global{p in Period,t in Time[p]};	#W/m2
 
 #-THERMAL STREAMS
@@ -510,6 +513,7 @@ param alpha_h{h in House}	:= (1/Mcp_0h[h])/(exp(UAh_0[h]/Mcp_0h[h])-1);									
 param alpha_c{h in House}	:= (1/Mcp_0c[h])/(exp(UAc_0[h]/Mcp_0c[h])-1);														#K/kW
 
 #-Standard requirements
+
 param Qh{h in House,p in Period,t in Time[p]} 			:= if U_h[h]*ERA[h]*(T_comfort_min_0[h]-T_ext[p,t])-(HeatGains[h,p,t]+SolarGains[h,p,t])>0 and U_h[h]>0 then U_h[h]*ERA[h]*(T_comfort_min_0[h]-T_ext[p,t])-(HeatGains[h,p,t]+SolarGains[h,p,t]) else 0;
 param Th_return{h in House,p in Period,t in Time[p]} 	:= if U_h[h]>0 then T_comfort_min_0[h] + Qh[h,p,t]*alpha_h[h] else T_comfort_min_0[h];
 param Th_supply{h in House,p in Period,t in Time[p]} 	:= if U_h[h]>0 then Qh[h,p,t]/Mcp_0h[h] + Th_return[h,p,t] else T_comfort_min_0[h];

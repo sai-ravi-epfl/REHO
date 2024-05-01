@@ -1,3 +1,7 @@
+import sys
+
+sys.path.append("/Users/ravi/REHO/")
+
 from reho.model.reho import *
 from reho.plotting import plotting
 

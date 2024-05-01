@@ -6,7 +6,7 @@ if __name__ == '__main__':
     # Set building parameters
     # you can as well define your district from a csv file instead of reading the database
     reader = QBuildingsReader()
-    qbuildings_data = reader.read_csv(buildings_filename='C:/Users/ravi/Desktop/REHO/scripts/template/data/EPFL_2.csv', nb_buildings=60000)
+    qbuildings_data = reader.read_csv(buildings_filename='/Users/ravi/REHO/scripts/template/data/EPFL_2.csv', nb_buildings=1)
 
     # Select weather data
     cluster = {'Location': 'Pully', 'Attributes': ['I', 'T', 'W', 'E'], 'Periods': 10, 'PeriodDuration': 24}
