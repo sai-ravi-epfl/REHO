@@ -3,6 +3,7 @@ import time
 import warnings
 warnings.filterwarnings("ignore")
 
+# TO PROFILE REHO REMOVE COMMENTS IN reho.py, LINES 456 to 462
 
 tic = time.perf_counter()
 

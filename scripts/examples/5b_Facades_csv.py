@@ -5,11 +5,11 @@ if __name__ == '__main__':
 
     # Set building parameters with roof orientations and facades loaded from csv files
     reader = QBuildingsReader(load_facades=True, load_roofs=True)
-    qbuildings_data = reader.read_csv(buildings_filename='../template/data/buildings.csv', nb_buildings=2,
-                                      facades_filename='../template/data/facades.csv', roofs_filename='../template/data/roofs.csv')
+    qbuildings_data = reader.read_csv(buildings_filename='../GSM/QBuildings/GSM_buildings.csv',
+                                      facades_filename='../GSM/QBuildings/GSM_facades.csv', roofs_filename='../GSM/QBuildings/GSM_roofs.csv')
 
     # Select weather data
-    cluster = {'Location': 'Geneva', 'Attributes': ['I', 'T', 'W'], 'Periods': 10, 'PeriodDuration': 24}
+    cluster = {'Location': 'Pully', 'Attributes': ['I', 'T', 'W'], 'Periods': 10, 'PeriodDuration': 24}
 
     # Set scenario
     scenario = dict()
@@ -31,4 +31,4 @@ if __name__ == '__main__':
     reho.single_optimization()
 
     # Save results
-    reho.save_results(format=['xlsx', 'pickle'], filename='5b')
+    reho.save_results(format=['xlsx', 'pickle'], filename='5b_GSM')

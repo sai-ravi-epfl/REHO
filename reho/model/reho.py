@@ -453,11 +453,13 @@ class reho(district_decomposition):
         self.MP_iteration(scenario, Scn_ID=Scn_ID, binary=True, Pareto_ID=Pareto_ID)
         self.add_df_Results(None, Scn_ID, Pareto_ID, self.scenario)
         self.get_KPIs(Scn_ID, Pareto_ID=Pareto_ID)
+        """
         try:
             reho.save_results(self, format=['xlsx'], filename=f'BS_{self.args["scenarios"]}_{self.args["nb_buildings"]}_{self.args["nb_excl"]}')
         except NameError:
             reho.save_results(self, format=['xlsx'],
                               filename=f'building_scale')
+        """
 
 
         # -----------------------------------------------------------------------------------------------------------
