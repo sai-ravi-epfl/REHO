@@ -1,3 +1,4 @@
+import reho.model.infrastructure
 from reho.model.reho import *
 
 
@@ -9,7 +10,7 @@ if __name__ == '__main__':
     qbuildings_data = reader.read_db(transformer=3658, nb_buildings=2)
 
     # Select weather data
-    cluster = {'Location': 'Geneva', 'Attributes': ['I', 'T', 'W'], 'Periods': 10, 'PeriodDuration': 24}
+    cluster = {'Location': 'Geneva', 'Attributes': ['T', 'I', 'W'], 'Periods': 10, 'PeriodDuration': 24}
 
     # Set scenario
     scenario = dict()
@@ -28,8 +29,9 @@ if __name__ == '__main__':
     # Set specific parameters
     parameters = {'n_vehicles': 6}
 
+
     # Run optimization
-    reho = reho(qbuildings_data=qbuildings_data, units=units, grids=grids, cluster=cluster, scenario=scenario, method=method, solver="gurobi")
+    reho = reho(qbuildings_data=qbuildings_data, units=units, grids=grids, cluster=cluster, scenario=scenario, method=method, parameters=parameters, solver="gurobi")
     reho.single_optimization()
 
     # Save results

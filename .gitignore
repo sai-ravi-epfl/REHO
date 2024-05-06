@@ -310,15 +310,14 @@ documentation/sections/_autosummary
 
 # Data
 
-reho/data/weather/hour/*
-!reho/data/weather/hour/Geneva-hour.dat
-!reho/data/weather/hour/Disentis-hour.dat
-!reho/data/weather/hour/Lugano-hour.dat
-!reho/data/weather/hour/Luzern-hour.dat
-!reho/data/weather/hour/Piotta-hour.dat
-!reho/data/weather/hour/Zuerich-Kloten-hour.dat
 
 # Scripts
 scripts/*
 !scripts/examples/
 !scripts/template/
+reho/data/weather/hour/Pully-hour.dat
+reho/data/weather/hour/Pully2020-hour.dat
+reho/data/weather/hour/Pully2020_29feb-hour.dat
+reho/data/weather/hour/Pully2021-hour.dat
+reho/data/weather/hour/Pully2022-hour.dat
+reho/data/weather/hour/Pully2023-hour.dat
