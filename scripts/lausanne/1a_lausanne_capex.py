@@ -13,7 +13,7 @@ if __name__ == '__main__':
     for name_district in dist:
         # Set building parameters
         reader = QBuildingsReader()
-        qbuildings_data = reader.read_csv(buildings_filename='../lausanne/QBuildings/Lausanne_sectors.csv', district=name_district, nb_buildings=10)
+        qbuildings_data = reader.read_csv(buildings_filename='../lausanne/QBuildings/Lausanne_sectors.csv', district=name_district, nb_buildings=1)
 
         # Select weather data
         cluster = {'Location': 'Pully', 'Attributes': ['I', 'T', 'W'], 'Periods': 10, 'PeriodDuration': 24}
