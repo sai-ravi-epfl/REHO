@@ -51,6 +51,8 @@ path_to_weather = os.path.join(path_to_data, 'weather')
 path_to_clustering = os.path.join(os.getcwd(), 'data', 'clustering')
 path_to_configurations = os.path.join(os.getcwd(), 'results', 'configurations')
 
+# specific results location
+path_to_results = '/Users/eduardo/REHO_local/REHO-HeatingBits/REHO/Projects/HeatingBits/Results'
 
 def path_handler(path_given):
     """To handle the path to csv file, absolute path or not"""

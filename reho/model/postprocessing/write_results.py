@@ -1,10 +1,13 @@
 import pandas as pd
 import numpy as np
 import logging
+from reho.paths import path_to_results
 
 __doc__ = """
 Extracts the results from the AMPL model and converts it to Python dictionary and pandas dataframes.
 """
+
+
 
 
 def get_df_Results_from_SP(ampl, scenario, method, buildings_data, filter=True):
@@ -154,7 +157,7 @@ def get_df_Results_from_SP(ampl, scenario, method, buildings_data, filter=True):
         df_Unit_t.index.names = ['Layer', 'Unit', 'Period', 'Time']
         df_Unit_t = df_Unit_t.sort_index()
 
-        df_Unit_t.to_csv('/Users/ravi/Desktop/df_unit_t_withDHNHEX.csv')
+        df_Unit_t.to_csv(path_to_results+'/df_unit_t_withDHNHEX.csv')
         return df_Unit, df_Unit_t
 
     def set_df_grid(ampl, method):
@@ -555,7 +558,7 @@ def get_df_Results_from_MP(ampl, binary=False, method=None, district=None, read_
         for layer, units in district.UnitsOfLayer.items():
             [district_l_u.append((layer, unit)) for unit in units if unit in units_districts]
         df_Unit_t = df_Unit_t.reset_index(level=['Period', 'Time']).loc[district_l_u, :]
-        df_Unit_t.to_csv('/Users/ravi/Desktop/df_unit_t.csv')
+        df_Unit_t.to_csv(path_to_results+'/df_unit_t.csv')
         df_Results["df_Unit_t"] = df_Unit_t.reset_index().set_index(['Layer', 'Unit', 'Period', 'Time']).sort_index()
     else:
         df_Results["df_Unit_t"] = pd.DataFrame()
