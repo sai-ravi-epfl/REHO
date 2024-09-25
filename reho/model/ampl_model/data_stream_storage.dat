@@ -1,3 +1,4 @@
+/*
 # PTES
 let {p in Period, t in Time[p],u in UnitsOfType['PTES_conversion'],s in StreamsOfUnit[u]} Streams_Tin[s,p,t]  := 70;
 let {p in Period, t in Time[p],u in UnitsOfType['PTES_conversion'],s in StreamsOfUnit[u]} Streams_Tout[s,p,t] := 70-(20);
@@ -31,3 +32,4 @@ let {h in House,st in StreamsOfHouse[h] inter {'LHS_'&h&'_c_lt'},p in Period,t i
 let {h in House,st in StreamsOfHouse[h] inter {'LHS_'&h&'_c_lt'},p in Period,t in Time[p]} Streams_Tout[st,p,t] := LHS_T_Fusion+LHS_dTmin_exchange;
 let {h in House,st in StreamsOfHouse[h] inter {'LHS_'&h&'_h_lt'},p in Period,t in Time[p]} Streams_Tin[st,p,t] := LHS_T_Fusion-LHS_dTmin_exchange;
 let {h in House,st in StreamsOfHouse[h] inter {'LHS_'&h&'_h_lt'},p in Period,t in Time[p]} Streams_Tout[st,p,t] := TES_T_ret[h,p];
+*/

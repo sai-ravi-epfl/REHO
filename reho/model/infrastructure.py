@@ -39,7 +39,7 @@ class Infrastructure:
         self.Units = np.array([])
         self.UnitTypes = np.unique(np.array([self.houses[h]['units'][u]['UnitOfType'] for h in self.houses for u in range(len(self.houses[h]['units']))]))
 
-        UnitTypeDistrict = np.array([self.district_units[i]["UnitOfType"] for i in range(len(self.district_units))])
+        UnitTypeDistrict = np.array([self.district_units[i]['UnitOfType'] for i in range(len(self.district_units))])
         self.UnitTypes = np.unique(np.concatenate([self.UnitTypes, UnitTypeDistrict]))
         self.LayerTypes = np.array(['HeatCascade', 'ResourceBalance'])
 
@@ -444,14 +444,14 @@ def initialize_units(scenario, grids=None, building_data=os.path.join(path_to_in
     building_units = prepare_units_array(building_data, exclude_units, grids)
 
     # TODO: these storage units are not fully working
-    storage_units_to_exclude = ['BESS_IP', 'PTES_S_IP', 'PTES_C_IP', 'H2S_storage', 'H2_compression', 'SOEFC', 'FC']
+    storage_units_to_exclude = [ 'PTES_S_IP', 'H2S_storage', 'H2_compression', 'SOEFC', 'FC'] #'BESS_IP', 'PTES_S_IP', 'PTES_C_IP', 'H2S_storage', 'H2_compression', 'SOEFC', 'FC'
 
     exclude_units = exclude_units + storage_units_to_exclude
     if storage_data is True:
         default_storage_units = os.path.join(path_to_infrastructure, "storage_units.csv")
         building_units = np.concatenate([building_units, prepare_units_array(default_storage_units, exclude_units=exclude_units)])
     elif storage_data:
-        building_units = np.concatenate([building_units, prepare_units_array(storage_data, exclude_units=exclude_units)])
+        building_units = np.concatenate([building_units, prepare_units_array(storage_data,exclude_units=exclude_units)])
 
     if district_data is True:
         district_units = prepare_units_array(os.path.join(path_to_infrastructure, "district_units.csv"), exclude_units, grids)

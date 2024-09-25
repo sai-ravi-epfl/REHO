@@ -193,24 +193,26 @@ class SubProblem:
         # TODO: integrate all storage units into district structure (avoid using ampl eval)
         if self.method_sp['use_Storage_Interperiod']:
             ampl.eval(
-                'set UnitsOfStorage := setof{u in UnitsOfType["Battery_interperiod"] union UnitsOfType["PTES_storage"]'
-                'union UnitsOfType["PTES_conversion"] union UnitsOfType["CH4storage"]'
-                'union UnitsOfType["H2storage"] union UnitsOfType["SOEFC"]'
-                'union UnitsOfType["Methanizer"] union UnitsOfType["FuelCell"]'
-                'union UnitsOfType["Electrolyzer"] union UnitsOfType["WaterTankSH_interperiod"]'
-                'union UnitsOfType["SolidLiquidLHS"]'
-                '} u;')
-
+                'set UnitsOfStorage := setof{u in UnitsOfType["Battery_interperiod"]} u;')
+                # union UnitsOfType["PTES_storage"]
+                #'
+                #    'union UnitsOfType["PTES_conversion"] union UnitsOfType["CH4storage"]'
+                #   'union UnitsOfType["H2storage"] union UnitsOfType["SOEFC"]'
+                #  'union UnitsOfType["Methanizer"] union UnitsOfType["FuelCell"]'
+                # 'union UnitsOfType["Electrolyzer"] union UnitsOfType["WaterTankSH_interperiod"]'
+                #'union UnitsOfType["SolidLiquidLHS"]'
+                #'
             # Storage Units
             ampl.cd(path_to_units_storage)
-            ampl.read('h2_storage.mod')
-            ampl.read('heatstorage_interperiod.mod')
-            ampl.read('LHS_storage.mod')
+            #     ampl.read('h2_storage.mod')
+            #     ampl.read('heatstorage_interperiod.mod')
+            #     ampl.read('LHS_storage.mod')
             ampl.read('battery_interperiod.mod')
-            ampl.read('PTES.mod')
-            ampl.read('CH4_tank.mod')
+             #     ampl.read('PTES.mod')
+             #    ampl.read('CH4_tank.mod')
 
             # H2 Units
+            '''
             ampl.cd(path_to_units_h2)
             ampl.read('fuel_cell.mod')
             ampl.read('electrolyser.mod')
@@ -218,7 +220,7 @@ class SubProblem:
             ampl.read('methanizer.mod')
 
             ampl.cd(path_to_units)
-            ampl.read('heat_curtailment.mod')
+            ampl.read('heat_curtailment.mod')'''
             ampl.cd(path_to_ampl_model)
 
         return ampl

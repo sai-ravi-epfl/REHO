@@ -658,6 +658,7 @@ def plot_profiles(df_Results, units_to_plot, style='plotly', label='EN_long', co
     pd.DataFrame
         (Optional) A dataframe for further post-processing or reporting purposes.
     """
+    
     if resolution == 'monthly':
         items_average = 730
     elif resolution == 'weekly':
@@ -1445,3 +1446,41 @@ def plot_composite_curve(df_Results, cluster, periods=["Yearly"], filename=None,
         return plt, data.fillna(0)
     else:
         return plt
+
+
+def plot_storage_profile(df_Results, resolution='monthly'):
+
+
+    if resolution == 'monthly':
+        items_average = 730
+    elif resolution == 'weekly':
+        items_average = 168
+    elif resolution == 'daily':
+        items_average = 24
+    else:
+        items_average = 1
+
+    SOC = df_Results["df_storage"]["BAT_E_stored_IP"]
+    time_index = np.arange(0, 8760)
+
+    SOC_average = moving_average(SOC, items_average)
+    time_index_average = moving_average(time_index, items_average)
+
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=time_index_average,
+        y=SOC_average,
+        mode='lines',
+        name='SOC',
+        line=dict(color='blue')
+    ))
+
+    fig.update_layout(
+        title='State of Charge Over Time',
+        xaxis_title='T',
+        yaxis_title='SOC (kWh)',
+        template='plotly',
+        showlegend=True
+    )
+
+    return fig

@@ -156,6 +156,15 @@ def get_df_Results_from_SP(ampl, scenario, method, buildings_data, filter=True):
 
         return df_Unit, df_Unit_t
 
+
+    def set_df_storage(ampl):
+
+        # TO DO: try to make the plotting of the excel better
+        df1 = get_ampl_data(ampl, 'BAT_E_stored_IP', multi_index=True)
+        df_storage = df1
+
+        return df_storage
+
     def set_df_grid(ampl, method):
         # Grid_t
         df1 = get_ampl_data(ampl, 'Grid_demand', multi_index=True)
@@ -353,6 +362,9 @@ def get_df_Results_from_SP(ampl, scenario, method, buildings_data, filter=True):
     df_Results["df_Unit"], df_Unit_t = set_df_unit(ampl)
     df_Results["df_Grid_t"] = set_df_grid(ampl, method)
     df_Results["df_Time"], df_Weather, df_Index = set_dfs_other(ampl)
+
+    if method['use_Storage_Interperiod']:
+        df_Results["df_storage"] = set_df_storage(ampl)
 
     if method['save_data_input']:
         df_Results["df_Buildings"] = set_df_buildings(buildings_data)

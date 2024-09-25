@@ -1,6 +1,3 @@
-from reho.plotting import plotting
-import pandas as pd
-
 
 results = pd.read_pickle('results/my_case_study.pickle')
 
@@ -21,3 +18,6 @@ plotting.plot_sunburst_eud(results, label='EN_long').show()
 # Hourly profiles
 units_to_plot = ['ElectricalHeater', 'HeatPump', 'PV', 'NG_Boiler']
 plotting.plot_profiles(results['totex'][0], units_to_plot, label='EN_long', color='ColorPastel', resolution='weekly').show()
+
+#battery level
+plotting.plot_storage_profile(results).show()
