@@ -15,8 +15,8 @@ if __name__ == '__main__':
     scenario = dict()
     scenario['Objective'] = 'TOTEX'
     scenario['name'] = 'totex'
-    scenario['exclude_units'] = ['Battery', 'NG_Cogeneration']
-    scenario['enforce_units'] = []
+    scenario['exclude_units'] = ['NG_Cogeneration']
+    scenario['enforce_units'] = ['']
 
     # Initialize available units and grids
     grids = infrastructure.initialize_grids()

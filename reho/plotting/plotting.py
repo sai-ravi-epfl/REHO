@@ -1448,7 +1448,7 @@ def plot_composite_curve(df_Results, cluster, periods=["Yearly"], filename=None,
         return plt
 
 
-def plot_storage_profile(df_Results, resolution='monthly'):
+def plot_storage_profile(df_Results, resolution='daily'):
 
 
     if resolution == 'monthly':
@@ -1484,3 +1484,24 @@ def plot_storage_profile(df_Results, resolution='monthly'):
     )
 
     return fig
+
+
+def plot_energy_balance_for_battery(df_Results, day_of_the_year ,time_range='week')
+
+    if time_range == 'week':
+        hours = 168
+    elif time_range == 'month':
+        hours = 720
+
+    starting_hour = [day_of_the_year-1]*24
+
+    # selection of the period
+    ending_hour = hours + starting_hour
+
+    # all factors affecting the energy balance
+    SOC = df_Results["df_storage"]["BAT_E_stored_IP"][starting_hour, ending_hour]
+
+
+
+
+

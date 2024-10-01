@@ -162,7 +162,8 @@ def get_df_Results_from_SP(ampl, scenario, method, buildings_data, filter=True):
         # TO DO: try to make the plotting of the excel better
         df1 = get_ampl_data(ampl, 'BAT_E_stored_IP', multi_index=True)
         df_storage = df1
-
+        df_storage.index.names = ['building', 'Unit', 'hour_year']
+        df_storage = df_storage.sort_index()
         return df_storage
 
     def set_df_grid(ampl, method):
