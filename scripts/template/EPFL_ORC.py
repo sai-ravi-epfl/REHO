@@ -8,14 +8,14 @@ if __name__ == '__main__':
     # you can as well define your district from a csv file instead of reading the database
     reader = QBuildingsReader()
     n_house = 1
-    qbuildings_data = reader.read_csv(buildings_filename='/Users/ravi/REHO/scripts/template/data/EPFL_2.csv', nb_buildings= n_house)
+    qbuildings_data = reader.read_csv(buildings_filename='C:/Users/there/Desktop/REHO2/scripts/template/data/EPFL_2.csv', nb_buildings= n_house)
     #reader.establish_connection('Suisse')
     #qbuildings_data = reader.read_db(transformer=3216, egid=[280001550])
     # Select weather data
     cluster = {'Location': 'Pully', 'Attributes': ['I', 'T','E','D'], 'Periods': 10, 'PeriodDuration': 24}
     attributes = ['Irr', 'Text', 'Weekday','DataLoad']
-    weather_file = '/Users/ravi/Desktop/PhD/My_Reho_Qgis_files/Reho_Sai_Fork/scripts/template/data/profiles/pully.csv'
-    weather.data_centre_profile(size = 50)
+    weather_file = r'C:\Users\there\Desktop\REHO2\scripts\template\data\profiles\pully.csv'
+    weather.data_centre_profile(size = 2000)
     df_annual = weather.read_custom_weather(weather_file)
     df_annual = df_annual[attributes]
     nb_clusters = [10]
@@ -47,10 +47,15 @@ if __name__ == '__main__':
     #parameters = {}
 
     # Set method options
-    method = {'building-scale': True,'save_stream_t': True, 'use_dynamic_emission_profiles': True, 'save_streams': True, 'ORC_all_the_time': False} #, 'use_pv_orientation': True
+    method = {'building-scale': True,'save_stream_t': True, 'use_dynamic_emission_profiles': True, 'save_streams': True, 'ORC_all_the_time':False} #, 'use_pv_orientation': True
     # Run optimization
     reho = REHO(qbuildings_data=qbuildings_data, units=units,parameters=parameters, grids=grids, cluster=cluster, scenario=scenario, method=method, solver ='gurobi') #parameters=parameters,
     reho.single_optimization()
+
+    # plot
+    import uuid
+    tmp_folder = Path("tmp")
+    tmp_folder.mkdir(exist_ok=True)
     #plotting.plot_composite_curve(reho.results["totex"][0], cluster, plot= True, periods =["Yearly"]) #,"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"
     #plotting.yearly_demand_plot(reho.results["totex"][0], cluster, plot=True)
     # Save results
@@ -58,7 +63,8 @@ if __name__ == '__main__':
     reho.save_results(format=['xlsx', 'pickle'], filename=filename)
     #plotting.plot_performance(reho.results, plot='costs', indexed_on='Scn_ID', label='EN_long').show()
    # plotting.plot_performance(reho.results, plot='gwp', indexed_on='Scn_ID', label='EN_long').show()
-    plotting.plot_sankey(reho.results['gwp'][0], label='EN_long', color='ColorPastel').show()
+    plot_performance = plotting.plot_sankey(reho.results['gwp'][0], label='EN_long', color='ColorPastel')
+    plot_performance.write_html(tmp_folder / f"performance-{uuid.uuid4()}.html", auto_open=True)
     #plotting.plot_profiles(reho.results,['PV'], resolution='daily')
     # Construct the full file path
     # plotting.yearly_demand_plot(filename)
