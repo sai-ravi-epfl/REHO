@@ -7,7 +7,10 @@ import datetime as dt
 from reho.paths import *
 from reho.model.preprocessing.clustering import Clustering
 import pvlib
+import geopandas as gpd
 from pyproj import Transformer
+import csv
+
 
 __doc__ = """
 Generates the meteorological data (temperature and solar irradiance).
@@ -49,8 +52,13 @@ def get_cluster_file_ID(cluster):
         E = '_E'
     else:
         E = ''
+    if 'D' in cluster['Attributes']:
+        D = '_D'
+    else:
+        D = ''
 
-    File_ID = cluster['Location'] + '_' + str(cluster['Periods']) + '_' + str(cluster['PeriodDuration']) + T + I + W + E
+    File_ID = cluster['Location'] + '_' + str(cluster['Periods']) + '_' + str(cluster['PeriodDuration']) + \
+              T + I + W + E + D
 
     return File_ID
 
@@ -75,6 +83,16 @@ def generate_weather_data(cluster, qbuildings_data):
         attributes.append('Weekday')
     if 'E' in cluster['Attributes']:
         attributes.append('Emissions')
+    if 'D' in cluster['Attributes']:
+        attributes.append('DataLoad')
+
+
+
+    df3 = pd.read_csv(os.path.join(path_to_weather, 'Elec_CO2_2023.txt'), index_col=[0], header=None)
+    df['Emissions'] = df3
+
+    df4 = pd.read_csv(os.path.join(path_to_weather, 'yearly_data_centre_profile_repeated.csv'))['Load_Profile']
+    df['DataLoad'] = df4
 
     df = df[attributes]
     cl = Clustering(data=df, nb_clusters=[cluster['Periods']], option={"year-to-day": True, "extreme": []}, pd=cluster['PeriodDuration'])
@@ -97,7 +115,7 @@ def get_weather_data(qbuildings_data):
     weather_data['Month'] = weather_data.index.month
     weather_data['Day'] = weather_data.index.day
     weather_data['Hour'] = weather_data.index.hour + 1
-    weather_data['id'] = (weather_data.reset_index().index + 1).to_list()
+    weather_data['id'] = (weather_data.reset_index().index+1).to_list()
     weekday = pd.read_csv(os.path.join(path_to_weather, 'weekday.txt'), index_col=[0], header=None)
     weather_data['Weekday'] = weekday[1].tolist()
 
@@ -109,7 +127,7 @@ def get_weather_data(qbuildings_data):
 def read_custom_weather(path_to_weather_file):
     """
     From the current directory, looks for a custom weather file.
-    This file should be a .csv with the same structure as the examples provided in ``reho/scripts/examples/data/profiles/``.
+    This file should be a .csv with the same structure as the template provided in ``reho/scripts/template/data/profiles/``.
     """
 
     df = file_reader(path_handler(path_to_weather_file))
@@ -117,6 +135,19 @@ def read_custom_weather(path_to_weather_file):
 
     df2 = pd.read_csv(os.path.join(path_to_weather, 'weekday.txt'), index_col=[0], header=None)
     df['Weekday'] = df2
+
+    df3 = pd.read_csv(os.path.join(path_to_weather, 'Elec_CO2_2023.txt'), index_col=[0], header=None)
+    df['Emissions'] = df3
+
+    df4 = pd.read_csv(os.path.join(path_to_weather, 'yearly_data_centre_profile_repeated.csv'), index_col= False, header=None)
+    df4 = df4.iloc[1:, :]
+
+
+    df4 = df4.reset_index()
+    df4 = df4.iloc[:,2]
+    print(df4)
+    df4 = df4.astype(float)
+    df['DataLoad'] = df4
 
     return df
 
@@ -206,9 +237,39 @@ def generate_output_data(cl, attributes, location):
     # Call for the write_dat_files function
     write_dat_files(attributes, location, data_cls, data_idy)
 
-    return print(f'The data have been computed and saved in {path_to_clustering}.')
+    print(f'The data have been computed and saved in {path_to_clustering}.')
+    return data_cls
+def data_centre_profiles(value):
+    df_D = value['DataLoad']
+    return df_D.to_numpy()
+
+def get_metric(cluster):
+    if 'E' in cluster['Attributes']:
+        return 'GWP100a'
+    else:
+        return 'method 1'
+
+def data_centre_profile(size): # size to be mentioned in kW
+    df_load_profile = pd.read_csv('/Users/ravi/Desktop/PhD/My_Reho_Qgis_files/Reho_Sai_Fork/scripts/template/data/profiles/data_centre_hourly_week.csv')
+    df_load_profile= df_load_profile['Load_Profile'].div(50).mul(size) #profile data created by observing trend from this study: https://arxiv.org/abs/1804.00703
+    df_load_annual = pd.concat([df_load_profile]*70).to_frame().reset_index()
+    df_load_annual = df_load_annual['Load_Profile'].to_frame()
+  # Replace with your actual data
+
+# Repeat data for the entire year (8760 hours)
 
 
+# Prepare data in the format for CSV
+    csv_data = []
+    for hour in range(8760):
+        value = df_load_annual['Load_Profile'][hour]  # Repeat data cyclically
+        csv_data.append([hour + 1, value])  # Hour starts from 1
+
+    csv_filename = '/Users/ravi/Desktop/PhD/My_Reho_Qgis_files/Reho_Sai_Fork/reho/data/weather/yearly_data_centre_profile_repeated.csv'
+    with open(csv_filename, mode='w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(['Hour', 'Load_Profile'])  # Header row
+        writer.writerows(csv_data)
 def write_dat_files(attributes, location, values_cluster, index_inter):
     """
     Writes the clustering results computed from ``generate_output_data`` as .dat files.
@@ -263,7 +324,13 @@ def write_dat_files(attributes, location, values_cluster, index_inter):
         E = '_E'
     else:
         E = ''
-    File_ID = location + '_' + str(len(df_dd) - 2) + '_' + str(int(max(pt))) + T + I + W + E
+    if 'DataLoad' in attributes:
+        D = '_D'
+    else:
+        D = ''
+
+
+    File_ID = location + '_' + str(len(df_dd) - 2) + '_' + str(int(max(pt))) + T + I + W + E + D
 
     if not os.path.isdir(path_to_clustering):
         os.makedirs(path_to_clustering)
@@ -271,9 +338,58 @@ def write_dat_files(attributes, location, values_cluster, index_inter):
     # -------------------------------------------------------------------------------------
     # T
     # -------------------------------------------------------------------------------------
+
     df_T = values_cluster['Text']
     filename = os.path.join(path_to_clustering, 'T_' + File_ID + '.dat')
     df_T.to_csv(filename, index=False, header=False)
+
+    # -------------------------------------------------------------------------------------
+    # DataLoad
+    # -------------------------------------------------------------------------------------
+    if 'DataLoad' in attributes:
+        df_D = values_cluster['DataLoad']
+        filename = os.path.join(path_to_clustering, 'D_' + File_ID + '.dat')
+        df_D.to_csv(filename, index=False, header=False)
+
+
+
+    # -------------------------------------------------------------------------------------
+    # Emissions
+    # -------------------------------------------------------------------------------------
+    if 'Emissions' in attributes:
+        df_Emission = values_cluster['Emissions']
+        df_E = df_Emission.to_frame().div(1000)
+    #df_E.columns = ['GWP_supply' if col == 'Emissions' else col for col in df_E.columns]
+        df_E.rename(columns={'Emissions': 'GWP_supply'}, inplace=True)
+        df_E.insert(0, '',  ['Electricity' for _ in range(242)], True)
+        df_E.columns = ['GWP_supply' if col == 'Emissions' else col for col in df_E.columns]
+    # Initialize an empty list
+        my_list = []
+
+    # Append 1 to 10, each repeated 24 times
+        for i in range(1, 11):
+            my_list.extend([i] * 24)
+
+    # Append 11 and 12 once
+        my_list.extend([11, 12])
+        df_E.insert(1,'', my_list, True)
+
+    # Initialize the base list
+        base_list = list(range(1, 25))
+
+    # Repeat the base list 10 times
+        repeated_list = base_list * 10
+        repeated_list.extend([1,1])
+    # Print the resulting list
+
+        df_E.insert(2,'', repeated_list, True)
+
+    #new_row = pd.DataFrame([['','','','GWP_supply']])
+        row = pd.DataFrame([['ResourceBalances', 'Period', 'Time', 'GWP_supply']], columns=df_E.columns)
+    # Concatenate new row at the beginning
+        df_E = pd.concat([row, df_E], ignore_index=True)
+        filename = os.path.join(path_to_clustering, 'GWP100a_' + File_ID + '.dat')
+        df_E.to_csv(filename, index=False, header=False)
 
     # -------------------------------------------------------------------------------------
     # Irr
@@ -324,8 +440,7 @@ def write_dat_files(attributes, location, values_cluster, index_inter):
     df_time['frequency'] = dp
     df_time['timesteps'] = pt
     dict_index = {}
-    for i, dd in enumerate(df_dd):
-        dict_index[dd] = i + 1
+    for i, dd in enumerate(df_dd): dict_index[dd] = i + 1
     index_inter['index_r'] = index_inter.inter_t.map(dict_index)
     df_time.index = df_time.index + 1
 
@@ -437,19 +552,25 @@ def plot_LDC(cl, save_fig):
     # get original, not clustered data
     T_org = cl.data_org['Text']
     IRR_org = cl.data_org['Irr']
-    # E_org= cl.data_org['Emissions']
+    W_org = cl.data_org['Weekday']
+    E_org = cl.data_org['Emissions']
+    D_org = cl.data_org['DataLoad']
+
 
     # get clustered data and undo normalization
     df_clu = cl.attr_clu.xs(str(nbr_plot), axis=1)
     T_clu = df_clu['Text'] * (T_org.max() - T_org.min()) + T_org.min()
     IRR_clu = df_clu['Irr'] * (IRR_org.max() - IRR_org.min()) + IRR_org.min()
-    #  E_clu= df_clu['Emissions']* (E_org.max() - E_org.min()) + E_org.min()
+    E_clu= df_clu['Emissions']* (E_org.max() - E_org.min()) + E_org.min()
+    W_clu = df_clu['Weekday'] * (W_org.max() - W_org.min()) + W_org.min()
+    D_clu = df_clu['DataLoad'] * (D_org.max() - D_org.min()) + D_org.min()
+
+
 
     # get assigned typical period
     res = cl.results['idx'][str(nbr_plot)]
     # instead of typical period (f.e. day 340) get index (1)
-    for i, d in enumerate(res.unique()):
-        res = np.where(res == d, i + 1, res)
+    for i, d in enumerate(res.unique()): res = np.where(res == d, i + 1, res)
     # get array of 8760 -modulo timesteps
     res = np.repeat(res, cl.pd)
 
@@ -461,21 +582,30 @@ def plot_LDC(cl, save_fig):
     # Plotting
     # ------------------------------------------------------------------------
 
-    fig, ax = plt.subplots(2, 1, sharex=True, figsize=(10, 8))
+    fig, ax = plt.subplots(5, 1, sharex=True, figsize=(10, 20))
+
 
     ax[0].plot(T_org, color='grey', alpha=0.5)
     sc = ax[0].scatter(T_clu.index, T_clu.values, s=10, c=res, cmap=cm)
     ax[1].plot(IRR_org, color='grey', alpha=0.5)
     ax[1].scatter(IRR_clu.index, IRR_clu.values, s=10, c=res, cmap=cm)
-    # ax[2].plot(E_org, color='grey', alpha=0.5)
-    # ax[2].scatter(E_clu.index, E_clu.values, s=10, c=res, cmap=cm)
+    ax[2].plot(E_org, color='grey', alpha=0.5)
+    ax[2].scatter(E_clu.index, E_clu.values, s=10, c=res, cmap=cm)
+    ax[3].plot(W_org, color='grey', alpha=0.5)
+    ax[3].scatter(W_clu.index, W_clu.values, s=10, c=res, cmap=cm)
+    ax[4].plot(D_org, color='grey', alpha=0.5)
+    ax[4].scatter(D_clu.index, D_clu.values, s=10, c=res, cmap=cm)
+
 
     # set months instead of timestep as xticks
-    plt.xticks(np.arange(8760, step=730), calendar.month_name[1:13], rotation=30, fontsize=16)
+    plt.xticks(np.arange(8760, step=730), calendar.month_name[1:13], rotation=20)
 
     ax[0].set_ylabel('temperature [C]')
     ax[1].set_ylabel('global irradiation [W/m$^2$]')
-    # ax[2].set_ylabel('global warming potential [gCO2/kWh]')
+    ax[2].set_ylabel('CO2 intensity of grid electricity [gCO2/kWh]')
+    ax[3].set_ylabel('Weekdays')
+    ax[4].set_ylabel('Data Centre Power consumption profile (kW)')
+  #  ax[2].set_ylabel('global warming potential [gCO2/kWh]')
     # plt.subplots_adjust(bottom=0.1, right=0.8, top=0.9)
 
     legend1 = ax[0].legend(*sc.legend_elements(),
@@ -497,27 +627,53 @@ def plot_LDC(cl, save_fig):
     df_Irr['Period'] = res
     df_Irr = df_Irr.sort_values(by=['Irr'], ignore_index=True, ascending=False)
 
-    # df_E = pd.DataFrame(E_clu)
-    # df_E['Period'] = res
-    # df_E = df_E.sort_values(by=['Emissions'], ignore_index=True, ascending=False)
+    df_E = pd.DataFrame(E_clu)
+    df_E['Period'] = res
+    df_E = df_E.sort_values(by=['Emissions'], ignore_index=True, ascending=False)
+    '''
+    df_W = pd.DataFrame(W_clu)
+    df_W['Period'] = res
+    df_W = df_W.sort_values(by=['Weekday'], ignore_index=True, ascending=False)
+    '''
+    df_D = pd.DataFrame(D_clu)
+    df_D['Period'] = res
+    df_D = df_D.sort_values(by=['DataLoad'], ignore_index=True, ascending=False)
 
     T_sort = T_org.sort_values(ascending=False, ignore_index=True)
     IRR_sort = IRR_org.sort_values(ascending=False, ignore_index=True)
-    # E_sort =  E_org.sort_values(ascending=False, ignore_index=True)
+    E_sort = E_org.sort_values(ascending=False, ignore_index=True)
+    D_sort = D_org.sort_values(ascending=False, ignore_index=True)
+    #W_sort = IRR_org.sort_values(ascending=False, ignore_index=True)
+  #  E_sort =  E_org.sort_values(ascending=False, ignore_index=True)
 
-    fig, ax = plt.subplots(2, 1, sharex=True, figsize=(10, 8))
+
+    fig, ax = plt.subplots(4, 1, sharex=True, figsize=(10, 8))
     ax[0].scatter(T_sort.index, T_sort.values, color='grey', alpha=0.5)
     ax[0].scatter(df_T.index, df_T['Text'], c=df_T['Period'], cmap=cm, s=20)
 
     ax[1].scatter(IRR_sort.index, IRR_sort.values, color='grey', alpha=0.5)
     ax[1].scatter(df_Irr.index, df_Irr['Irr'], c=df_Irr['Period'], cmap=cm, s=20)
 
-    #  ax[2].scatter(E_sort.index, E_sort.values, color='grey', alpha=0.5)
-    # ax[2].scatter(df_E.index, df_E['Emissions'], c=df_Irr['Period'], cmap=cm, s=20)
+    ax[2].scatter(E_sort.index, E_sort.values, color='grey', alpha=0.5)
+    ax[2].scatter(df_E.index, df_E['Emissions'], c=df_E['Period'], cmap=cm, s=20)
+
+    #ax[3].scatter(W_sort.index, W_sort.values, color='grey', alpha=0.5)
+    #ax[3].scatter(df_W.index, df_W['Irr'], c=df_W['Period'], cmap=cm, s=20)
+
+    ax[3].scatter(D_sort.index, D_sort.values, color='grey', alpha=0.5)
+    ax[3].scatter(df_D.index, df_D['DataLoad'], c=df_D['Period'], cmap=cm, s=20)
+
+
+
+  #  ax[2].scatter(E_sort.index, E_sort.values, color='grey', alpha=0.5)
+   # ax[2].scatter(df_E.index, df_E['Emissions'], c=df_Irr['Period'], cmap=cm, s=20)
 
     ax[0].set_ylabel('temperature [C]')
     ax[1].set_ylabel('global irradiation [W/m$^2$]')
-    # ax[2].set_ylabel('global warming potential [gCO2/kWh]')
+    ax[2].set_ylabel('CO2 intensity of grid electricity [gCO2/kWh]')
+    #ax[3].set_ylabel('Weekdays')
+    ax[3].set_ylabel('Data Centre Power consumption profile (kW)')
+   # ax[2].set_ylabel('global warming potential [gCO2/kWh]')
 
     plt.xlabel('Hours [h]')
 
@@ -536,11 +692,13 @@ def plot_LDC(cl, save_fig):
 if __name__ == '__main__':
     cm = plt.cm.get_cmap('Spectral_r')
 
-    weather_file = '../../../scripts/test/data/profiles/Sion.csv'
-    Attributes = ['Text', 'Irr']
-    nb_clusters = [2, 4, 6, 8, 10, 12]
+    weather_file = '../../../scripts/template/data/profiles/pully.csv'
+    Attributes = ['Text', 'Irr','Weekday','Emissions','DataLoad']
+    #nb_clusters = [10]
+    nb_clusters = [2, 4, 6, 8, 10, 12, 16]
 
     df_annual = read_custom_weather(weather_file)
+    print(df_annual)
     df_annual = df_annual[Attributes]
 
     cl = Clustering(data=df_annual, nb_clusters=nb_clusters, option={"year-to-day": True, "extreme": []}, pd=24)
@@ -549,4 +707,4 @@ if __name__ == '__main__':
     plot_cluster_KPI_separate(cl.kpis_clu, save_fig=False)
     plot_LDC(cl, save_fig=False)
 
-    generate_output_data(cl, Attributes, "Sion")
+    generate_output_data(cl, Attributes, "Pully")

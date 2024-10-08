@@ -192,8 +192,8 @@ class SubProblem:
 
         # TODO: integrate all storage units into district structure (avoid using ampl eval)
         if self.method_sp['use_Storage_Interperiod']:
-            ampl.eval(
-                'set UnitsOfStorage := setof{u in UnitsOfType["Battery_interperiod"]} u;')
+            ampl.eval('set UnitsOfStorage := setof {u in UnitsOfType["Battery_interperiod"]} u union {"WaterTankSH_interperiod"};');
+
                 # union UnitsOfType["PTES_storage"]
                 #'
                 # 'union UnitsOfType["PTES_conversion"] union UnitsOfType["CH4storage"]'
@@ -205,7 +205,7 @@ class SubProblem:
             # Storage Units
             ampl.cd(path_to_units_storage)
             #     ampl.read('h2_storage.mod')
-            #     ampl.read('heatstorage_interperiod.mod')
+            ampl.read('heatstorage_interperiod.mod')
             #     ampl.read('LHS_storage.mod')
             ampl.read('battery_interperiod.mod')
              #     ampl.read('PTES.mod')

@@ -6,6 +6,7 @@ from plotly.subplots import make_subplots
 
 from reho.model.sub_problem import *
 from reho.plotting import sankey
+from reho.plotting import sankey_1
 from reho.plotting.utils import *
 
 __doc__ = """
@@ -555,6 +556,80 @@ def plot_expenses(results, plot='costs', indexed_on='Scn_ID', label='EN_long', p
     else:
         return fig
 
+def plot_sankey_1(df_Results, label='EN_long', color='ColorPastel', filename=None, export_format='html', scaling_factor=1, return_df=False):
+    """
+    Plots a Sankey plot based on the results DataFrame.
+
+    Parameters
+    ----------
+    df_Results: pd.DataFrame
+        DataFrame coming from REHO results (already extracted from the desired *Scn_ID* and *Pareto_ID*).
+    label: str
+        Indicate the language to use for the plot. Choose among 'FR_long', 'FR_short', 'EN_long', 'EN_short'.
+    color: str
+        Indicate the color set to use for the plot. Choose among 'ColorPastel', 'ColorFlash'.
+    filename: str
+        Name of the file to be saved.
+    export_format: str
+        Can be either 'html', 'png', or 'pdf'.
+    scaling_factor: int/float
+        Scales linearly the REHO results for the plot.
+    return_df: bool
+        A dataframe can be returned for further post-processing or reporting purposes.
+
+    Returns
+    ----------
+    plotly.graph_objs.Figure
+        The generated plotly figure.
+    pd.DataFrame
+        (Optional) A dataframe for further post-processing or reporting purposes.
+    """
+    source, target, value, label_, color_ = sankey_1.df_sankey(df_Results, label=label, color=color, precision=2,
+                                                             units='MWh', display_label_value=True,
+                                                             scaling_factor=scaling_factor)
+    # Number of labels
+    num_labels = len(label_)
+
+    # Generate colors using a colormap
+    colormap = plt.cm.get_cmap('tab10', num_labels)  # You can choose different colormaps
+    colors = [colormap(i) for i in range(num_labels)]
+
+    # Convert colors to hex format
+    color_list = ['#%02x%02x%02x' % (int(r * 255), int(g * 255), int(b * 255)) for r, g, b, _ in colors]
+
+    fig = go.Figure(data=[go.Sankey(
+        orientation="h",
+        valueformat=".2f",
+        valuesuffix=" MWh",
+        node=dict(
+            pad=15,
+            thickness=20,
+            line=dict(color="black", width=0.5),
+            label=label_,
+            color=color_list,
+        ),
+        link=dict(
+            source=source,
+            target=target,
+            value=value
+        ))])
+
+    if filename is not None:
+        if not os.path.isdir(os.path.dirname(filename)):
+            os.makedirs(os.path.dirname(filename))
+        if export_format == 'html':
+            fig.write_html(filename + '.' + export_format)
+        if export_format == 'png' or export_format == 'pdf':
+            fig.write_image(filename + '.' + export_format)
+
+    if return_df:
+        df = pd.DataFrame()
+        df["source"] = [label_[int(s)].split("\n")[0] for s in source]
+        df["target"] = [label_[int(t)].split("\n")[0] for t in target]
+        df["Energy [MWh/yr]"] = value
+        return fig, df
+    else:
+        return fig
 
 def plot_sankey(df_Results, label='EN_long', color='ColorPastel', filename=None, export_format='html', scaling_factor=1, return_df=False):
     """
@@ -587,6 +662,15 @@ def plot_sankey(df_Results, label='EN_long', color='ColorPastel', filename=None,
     source, target, value, label_, color_ = sankey.df_sankey(df_Results, label=label, color=color, precision=2,
                                                              units='MWh', display_label_value=True,
                                                              scaling_factor=scaling_factor)
+    # Number of labels
+    num_labels = len(label_)
+
+    # Generate colors using a colormap
+    colormap = plt.cm.get_cmap('tab10', num_labels)  # You can choose different colormaps
+    colors = [colormap(i) for i in range(num_labels)]
+
+    # Convert colors to hex format
+    color_list = ['#%02x%02x%02x' % (int(r * 255), int(g * 255), int(b * 255)) for r, g, b, _ in colors]
 
     fig = go.Figure(data=[go.Sankey(
         orientation="h",
@@ -597,7 +681,7 @@ def plot_sankey(df_Results, label='EN_long', color='ColorPastel', filename=None,
             thickness=20,
             line=dict(color="black", width=0.5),
             label=label_,
-            color=color_,
+            color=color_list,
         ),
         link=dict(
             source=source,
@@ -1486,22 +1570,150 @@ def plot_storage_profile(df_Results, resolution='daily'):
     return fig
 
 
-def plot_energy_balance_for_battery(df_Results, day_of_the_year ,time_range='week')
+def plot_energy_balance_for_battery(df_Results, units_to_plot, color='ColorPastel', day_of_the_year = '' ,time_range='week', label='EN_long'):
 
     if time_range == 'week':
-        hours = 168
+        period = 7
     elif time_range == 'month':
-        hours = 720
+        period = 30
+    elif time_range == '2weeks':
+        period = 14
+    elif time_range == '3days':
+        period = 3
+    else:
+        period = 1
 
-    starting_hour = [day_of_the_year-1]*24
+    starting_hour = ((day_of_the_year-1)*24)+1
 
     # selection of the period
-    ending_hour = hours + starting_hour
+    ending_hour = starting_hour + period*24
 
-    # all factors affecting the energy balance
-    SOC = df_Results["df_storage"]["BAT_E_stored_IP"][starting_hour, ending_hour]
+    SOC = df_Results["df_storage"]["BAT_E_stored_IP"][starting_hour:ending_hour]
+    time_index = np.arange(starting_hour, ending_hour)
+
+    units_demand = []
+    units_supply = []
+    for unit in units_to_plot:
+        if unit == "BESS_IP":
+            continue
+        if unit == "PV":
+            units_supply.append(unit)
+        elif unit in ["Battery", "EV_district"]:
+            units_demand.append(unit)
+            units_supply.append(unit)
+        else:
+            units_demand.append(unit)
+
+    # Grids
+    imports = {}
+    exports = {}
+    layers =  df_Results['df_Grid_t'].index.get_level_values("Layer").unique()
+    for layer in layers:
+        imports[layer] = df_Results['df_Grid_t'].xs((layer, 'Network'), level=('Layer', 'Hub')).Grid_supply[:-2]
+        exports[layer] = df_Results['df_Grid_t'].xs((layer, 'Network'), level=('Layer', 'Hub')).Grid_demand[:-2]
+
+    import_profile = {}
+    export_profile = {}
+    for layer in layers:
+        import_profile[layer] = np.array([])
+        export_profile[layer] = np.array([])
+        for i in range(day_of_the_year, day_of_the_year+period):
+            id = df_Results['df_Index'].PeriodOfYear[i * 24]
+            import_profile[layer] = np.concatenate((import_profile[layer], imports[layer].xs(id)))
+            export_profile[layer] = np.concatenate((export_profile[layer], exports[layer].xs(id)))
+
+    # Units
+    demands = dict()
+    supplies = dict()
+    for unit in units_to_plot:
+        df_aggregated = df_Results['df_Unit_t'][df_Results['df_Unit_t'].index.get_level_values('Unit').str.contains(unit)]
+        if unit in units_demand:
+            demand = df_aggregated.droplevel('Layer').Units_demand[:-2].groupby(['Period', 'Time']).sum()
+            demands[unit] = np.array([])
+            for i in range(day_of_the_year, day_of_the_year+period):
+                t = df_Results['df_Index'].PeriodOfYear[i * 24]
+                demands[unit] = np.concatenate((demands[unit], demand.xs(t)))
+        if unit in units_supply:
+            supply = df_aggregated.droplevel('Layer').Units_supply[:-2].groupby(['Period', 'Time']).sum()
+            supplies[unit] = np.array([])
+            for i in range(day_of_the_year, day_of_the_year+period):
+                t = df_Results['df_Index'].PeriodOfYear[i * 24]
+                supplies[unit] = np.concatenate((supplies[unit], supply.xs(t)))
+
+    #Building
+    df_aggregated = df_Results["df_Buildings_t"]
+
+    demand = df_aggregated.droplevel('Hub').Domestic_electricity[:-2].groupby(['Period', 'Time']).sum()
+    building_demand = np.array([])
+
+    # Loop per ottenere la domanda giornaliera nel periodo specificato
+    for i in range(day_of_the_year, day_of_the_year + period):
+        t = df_Results['df_Index'].PeriodOfYear[i * 24]
+        building_demand = np.concatenate((building_demand, demand.xs(t)))
+
+    idx = list(range(1, len(import_profile["Electricity"]) + 1))
+
+    fig = go.Figure()
+
+    if export_profile["Electricity"].any() > 0:
+        fig.add_trace(go.Scatter(
+            x=idx,
+            y=-export_profile["Electricity"],
+            mode="lines",
+            name=layout.loc['Electrical_grid_feed_in', label],
+            line=dict(color=layout.loc['Electrical_grid_feed_in', color], dash='dash')
+        ))
 
 
 
+    if import_profile["Electricity"].any() > 0:
+        fig.add_trace(go.Scatter(
+            x=idx,
+            y=import_profile["Electricity"],
+            mode="lines",
+            name=layout.loc['Electrical_grid', label],
+            line=dict(color=layout.loc['Electrical_grid', color])
+        ))
+
+    for unit in units_demand:
+        if demands[unit].any() > 0:
+            fig.add_trace(go.Scatter(
+                x=idx,
+                y=demands[unit],
+                mode="lines",
+                name=layout.loc[unit, label],
+                line=dict(color=layout.loc[unit, color])
+            ))
+    for unit in units_supply:
+        if supplies[unit].any() > 0:
+            fig.add_trace(go.Scatter(
+                x=idx,
+                y=-supplies[unit],
+                mode="lines",
+                name=layout.loc[unit, label],
+                line=dict(color=layout.loc[unit, color], dash='dash')
+            ))
+
+    fig.add_trace(go.Scatter(
+        x=time_index-starting_hour,
+        y=SOC,
+        mode="lines",
+        name="State of Charge (SOC)",
+        line=dict(color="green", dash="solid")
+    ))
+
+    fig.add_trace(go.Scatter(
+        x=idx,
+        y=building_demand,
+        mode="lines",
+        name="building_demand",
+        line=dict(color="red", dash="solid")
+    ))
+
+    fig.update_layout(
+        xaxis=dict(
+            dtick=24 if time_range in ['month', '2weeks', 'week'] else 4
+        ))
 
 
+    return fig

@@ -16,7 +16,7 @@
 # [3] Efficiency degradation over time (efficiency used is an average of the battery efficiency over its lifetime)
 # [4] C-rate limitation (beware that maximum C-rate value is 1 (due to hourly resolution))
 
-param BAT_eff_RTE_basis_IP{u in UnitsOfType['Battery_interperiod']} 	default 0.86;	#- AC-AC efficiency
+param BAT_eff_RTE_basis_IP{u in UnitsOfType['Battery_interperiod']} default 0.86;	#- AC-AC efficiency
 param BAT_limit_ch_IP{u in UnitsOfType['Battery_interperiod']} default 0.8;			#-	[2]
 param BAT_limit_di_IP{u in UnitsOfType['Battery_interperiod']} default 0.2;			#-	[1]
 param C_rate_IP{u in UnitsOfType['Battery_interperiod']} default 1;					#-

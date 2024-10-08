@@ -154,15 +154,15 @@ def get_df_Results_from_SP(ampl, scenario, method, buildings_data, filter=True):
         df_Unit_t.index.names = ['Layer', 'Unit', 'Period', 'Time']
         df_Unit_t = df_Unit_t.sort_index()
 
+        #df_Unit_t.to_csv('/Users/ravi/Desktop/df_unit_t_withDHNHEX.csv')
         return df_Unit, df_Unit_t
 
 
     def set_df_storage(ampl):
-
-        # TO DO: try to make the plotting of the excel better
         df1 = get_ampl_data(ampl, 'BAT_E_stored_IP', multi_index=True)
-        df_storage = df1
-        df_storage.index.names = ['building', 'Unit', 'hour_year']
+        df2 = get_ampl_data(ampl, 'HS_E_stored_IP', multi_index=True)
+        df_storage = pd.concat([df1, df2], axis=1)
+        df_storage.index.names = ['Layer', 'Unit', 'hour_year']
         df_storage = df_storage.sort_index()
         return df_storage
 
@@ -367,6 +367,7 @@ def get_df_Results_from_SP(ampl, scenario, method, buildings_data, filter=True):
     if method['use_Storage_Interperiod']:
         df_Results["df_storage"] = set_df_storage(ampl)
 
+
     if method['save_data_input']:
         df_Results["df_Buildings"] = set_df_buildings(buildings_data)
         df_Results["df_Weather"] = df_Weather
@@ -397,6 +398,7 @@ def get_df_Results_from_SP(ampl, scenario, method, buildings_data, filter=True):
                 parameters_record[p] = ampl.getData(p).toPandas()
             except:
                 logging.info(p)
+
 
     if filter:
         for df_name, df in df_Results.items():
@@ -567,6 +569,7 @@ def get_df_Results_from_MP(ampl, binary=False, method=None, district=None, read_
         for layer, units in district.UnitsOfLayer.items():
             [district_l_u.append((layer, unit)) for unit in units if unit in units_districts]
         df_Unit_t = df_Unit_t.reset_index(level=['Period', 'Time']).loc[district_l_u, :]
+       # df_Unit_t.to_csv('/Users/ravi/Desktop/df_unit_t.csv')
         df_Results["df_Unit_t"] = df_Unit_t.reset_index().set_index(['Layer', 'Unit', 'Period', 'Time']).sort_index()
     else:
         df_Results["df_Unit_t"] = pd.DataFrame()

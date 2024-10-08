@@ -1,5 +1,6 @@
 from reho.model.reho import *
 
+from reho.plotting import plotting
 
 if __name__ == '__main__':
 
@@ -23,7 +24,7 @@ if __name__ == '__main__':
     units = infrastructure.initialize_units(scenario, grids)
 
     # Set method options
-    method = {'building-scale': True}
+    method = {'building-scale': True }
 
     # Run optimization
     reho = REHO(qbuildings_data=qbuildings_data, units=units, grids=grids, cluster=cluster, scenario=scenario, method=method, solver="gurobi")
@@ -31,3 +32,6 @@ if __name__ == '__main__':
 
     # Save results
     reho.save_results(format=['xlsx', 'pickle'], filename='1a')
+    plotting.plot_performance(reho.results, plot='costs', indexed_on='Scn_ID', label='EN_long').show()
+    plotting.plot_performance(reho.results, plot='gwp', indexed_on='Scn_ID', label='EN_long').show()
+    plotting.plot_sankey(reho.results['totex'][0], label='EN_long', color='ColorPastel').show()

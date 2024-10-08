@@ -4,6 +4,12 @@
 #--------------------------------------------------------------------------------------------------------------------#
 ######################################################################################################################
 
+######################################################################################################################
+#--------------------------------------------------------------------------------------------------------------------#
+# Heat storage tank, with interperiod storage conversion
+#--------------------------------------------------------------------------------------------------------------------#
+######################################################################################################################
+
 param TES_IP_T_min{h in House,p in Period} default 20;																											#deg C															
 param TES_IP_T_max{h in House,p in Period} := min{Thp in HP_Tsupply: Thp >= min( max{t in Time[p]} Th_supply[h,p,t], max{i in HP_Tsupply} i)} Thp;	#deg C
 param TES_IP_T_ret{h in House,p in Period} := (T_comfort_min_0[h] + TES_IP_T_max[h,p]*(alpha_h[h]*Mcp_0h[h]))/(1+alpha_h[h]*Mcp_0h[h]);									#deg C
@@ -71,3 +77,31 @@ subject to TES_IP_MB_c3{h in House,u in (UnitsOfType['WaterTankSH_interperiod'] 
 (TES_IP_Mass[h,u,next(hy,Year),last(TESindex_IP[h,PeriodOfYear[next(hy,Year)]])] - TES_IP_Mass[h,u,hy,last(TESindex_IP[h,PeriodOfYear[hy]])]) = 
 + (TES_IP_mf_cold[h,u,PeriodOfYear[hy],TimeOfYear[hy],last(TESindex_IP[h,PeriodOfYear[hy]])])*dt[PeriodOfYear[hy]] 
 - (TES_IP_efficiency[h,u,PeriodOfYear[hy],last(TESindex_IP[h,PeriodOfYear[hy]])]*TES_IP_Mass[h,u,hy,last(TESindex_IP[h,PeriodOfYear[hy]])] + TES_IP_mf_hot[h,u,PeriodOfYear[hy],TimeOfYear[hy],last(TESindex_IP[h,PeriodOfYear[hy]])])*dt[PeriodOfYear[hy]]; 				#kg
+
+
+
+# Define the energy stored
+
+var TES_IP_EnergyContent{h in House, u in UnitsOfType['WaterTankSH_interperiod'] inter UnitsOfHouse[h], hy in Year, T in TESindex_IP[h, PeriodOfYear[hy]]} >= 0;  # kJ
+
+
+subject to TES_IP_EnergyContent_calc{h in House, u in UnitsOfType['WaterTankSH_interperiod'] inter UnitsOfHouse[h], hy in Year, T in TESindex_IP[h, PeriodOfYear[hy]]}:
+    TES_IP_EnergyContent[h,u,hy,T] = TES_IP_Mass[h,u,hy,T] * cp_water_kj * (T - TES_IP_Tamb[u]);  # kJ
+
+var HS_E_stored_IP{h in House, u in UnitsOfType['WaterTankSH_interperiod'] inter UnitsOfHouse[h], hy in Year} >= 0;  # kJ
+
+subject to TES_IP_TotalEnergy_calc{h in House, u in UnitsOfType['WaterTankSH_interperiod'] inter UnitsOfHouse[h], hy in Year}:
+    HS_E_stored_IP[h,u,hy] = sum{T in TESindex_IP[h, PeriodOfYear[hy]]} TES_IP_EnergyContent[h,u,hy,T];  # kJ
+
+
+
+
+/*
+# my new line
+var HS_E_stored_IP{h in House, u in UnitsOfType['WaterTankSH_interperiod'] inter UnitsOfHouse[h], hy in Year, T in TESindex_IP[h, PeriodOfYear[hy]]} >= 0;
+# Calculate the energy stored in each layer of the tank
+subject to HS_E_stored_IP_calculation{h in House, u in UnitsOfType['WaterTankSH_interperiod'] inter UnitsOfHouse[h], hy in Year, T in TESindex_IP[h, PeriodOfYear[hy]]}:
+HS_E_stored_IP[h, u, hy, T] = TES_IP_Mass[h, u, hy, T] * cp_water_kj * (T - TES_IP_Tamb[u]);  # kJ
+*/
+
+

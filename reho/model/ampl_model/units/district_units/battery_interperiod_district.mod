@@ -44,3 +44,4 @@ Units_demand['Electricity',u,p,t]*dt[p] <= (BAT_limit_ch_IP[u]-BAT_limit_di_IP[u
 
 subject to BAT_c4_IP{u in UnitsOfType['Battery_interperiod'],p in PeriodStandard,t in Time[p]}:
 Units_supply['Electricity',u,p,t]*dt[p] <= (BAT_limit_ch_IP[u]-BAT_limit_di_IP[u])*Units_Mult[u]*C_rate_IP[u];
+
