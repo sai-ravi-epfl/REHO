@@ -1589,7 +1589,6 @@ def plot_energy_balance_for_battery(df_Results, units_to_plot, color='ColorPaste
     ending_hour = starting_hour + period*24
 
     SOC = df_Results["df_storage"]["BAT_E_stored_IP"][starting_hour:ending_hour]
-    time_index = np.arange(starting_hour, ending_hour)
 
     units_demand = []
     units_supply = []
@@ -1651,7 +1650,7 @@ def plot_energy_balance_for_battery(df_Results, units_to_plot, color='ColorPaste
         t = df_Results['df_Index'].PeriodOfYear[i * 24]
         building_demand = np.concatenate((building_demand, demand.xs(t)))
 
-    idx = list(range(1, len(import_profile["Electricity"]) + 1))
+    idx = list(range(1, len(import_profile["Electricity"])))
 
     fig = go.Figure()
 
@@ -1695,7 +1694,7 @@ def plot_energy_balance_for_battery(df_Results, units_to_plot, color='ColorPaste
             ))
 
     fig.add_trace(go.Scatter(
-        x=time_index-starting_hour,
+        x=idx,
         y=SOC,
         mode="lines",
         name="State of Charge (SOC)",
