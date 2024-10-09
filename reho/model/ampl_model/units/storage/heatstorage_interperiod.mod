@@ -95,7 +95,6 @@ subject to TES_IP_TotalEnergy_calc{h in House, u in UnitsOfType['WaterTankSH_int
 
 
 
-
 /*
 # my new line
 var HS_E_stored_IP{h in House, u in UnitsOfType['WaterTankSH_interperiod'] inter UnitsOfHouse[h], hy in Year, T in TESindex_IP[h, PeriodOfYear[hy]]} >= 0;
