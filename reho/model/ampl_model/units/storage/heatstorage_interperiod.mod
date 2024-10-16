@@ -79,11 +79,9 @@ subject to TES_IP_MB_c3{h in House,u in (UnitsOfType['WaterTankSH_interperiod'] 
 - (TES_IP_efficiency[h,u,PeriodOfYear[hy],last(TESindex_IP[h,PeriodOfYear[hy]])]*TES_IP_Mass[h,u,hy,last(TESindex_IP[h,PeriodOfYear[hy]])] + TES_IP_mf_hot[h,u,PeriodOfYear[hy],TimeOfYear[hy],last(TESindex_IP[h,PeriodOfYear[hy]])])*dt[PeriodOfYear[hy]]; 				#kg
 
 
-
+/*
 # Define the energy stored
-
 var TES_IP_EnergyContent{h in House, u in UnitsOfType['WaterTankSH_interperiod'] inter UnitsOfHouse[h], hy in Year, T in TESindex_IP[h, PeriodOfYear[hy]]} >= 0;  # kJ
-
 
 subject to TES_IP_EnergyContent_calc{h in House, u in UnitsOfType['WaterTankSH_interperiod'] inter UnitsOfHouse[h], hy in Year, T in TESindex_IP[h, PeriodOfYear[hy]]}:
     TES_IP_EnergyContent[h,u,hy,T] = TES_IP_Mass[h,u,hy,T] * cp_water_kj * (T - TES_IP_Tamb[u]);  # kJ
@@ -92,15 +90,15 @@ var HS_E_stored_IP{h in House, u in UnitsOfType['WaterTankSH_interperiod'] inter
 
 subject to TES_IP_TotalEnergy_calc{h in House, u in UnitsOfType['WaterTankSH_interperiod'] inter UnitsOfHouse[h], hy in Year}:
     HS_E_stored_IP[h,u,hy] = sum{T in TESindex_IP[h, PeriodOfYear[hy]]} TES_IP_EnergyContent[h,u,hy,T];  # kJ
-
+*/
 
 
 /*
-# my new line
-var HS_E_stored_IP{h in House, u in UnitsOfType['WaterTankSH_interperiod'] inter UnitsOfHouse[h], hy in Year, T in TESindex_IP[h, PeriodOfYear[hy]]} >= 0;
-# Calculate the energy stored in each layer of the tank
-subject to HS_E_stored_IP_calculation{h in House, u in UnitsOfType['WaterTankSH_interperiod'] inter UnitsOfHouse[h], hy in Year, T in TESindex_IP[h, PeriodOfYear[hy]]}:
-HS_E_stored_IP[h, u, hy, T] = TES_IP_Mass[h, u, hy, T] * cp_water_kj * (T - TES_IP_Tamb[u]);  # kJ
+# to impose a variation of the hot mass flow rate
+subject to TES_IP_mf_hot_constraint_period1_time5 {h in House, u in UnitsOfType['WaterTankSH_interperiod'] inter UnitsOfHouse[h], T in TESindex_IP[h, 1] diff {first(TESindex_IP[h, 1])}}:
+    TES_IP_mf_hot[h, u, 1, 5, T] >= 5;
 */
+
+
 
 

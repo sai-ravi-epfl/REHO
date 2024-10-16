@@ -14,7 +14,7 @@ if __name__ == '__main__':
 
     # Set scenario
     scenario = dict()
-    scenario['Objective'] = 'OPEX'
+    scenario['Objective'] = 'TOTEX'
     scenario['name'] = 'totex'
     scenario['exclude_units'] = ['NG_Cogeneration','PV','BESS_IP']
     scenario['enforce_units'] = ['BESS_IP_district']
