@@ -251,6 +251,7 @@ def get_metric(cluster):
 
 def data_centre_profile(size): # size to be mentioned in kW
     df_load_profile = pd.read_csv(r'C:\Users\there\Desktop\REHO2\scripts\templates\yearly_data_centre_profile_repeated2.csv')
+    df_load_profile = pd.read_csv(r'C:\Users\there\Desktop\REHO2\scripts\templates\shifted_load.csv')
     df_load_profile = df_load_profile['Load_Profile'].div(288).mul(size) #profile data created by observing trend from this study: https://arxiv.org/abs/1804.00703
     path = os.path.join(path_to_weather, 'yearly_data_centre_profile_repeated.csv')
     df_load_profile.to_csv(path)

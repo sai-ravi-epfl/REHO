@@ -15,7 +15,7 @@ if __name__ == '__main__':
     cluster = {'Location': 'Pully', 'Attributes': ['I', 'T','E','D'], 'Periods': 10, 'PeriodDuration': 24}
     attributes = ['Irr', 'Text', 'Weekday','DataLoad']
     weather_file = r'C:\Users\there\Desktop\REHO2\scripts\template\data\profiles\pully.csv'
-    weather.data_centre_profile(size = 2000)
+    weather.data_centre_profile(size = 288)
     df_annual = weather.read_custom_weather(weather_file)
     df_annual = df_annual[attributes]
     nb_clusters = [10]
@@ -62,12 +62,17 @@ if __name__ == '__main__':
     filename='ALL_EPFL_ORC_2MW_DC'
     reho.save_results(format=['xlsx', 'pickle'], filename=filename)
     #plotting.plot_performance(reho.results, plot='costs', indexed_on='Scn_ID', label='EN_long').show()
-   # plotting.plot_performance(reho.results, plot='gwp', indexed_on='Scn_ID', label='EN_long').show()
-    plot_performance = plotting.plot_sankey(reho.results['gwp'][0], label='EN_long', color='ColorPastel')
-    plot_performance.write_html(tmp_folder / f"performance-{uuid.uuid4()}.html", auto_open=True)
+    #plotting.plot_performance(reho.results, plot='gwp', indexed_on='Scn_ID', label='EN_long').show()
+    sankey = plotting.plot_sankey(reho.results['gwp'][0], label='EN_long', color='ColorPastel')
+    sankey.write_html(tmp_folder / f"sankey-{uuid.uuid4()}.html", auto_open=True)
+    performance = plotting.plot_performance(reho.results, plot='costs', indexed_on='Scn_ID', label='EN_long')
+    performance.write_html(tmp_folder / f"performance-{uuid.uuid4()}.html", auto_open=True)
+    plot_performance = plotting.plot_performance(reho.results, plot='gwp', indexed_on='Scn_ID', label='EN_long')
+    plot_performance.write_html(tmp_folder / f"plot_performance-{uuid.uuid4()}.html", auto_open=True)
     #plotting.plot_profiles(reho.results,['PV'], resolution='daily')
     # Construct the full file path
     # plotting.yearly_demand_plot(filename)
 
     # path_egid_map =
     # Read typical day distribution and buildings profiles
+
