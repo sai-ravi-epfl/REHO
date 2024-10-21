@@ -51,6 +51,7 @@ def add_label_value(df_label, df_stv, precision, units):
     df_source_value = pd.DataFrame()
     df_source_value.index = df_label.pos
 
+'''
     for i in list(df_source_value.index):
         if df_label.loc['ORC_EPFL_district', 'pos'] == i and len(
                 df_stv.loc['value', df_stv.loc['source', :] == i]) == 1:
@@ -69,7 +70,7 @@ def add_label_value(df_label, df_stv, precision, units):
 
     df_label = df_label.merge(df_source_value, left_on='pos', right_index=True)
     df_label.label = df_label.label + "\n" + df_label.value.round(precision).astype(str) + units
-    return df_label
+    return df_label  '''
 
 
 def add_flow(source, dest, layer, hub, dem_sup, df_annuals, df_label, df_stv, check_dest_2=False, dest_2=None, adjustment=0, fact=1):
@@ -294,13 +295,12 @@ def df_sankey(df_results, label='FR_long', color='ColorPastel', precision=2, uni
     df_source_value = pd.DataFrame()
     df_source_value.index = df_label.pos
 
+
     for i in list(df_source_value.index):
         if df_label.loc['ORC_EPFL_district', 'pos'] == i and len(
                 df_stv.loc['value', df_stv.loc['source', :] == i]) == 1:
             df_label, df_stv, _ = add_flow('Thermal_grid', 'Heat', 'Heat', 'Network', 'Supply_MWh', df_annuals,
                                            df_label, df_stv, elec_storage_use, 'Heat', -heat_diff)
-
-
 
 
 

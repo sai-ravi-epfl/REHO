@@ -8,8 +8,6 @@ Extracts the results from the AMPL model and converts it to Python dictionary an
 """
 
 
-
-
 def get_df_Results_from_SP(ampl, scenario, method, buildings_data, filter=True):
     def set_df_performance(ampl, scenario):
         df1 = get_ampl_data(ampl, 'Costs_House_op')  # without the comfort penalty costs
@@ -159,6 +157,43 @@ def get_df_Results_from_SP(ampl, scenario, method, buildings_data, filter=True):
 
         df_Unit_t.to_csv(path_to_results+'/df_unit_t_withDHNHEX.csv')
         return df_Unit, df_Unit_t
+
+    def set_df_storage(ampl):
+        try:
+            df1 = get_ampl_data(ampl, 'BAT_E_stored_IP', multi_index=True)
+            if df1.empty:
+                df1 = None
+        except:
+            df1 = None
+
+        try:
+            df2 = get_ampl_data(ampl, 'HS_E_stored_IP', multi_index=True)
+            if df2.empty:
+                df2 = None
+        except:
+            df2 = None
+
+        if df1 is not None and df2 is not None:
+            df_storage = pd.concat([df1, df2], axis=1)
+        elif df1 is not None:
+            df_storage = df1
+        elif df2 is not None:
+            df_storage = df2
+        else:
+            df_storage = pd.DataFrame()
+
+        if not df_storage.empty:
+            df_storage.index.names = ['Layer', 'Unit', 'HourOfYear']
+            df_storage = df_storage.sort_index()
+
+        return df_storage
+
+
+    def set_df_M_HS_IP(ampl):
+        df1 = get_ampl_data(ampl, 'TES_IP_mf_hot', multi_index=True)
+        df2 = get_ampl_data(ampl, 'TES_IP_mf_cold', multi_index=True)
+        df_M_HS_IP = pd.concat([df1, df2], axis=1)
+        return df_M_HS_IP
 
     def set_df_grid(ampl, method):
         # Grid_t
@@ -357,6 +392,10 @@ def get_df_Results_from_SP(ampl, scenario, method, buildings_data, filter=True):
     df_Results["df_Unit"], df_Unit_t = set_df_unit(ampl)
     df_Results["df_Grid_t"] = set_df_grid(ampl, method)
     df_Results["df_Time"], df_Weather, df_Index = set_dfs_other(ampl)
+
+    if method['use_Storage_Interperiod']:
+        df_Results["df_storage"] = set_df_storage(ampl)
+        df_Results["df_M_HS_IP"] = set_df_M_HS_IP(ampl)
 
     if method['save_data_input']:
         df_Results["df_Buildings"] = set_df_buildings(buildings_data)

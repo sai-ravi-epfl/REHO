@@ -234,7 +234,7 @@ class MasterProblem:
 
                 # sometimes, python goes to fast and extract the results before calculating them. This step makes python wait finishing the calculations
                 while len(results[list(self.buildings_data.keys())[-1]].get()) != 2:
-                    time.sleep(1)
+                    time.sleep(5)
 
                 # the memory to write and share results is not parallel -> results have to be stored outside calculation
                 for h in self.infrastructure.houses:
@@ -463,8 +463,8 @@ class MasterProblem:
             MP_parameters['GWP_supply'] = df.xs((ids["FeasibleSolution"], ids["House"]), level=("FeasibleSolution", "house"))
             MP_parameters['GWP_demand'] = MP_parameters['GWP_supply'].rename(columns={"GWP_supply": "GWP_demand"}) * (1-1e-9)
 
-        if self.method['ORC_all_the_time']:
-            ampl_MP.getConstraint('ORC_all_the_time').restore()
+        #if self.method['ORC_all_the_time']:
+        #    ampl_MP.getConstraint('ORC_all_the_time').restore()
 
         for key in self.lists_MP['list_parameters_MP']:
             if key in self.parameters.keys():
