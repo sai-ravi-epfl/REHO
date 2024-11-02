@@ -3,13 +3,15 @@ from reho.plotting import plotting
 
 if __name__ == '__main__':
 
+    buildings_filename = str(Path(__file__).parent / 'data' / 'EPFL_2.csv')
+
     # Set building parameters
-    # you can as well define your district from a csv file instead of reading the database
     reader = QBuildingsReader()
     n_house = 1
-    qbuildings_data = reader.read_csv(buildings_filename='/Users/eduardo/REHO_local/REHO-HeatingBits/REHO/Projects/HeatingBits/Data/EPFL_nb_1.csv', nb_buildings= n_house)
+    qbuildings_data = reader.read_csv(buildings_filename=buildings_filename, nb_buildings= n_house)
     #reader.establish_connection('Suisse')
     #qbuildings_data = reader.read_db(transformer=3216, egid=[280001550])
+
     # Select weather data
     cluster = {'Location': 'Pully', 'Attributes': ['I', 'T', 'W'], 'Periods': 10, 'PeriodDuration': 24}
 

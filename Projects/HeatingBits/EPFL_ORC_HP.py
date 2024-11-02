@@ -7,7 +7,7 @@ if __name__ == '__main__':
     # you can as well define your district from a csv file instead of reading the database
     reader = QBuildingsReader()
     n_house = 53
-    qbuildings_data = reader.read_csv(buildings_filename='/Users/ravi/REHO/scripts/template/data/EPFL_2.csv', nb_buildings= n_house)
+    qbuildings_data = reader.read_csv(buildings_filename='/Users/eduardo/REHO_local/REHO-HeatingBits/REHO/scripts/template/data/EPFL_2.csv', nb_buildings= n_house)
     #reader.establish_connection('Suisse')
     #qbuildings_data = reader.read_db(transformer=3216, egid=[280001550])
     # Select weather data
