@@ -1,6 +1,7 @@
 from reho.model.reho import *
 from reho.plotting import plotting
 from reho.model.preprocessing.clustering import Clustering
+from scripts.template.manipulate_Load_DC.data_heat_switch_init_after_clustering import *
 
 if __name__ == '__main__':
 
@@ -23,8 +24,17 @@ if __name__ == '__main__':
     cl.run_clustering()
     val_cls = weather.generate_output_data(cl, attributes, "Pully")
     data_centre_heat_profile = weather.data_centre_profiles(val_cls)
-    # Set scenario
 
+    # manipulate load DC
+    path_to_load_profile_dat = r'C:\\Users\\there\\Desktop\\REHO2\\scripts\\templates\\data\\clustering\\D_Pully_10_24_T_I_E_D.dat'
+    path_to_emissions = r'C:\\Users\\there\\Desktop\\REHO2\\reho\\data\\emissions\\electricity_matrix_2019_reduced.csv'
+    path_timestamp_dat = r'C:\\Users\\there\\Desktop\\REHO2\\scripts\\template\\data\\clustering\\timestamp_Pully_10_24_T_I_E_D.dat'
+    model_path = r'/scripts/templates/switchLoad/data_heat_switch_after_clustering_gwp.mod'
+    output_single_column_dat_path = r'C:\\Users\\there\\Desktop\\REHO2\\scripts\\templates\\switchLoad\\D_Pully_10_24_T_I_E_D.dat'
+
+    total_gwp, shifted_load_df = process_and_optimize_data_GWP(path_to_load_profile_dat, path_to_emissions, path_timestamp_dat, model_path, output_single_column_dat_path)
+
+    # Set scenario
     scenario = dict()
     scenario['Objective'] = 'GWP'
     scenario['name'] = 'gwp'
@@ -75,4 +85,10 @@ if __name__ == '__main__':
 
     # path_egid_map =
     # Read typical day distribution and buildings profiles
+
+
+
+
+
+
 

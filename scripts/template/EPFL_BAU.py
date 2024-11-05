@@ -67,9 +67,11 @@ if __name__ == '__main__':
     plot_performance = plotting.plot_sankey_1(reho.results['gwp'][0], label='EN_long', color='ColorPastel')
     plot_performance.write_html(tmp_folder / f"performance-{uuid.uuid4()}.html", auto_open=True)
     # plot_performance.write_html(f"tmp/performance-{filename}.html", auto_open=True)
-    #plotting.plot_profiles(reho.results,['PV'], resolution='daily')
+    # plotting.plot_profiles(reho.results,['PV'], resolution='daily')
     # Construct the full file path
     # plotting.yearly_demand_plot(filename)
 
     # path_egid_map =
     # Read typical day distribution and buildings profiles
+
+    # extract

@@ -13,7 +13,7 @@ if __name__ == '__main__':
     #qbuildings_data = reader.read_db(transformer=3216, egid=[280001550])
     # Select weather data
     cluster = {'Location': 'Pully', 'Attributes': ['I', 'T','E','D'], 'Periods': 10, 'PeriodDuration': 24}
-    attributes = ['Irr', 'Text', 'Weekday','DataLoad']
+    attributes = ['Irr', 'Text', 'Weekday', 'DataLoad']
     weather_file = '/Users/ravi/Desktop/PhD/My_Reho_Qgis_files/Reho_Sai_Fork/scripts/template/data/profiles/pully.csv'
     weather.data_centre_profile(size = 50)
     df_annual = weather.read_custom_weather(weather_file)
