@@ -1,7 +1,7 @@
 from reho.model.reho import *
 from reho.plotting import plotting
 from reho.model.preprocessing.clustering import Clustering
-from scripts.template.manipulate_Load_DC.data_heat_switch_init_after_clustering import *
+from scripts.templates.switchLoad.data_heat_switch_init_after_clustering import *
 
 if __name__ == '__main__':
 
@@ -25,14 +25,6 @@ if __name__ == '__main__':
     val_cls = weather.generate_output_data(cl, attributes, "Pully")
     data_centre_heat_profile = weather.data_centre_profiles(val_cls)
 
-    # manipulate load DC
-    path_to_load_profile_dat = r'C:\\Users\\there\\Desktop\\REHO2\\scripts\\templates\\data\\clustering\\D_Pully_10_24_T_I_E_D.dat'
-    path_to_emissions = r'C:\\Users\\there\\Desktop\\REHO2\\reho\\data\\emissions\\electricity_matrix_2019_reduced.csv'
-    path_timestamp_dat = r'C:\\Users\\there\\Desktop\\REHO2\\scripts\\template\\data\\clustering\\timestamp_Pully_10_24_T_I_E_D.dat'
-    model_path = r'/scripts/templates/switchLoad/data_heat_switch_after_clustering_gwp.mod'
-    output_single_column_dat_path = r'C:\\Users\\there\\Desktop\\REHO2\\scripts\\templates\\switchLoad\\D_Pully_10_24_T_I_E_D.dat'
-
-    total_gwp, shifted_load_df = process_and_optimize_data_GWP(path_to_load_profile_dat, path_to_emissions, path_timestamp_dat, model_path, output_single_column_dat_path)
 
     # Set scenario
     scenario = dict()
@@ -69,7 +61,7 @@ if __name__ == '__main__':
     #plotting.plot_composite_curve(reho.results["totex"][0], cluster, plot= True, periods =["Yearly"]) #,"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"
     #plotting.yearly_demand_plot(reho.results["totex"][0], cluster, plot=True)
     # Save results
-    filename='ALL_EPFL_ORC_2MW_DC'
+    filename='ALL_EPFL_ORC_50kW_DC'
     reho.save_results(format=['xlsx', 'pickle'], filename=filename)
     #plotting.plot_performance(reho.results, plot='costs', indexed_on='Scn_ID', label='EN_long').show()
     #plotting.plot_performance(reho.results, plot='gwp', indexed_on='Scn_ID', label='EN_long').show()
@@ -79,16 +71,12 @@ if __name__ == '__main__':
     performance.write_html(tmp_folder / f"performance-{uuid.uuid4()}.html", auto_open=True)
     plot_performance = plotting.plot_performance(reho.results, plot='gwp', indexed_on='Scn_ID', label='EN_long')
     plot_performance.write_html(tmp_folder / f"plot_performance-{uuid.uuid4()}.html", auto_open=True)
-    #plotting.plot_profiles(reho.results,['PV'], resolution='daily')
+
+
+
+    # plotting.plot_profiles(reho.results,['PV'], resolution='daily')
     # Construct the full file path
     # plotting.yearly_demand_plot(filename)
 
     # path_egid_map =
     # Read typical day distribution and buildings profiles
-
-
-
-
-
-
-
