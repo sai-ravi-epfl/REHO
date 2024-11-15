@@ -16,7 +16,7 @@ if __name__ == '__main__':
     cluster = {'Location': 'Pully', 'Attributes': ['I', 'T','E','D'], 'Periods': 10, 'PeriodDuration': 24}
     attributes = ['Irr', 'Text', 'Weekday','DataLoad']
     weather_file = r'C:\Users\there\Desktop\REHO2\scripts\template\data\profiles\pully.csv'
-    weather.data_centre_profile(size = 288)
+    weather.data_centre_profile(size = 50)
     df_annual = weather.read_custom_weather(weather_file)
     df_annual = df_annual[attributes]
     nb_clusters = [10]
