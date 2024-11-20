@@ -27,6 +27,11 @@ param TimeStart default 1;
 param TimeEnd{p in Period};
 set Time{p in Period} := {TimeStart .. TimeEnd[p]} ordered;
 
+#-INDEX SETS (useful for inter-period energy balance appart from the extreme periods)
+set Year := {1..8760} circular;
+param PeriodOfYear{y in Year} default 1;
+param TimeOfYear{y in Year} default 1;
+
 param dt{p in Period} default 1;       # h
 param dp{p in Period} default 1;			# days
 
@@ -36,6 +41,11 @@ param ERA{h in House} default 100;
 param n_years default 25;
 param i_rate default 0.02;
 param tau := i_rate*(1+i_rate)^n_years/(((1+i_rate)^n_years)-1);
+
+
+# for district solar thermal collector
+param STC_Tml_district{u in UnitsOfType['ThermalSolar_district'],p in Period,t in Time[p]} default 50;
+param I_global_STC{u in UnitsOfType['ThermalSolar_district'],p in Period,t in Time[p]} default 1;
 
 ######################################################################################################################
 #--------------------------------------------------------------------------------------------------------------------#
@@ -97,12 +107,10 @@ subject to complicating_cst_GWP{l in ResourceBalances, p in Period, t in Time[p]
 
 
 subject to TOTAL_profile_c1{l in ResourceBalances, p in Period,t in Time[p]}:
-Profile_grid[l,p,t] =  sum{f in FeasibleSolutions, h in House} ( (Grid_supply[l,f,h,p,t] - Grid_demand[l,f,h,p,t]) * lambda[f,h])
-;
+Profile_grid[l,p,t] =  sum{f in FeasibleSolutions, h in House} ( (Grid_supply[l,f,h,p,t] - Grid_demand[l,f,h,p,t]) * lambda[f,h]);
 
 subject to TOTAL_profile_c2{l in ResourceBalances, h in House,p in Period,t in Time[p]}:
-Profile_house[l,h,p,t] =  sum{f in FeasibleSolutions} ( (Grid_supply[l,f,h,p,t] - Grid_demand[l,f,h,p,t]) * lambda[f,h])
-;
+Profile_house[l,h,p,t] =  sum{f in FeasibleSolutions} ( (Grid_supply[l,f,h,p,t] - Grid_demand[l,f,h,p,t]) * lambda[f,h]);
 
 #subject to TOTAL_profile_c3{l in ResourceBalances, p in Period,t in Time[p]}:
 #Network_supply[l,p,t] <=  sum{f in FeasibleSolutions, h in House} ( Grid_supply[l,f,h,p,t]  * lambda[f,h] * dp[p] * dt[p]) ;

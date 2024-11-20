@@ -115,7 +115,7 @@ class MasterProblem:
 
         self.lists_MP = {"list_parameters_MP": ['utility_portfolio_min', 'owner_portfolio_min', 'EMOO_totex_renter', 'TransformerCapacity',
                                                 'EV_y', 'EV_plugged_out', 'n_vehicles', 'EV_capacity', 'EV_displacement_init', 'monthly_grid_connection_cost',
-                                                "area_district", "velocity", "density", "delta_enthalpy", "cinv1_dhn", "cinv2_dhn", "TransformerCapacity_heat_t"],
+                                                "area_district", "velocity", "density", "delta_enthalpy", "cinv1_dhn", "cinv2_dhn", "TransformerCapacity_heat_t",'STC_Tml_district','I_global_STC'],
                          "list_constraints_MP": []
                          }
 
@@ -398,6 +398,8 @@ class MasterProblem:
                 self.lists_MP["list_constraints_MP"] = self.lists_MP["list_constraints_MP"] + ['unidirectional_service', 'unidirectional_service2']
             if "NG_Boiler_district" in self.infrastructure.UnitsOfDistrict:
                 ampl_MP.read('ng_boiler_district.mod')
+            if "ThermalSolar_district" in self.infrastructure.UnitsOfDistrict:
+                ampl_MP.read('solarthermal_district.mod')
             if "HeatPump_Geothermal_district" in self.infrastructure.UnitsOfDistrict:
                 ampl_MP.read('heatpump_district.mod')
             if "NG_Cogeneration_district" in self.infrastructure.UnitsOfDistrict:
@@ -408,6 +410,12 @@ class MasterProblem:
             if "Battery_district" in self.infrastructure.UnitsOfDistrict:
                 ampl_MP.cd(path_to_units_storage)
                 ampl_MP.read('battery.mod')
+            if "BESS_IP_district" in self.infrastructure.UnitsOfDistrict:
+                ampl_MP.cd(path_to_units_storage)
+                ampl_MP.read('Battery_interperiod.mod')
+            if "STES_district" in self.infrastructure.UnitsOfDistrict:
+                ampl_MP.cd(path_to_units_storage)
+                ampl_MP.read('STES.mod')
 
         if read_DHN:  # TODO: move DHN.mod into ampl_model > units > district_units
             ampl_MP.cd(path_to_units)
@@ -416,6 +424,7 @@ class MasterProblem:
 
         ampl_MP.cd(path_to_clustering)
         ampl_MP.readData('frequency_' + self.local_data['File_ID'] + '.dat')
+        ampl_MP.readData('index_' + self.local_data['File_ID'] + '.dat')
         ampl_MP.cd(path_to_ampl_model)
 
         # -------------------------------------------------------------------------------------------------------------
