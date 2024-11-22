@@ -249,20 +249,7 @@ def get_metric(cluster):
     else:
         return 'method 1'
 
-def data_centre_profile(size): # size to be mentioned in kW
-    # df_load_profile = pd.read_csv(r'C:\Users\there\Desktop\REHO2\scripts\templates\yearly_data_centre_profile_repeated2.csv')
-    # df_load_profile = pd.read_csv(r'C:\Users\there\Desktop\REHO2\scripts\templates\shifted_load_GWP_before_clustering.csv')
-    df_load_profile = pd.read_csv(r'C:\Users\there\Desktop\REHO2\scripts\templates\yearly_data_centre_profile_repeated.csv')
-    df_load_profile = df_load_profile['Load_Profile'].div(288).mul(size) #profile data created by observing trend from this study: https://arxiv.org/abs/1804.00703
-    path = os.path.join(path_to_weather, 'yearly_data_centre_profile_repeated.csv')
-    df_load_profile.to_csv(path)
-    # df_load_annual = pd.concat([df_load_profile]*70).to_frame().reset_index()
-    # df_load_annual = df_load_annual['Load_Profile'].to_frame()
-  # Replace with your actual data
-
 # Repeat data for the entire year (8760 hours)
-
-
 # Prepare data in the format for CSV
 '''   csv_data = []
     for hour in range(8760):
@@ -346,6 +333,7 @@ def write_dat_files(attributes, location, values_cluster, index_inter):
     df_T = values_cluster['Text']
     filename = os.path.join(path_to_clustering, 'T_' + File_ID + '.dat')
     df_T.to_csv(filename, index=False, header=False)
+    period = int((len(df_T.index) - 2)/24)
 
     # -------------------------------------------------------------------------------------
     # DataLoad
@@ -365,24 +353,24 @@ def write_dat_files(attributes, location, values_cluster, index_inter):
         df_E = df_Emission.to_frame().div(1000)
     #df_E.columns = ['GWP_supply' if col == 'Emissions' else col for col in df_E.columns]
         df_E.rename(columns={'Emissions': 'GWP_supply'}, inplace=True)
-        df_E.insert(0, '',  ['Electricity' for _ in range(242)], True)
+        df_E.insert(0, '',  ['Electricity' for _ in range(len(df_T.index))], True)
         df_E.columns = ['GWP_supply' if col == 'Emissions' else col for col in df_E.columns]
     # Initialize an empty list
         my_list = []
 
     # Append 1 to 10, each repeated 24 times
-        for i in range(1, 11):
+        for i in range(1, period +1):
             my_list.extend([i] * 24)
 
     # Append 11 and 12 once
-        my_list.extend([11, 12])
+        my_list.extend([period +1, period+2])
         df_E.insert(1,'', my_list, True)
 
     # Initialize the base list
         base_list = list(range(1, 25))
 
     # Repeat the base list 10 times
-        repeated_list = base_list * 10
+        repeated_list = base_list * period
         repeated_list.extend([1,1])
     # Print the resulting list
 
@@ -493,13 +481,20 @@ def plot_cluster_KPI_separate(df, save_fig):
     df.rename({'Irr': 'Global Irradiation', 'Text': 'Ambient Temperature'}, inplace=True)
     df_irr = df.xs('Global Irradiation', level=1)
     df_T = df.xs('Ambient Temperature', level=1)
+    df_Emissions = df.xs('Emissions', level=1)
+    df_DataLoad = df.xs('DataLoad', level=1)
 
     fig, ax = plt.subplots()
     fig.set_size_inches(4, 8)
     df_irr['RMSD'].plot(linestyle='--', color='black', label='RMSD (Irr)', ax=ax)
     df_T['RMSD'].plot(linestyle='-', color='black', label='RMSD (T)', ax=ax)
+    df_Emissions['RMSD'].plot(linestyle='-.', color='black', label='RMSD (T)', ax=ax)
+    df_DataLoad['RMSD'].plot(linestyle=':', color='black', label='RMSD (T)', ax=ax)
+
     df_irr['LDC'].plot(linestyle='--', color="red", label='LDC (Irr)', ax=ax)
     df_T['LDC'].plot(linestyle='-', color="red", label='LDC (T)', ax=ax)
+    df_Emissions['LDC'].plot(linestyle='-.', color="red", label='LDC (T)', ax=ax)
+    df_DataLoad['LDC'].plot(linestyle=':', color="red", label='LDC (T)', ax=ax)
 
     plt.xlabel('number of clusters [-]')
     plt.ylabel('key performance indicator (KPI) [-]')
@@ -518,6 +513,8 @@ def plot_cluster_KPI_separate(df, save_fig):
     fig.set_size_inches(4, 8)
     df_irr['MAE'].plot(linestyle='--', color='black', label='MAE (Irr)', ax=ax)
     df_T['MAE'].plot(linestyle='-', color='black', label='MAE (T)', ax=ax)
+    df_Emissions['MAE'].plot(linestyle='-.', color='black', label='MAE (Emissions)', ax=ax)
+    df_DataLoad['MAE'].plot(linestyle=':', color='black', label='MAE (DataLoad)', ax=ax)
 
     plt.xlabel('number of clusters [-]')
     plt.ylabel('mean average error (MAE)  [-]')
@@ -535,6 +532,8 @@ def plot_cluster_KPI_separate(df, save_fig):
     fig.set_size_inches(4, 8)
     df_irr['MAPE'].plot(linestyle='--', color='black', label='MAPE  (Irr)', ax=ax)
     df_T['MAPE'].plot(linestyle='-', color='black', label='MAPE  (T)', ax=ax)
+    df_Emissions['MAPE'].plot(linestyle='-.', color='black', label='MAPE  (Emissions)', ax=ax)
+    df_DataLoad['MAPE'].plot(linestyle=':', color='black', label='MAPE  (DataLoad)', ax=ax)
 
     plt.xlabel('number of clusters [-]')
     plt.ylabel('mean average percentage error  [-]')
@@ -556,7 +555,7 @@ def plot_LDC(cl, save_fig):
     # get original, not clustered data
     T_org = cl.data_org['Text']
     IRR_org = cl.data_org['Irr']
-    W_org = cl.data_org['Weekday']
+    #W_org = cl.data_org['Weekday']
     E_org = cl.data_org['Emissions']
     D_org = cl.data_org['DataLoad']
 
@@ -697,9 +696,9 @@ if __name__ == '__main__':
     cm = plt.cm.get_cmap('Spectral_r')
 
     weather_file = '../../../scripts/template/data/profiles/pully.csv'
-    Attributes = ['Text', 'Irr','Weekday','Emissions','DataLoad']
+    Attributes = ['Text', 'Irr','Emissions', 'DataLoad']
     #nb_clusters = [10]
-    nb_clusters = [2, 4, 6, 8, 10, 12, 16]
+    nb_clusters = [6, 8, 10, 12, 14, 16, 18]
 
     df_annual = read_custom_weather(weather_file)
     print(df_annual)
