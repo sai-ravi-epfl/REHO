@@ -30,14 +30,14 @@ if __name__ == '__main__':
     scenario["specific"] = []
     scenario['enforce_units'] = ["STES_district"] #'HeatPump_Geothermal_district'
     # Initialize available units and grids
-    grids = infrastructure.initialize_grids({'Electricity': {"Cost_demand_cst": 0.08, "Cost_supply_cst": 0.08},
-                                            "Heat": {"Cost_demand_cst": 0.01, "Cost_supply_cst": 0.02,  "GWP_supply_cst": 0}})  #'NaturalGas': {"Cost_demand_cst": 0.01, "Cost_supply_cst": 0.10},
+    grids = infrastructure.initialize_grids({'Electricity': {"Cost_demand_cst": 0.1743, "Cost_supply_cst": 0.3346},
+                                            "Heat": {"Cost_demand_cst": 0.01, "Cost_supply_cst": 0.3346}})  #'NaturalGas': {"Cost_demand_cst": 0.01, "Cost_supply_cst": 0.10},
                                                                                                                 #"Data": {"Cost_demand_cst": 0.0001, "Cost_supply_cst": 0.0002}}
 
 
     units = infrastructure.initialize_units(scenario, grids, district_data= True)
 
-    parameters = {'Cooling': np.array([1.0]), 'n_vehicles': np.array([0.0]), 'T_DHN_supply_cst': np.repeat(70.0, n_house),'T_DHN_return_cst': np.repeat(60.0, n_house), "TransformerCapacity": np.array([1e8, 0.0])} #, 'Network_supply_heat': np.array([0.0])
+    parameters = {'n_vehicles': np.array([0.0]), 'T_DHN_supply_cst': np.repeat(70.0, n_house),'T_DHN_return_cst': np.repeat(60.0, n_house), "TransformerCapacity": np.array([1e8, 1e8]), 'TransformerCapacity_heat':np.array([0]) } #, 'Network_supply_heat': np.array([0.0])
     #parameters = {}
 
     # Set method options

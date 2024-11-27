@@ -7,7 +7,7 @@
 
 param STES_limit_ch_IP{u in UnitsOfType['STES']} default 0.8;			#-	[2] max charging limit
 param STES_limit_di_IP{u in UnitsOfType['STES']} default 0.2;			#-	[1] max discharging limit
-param STES_self_discharge_IP{u in UnitsOfType['STES']} default 0.71;	#-	[1]
+param STES_self_discharge_IP{u in UnitsOfType['STES']} default 0.95;	#-	[1]
 param STES_efficiency_IP{u in UnitsOfType['STES']} default 0.94;
 var STES_E_stored_IP{u in UnitsOfType['STES'], hy in Year} >= 0;
 
