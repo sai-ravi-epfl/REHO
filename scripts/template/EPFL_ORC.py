@@ -58,7 +58,7 @@ if __name__ == '__main__':
     reho.save_results(format=['xlsx', 'pickle'], filename=filename)
     #plotting.plot_performance(reho.results, plot='costs', indexed_on='Scn_ID', label='EN_long').show()
    # plotting.plot_performance(reho.results, plot='gwp', indexed_on='Scn_ID', label='EN_long').show()
-    plotting.plot_sankey(reho.results['gwp'][0], label='EN_long', color='ColorPastel').show()
+    #plotting.plot_sankey(reho.results['gwp'][0], label='EN_long', color='ColorPastel').show()
     #plotting.plot_profiles(reho.results,['PV'], resolution='daily')
     # Construct the full file path
     # plotting.yearly_demand_plot(filename)

@@ -398,8 +398,8 @@ class MasterProblem:
                 self.lists_MP["list_constraints_MP"] = self.lists_MP["list_constraints_MP"] + ['unidirectional_service', 'unidirectional_service2']
             if "NG_Boiler_district" in self.infrastructure.UnitsOfDistrict:
                 ampl_MP.read('ng_boiler_district.mod')
-            if "ThermalSolar_district" in self.infrastructure.UnitsOfDistrict:
-                ampl_MP.read('solarthermal_district.mod')
+            #if "ThermalSolar_district" in self.infrastructure.UnitsOfDistrict:
+                #ampl_MP.read('solarthermal_district.mod')
             if "HeatPump_Geothermal_district" in self.infrastructure.UnitsOfDistrict:
                 ampl_MP.read('heatpump_district.mod')
             if "NG_Cogeneration_district" in self.infrastructure.UnitsOfDistrict:
@@ -415,7 +415,7 @@ class MasterProblem:
                 ampl_MP.read('Battery_interperiod.mod')
             if "STES_district" in self.infrastructure.UnitsOfDistrict:
                 ampl_MP.cd(path_to_units_storage)
-                ampl_MP.read('STES.mod')
+                ampl_MP.read('STES_ettore.mod')
 
         if read_DHN:  # TODO: move DHN.mod into ampl_model > units > district_units
             ampl_MP.cd(path_to_units)

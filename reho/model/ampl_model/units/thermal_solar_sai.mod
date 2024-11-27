@@ -31,16 +31,13 @@ var STC_Area_T{u in UnitsOfType['ThermalSolar'],STCindex,p in Period,t in Time[p
 var STC_module_nbr{u in UnitsOfType['ThermalSolar']} >= 0, integer;
 
 
-
 subject to STC_energy_balance{h in House,u in UnitsOfType['ThermalSolar'] inter UnitsOfHouse[h],st in StreamsOfUnit[u],T in STCindex,p in Period,t in Time[p]: T = Streams_Tin[st,p,t]}:
 sum{se in ServicesOfStream[st]} Streams_Q[se,st,p,t] = STC_Area_T[u,T,p,t]*STC_efficiency[u,T,p,t]*(I_global[p,t]/1000);
-#Units_supply['Heat',u,p,t]= STC_Area_T[u,T,p,t]*STC_efficiency[u,T,p,t]*(I_global[p,t]/1000);
 
-
-#subject to STC_energy_balance{h in House, u in UnitsOfType['ThermalSolar'] inter UnitsOfHouse[h], st in StreamsOfUnit[u], p in Period, t in Time[p]}:
-#Units_supply['Heat', u, p, t] = sum{T in STCindex: T = Streams_Tin[st, p, t]} STC_Area_T[u, T, p, t] * STC_efficiency[u, T, p, t] * (I_global[p, t] / 1000);
-
-
+/*
+subject to STC_energy_balance{h in House, u in UnitsOfType['ThermalSolar'] inter UnitsOfHouse[h], st in StreamsOfUnit[u], p in Period, t in Time[p]}:
+Units_supply['Heat', u, p, t] =sum{T in STCindex: T = Streams_Tin[st, p, t]} STC_Area_T[u, T, p, t] * STC_efficiency[u, T, p, t] * (I_global[p, t] / 1000);
+*/
 #--Sizing
 subject to STC_c1{h in House,u in UnitsOfType['ThermalSolar'] inter UnitsOfHouse[h],p in Period,t in Time[p]}:
 sum{T in STCindex} (STC_Area_T[u,T,p,t]) <= Units_Mult[u];																	#m2
@@ -48,8 +45,5 @@ sum{T in STCindex} (STC_Area_T[u,T,p,t]) <= Units_Mult[u];																	#m2
 subject to STC_c2{h in House,u in UnitsOfType['ThermalSolar'] inter UnitsOfHouse[h]}:
 Units_Mult[u] = STC_module_size[u]*STC_module_nbr[u];																		#m2			
 
-
-/*
 subject to enforce_DHW_tank_if_thermal_solar{h in House}:
 sum{uj in UnitsOfType['WaterTankDHW'] inter UnitsOfHouse[h]} Units_Use[uj] >= sum{ui in UnitsOfType['ThermalSolar'] inter UnitsOfHouse[h]} Units_Use[ui];
-*/
