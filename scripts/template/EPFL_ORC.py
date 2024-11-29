@@ -7,21 +7,23 @@ if __name__ == '__main__':
     # Set building parameters
     # you can as well define your district from a csv file instead of reading the database
     reader = QBuildingsReader()
-    n_house = 53
-    qbuildings_data = reader.read_csv(buildings_filename='/Users/ravi/REHO/scripts/template/data/EPFL_2.csv', nb_buildings= n_house)
+    n_house = 1
+    file_ID = "/EPFL_MOES.csv"
+    epfl_csv_path = path_to_buildings_csv + file_ID
+    qbuildings_data = reader.read_csv(buildings_filename=epfl_csv_path, nb_buildings= n_house)
     #reader.establish_connection('Suisse')
     #qbuildings_data = reader.read_db(transformer=3216, egid=[280001550])
     # Select weather data
     cluster = {'Location': 'Pully', 'Attributes': ['I', 'T','E','D'], 'Periods': 10, 'PeriodDuration': 24}
     attributes = ['Irr', 'Text', 'Emissions','DataLoad']
-    weather_file = '/Users/ravi/Desktop/PhD/My_Reho_Qgis_files/Reho_Sai_Fork/scripts/template/data/profiles/pully.csv'
-    weather.data_centre_profile(size = 2000)
+    weather_file = path_to_profiles + '/pully.csv'
+    weather.data_centre_profile(size = 50)
     df_annual = weather.read_custom_weather(weather_file)
     df_annual = df_annual[attributes]
-    nb_clusters = [10]
+    nb_clusters = [cluster['Periods']]
     cl = Clustering(data=df_annual, nb_clusters=nb_clusters, option={"year-to-day": True, "extreme": []}, pd=24)
     cl.run_clustering()
-    val_cls = weather.generate_output_data(cl, attributes, "Pully")
+    val_cls = weather.generate_output_data(cl, attributes, "Pully",cluster)
     data_centre_heat_profile = weather.data_centre_profiles(val_cls)
     # Set scenario
 
@@ -47,7 +49,7 @@ if __name__ == '__main__':
     #parameters = {}
 
     # Set method options
-    method = {'building-scale': True,'save_stream_t': True, 'use_dynamic_emission_profiles': True, 'save_streams': True, 'ORC_all_the_time': True} #, 'use_pv_orientation': True
+    method = {'building-scale': True,'save_stream_t': True, 'use_dynamic_emission_profiles': True, 'save_streams': True, 'ORC_all_the_time': False} #, 'use_pv_orientation': True
     # Run optimization
     reho = REHO(qbuildings_data=qbuildings_data, units=units,parameters=parameters, grids=grids, cluster=cluster, scenario=scenario, method=method, solver ='gurobi') #parameters=parameters,
     reho.single_optimization()

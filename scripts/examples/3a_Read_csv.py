@@ -3,7 +3,7 @@ from reho.model.reho import *
 
 if __name__ == '__main__':
 
-    buildings_filename = str(Path(__file__).parent / 'data' / 'buildings.csv')
+    buildings_filename =  str(Path(__file__).parent / 'data' / 'buildings.csv')
 
     # Set building parameters
     # Load your buildings from a csv file instead of reading the database

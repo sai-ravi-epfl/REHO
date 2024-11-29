@@ -1,6 +1,5 @@
 from reho.model.reho import *
 
-
 if __name__ == '__main__':
 
     # Set building parameters

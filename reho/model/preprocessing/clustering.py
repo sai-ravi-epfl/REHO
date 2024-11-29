@@ -162,11 +162,11 @@ class Clustering:
                 df_res[str(c)] = s[1].sort_index()
 
         df_res.columns.name = "iteration"
-        for col in df_res.columns:
+     #   for col in df_res.columns:
             # - Rename extreme day index
-            df_res.loc[df_res.loc[:, col] == 0, col] = df_res.loc[df_res.loc[:, col] == 0, col].index
+      #      df_res.loc[df_res.loc[:, col] == 0, col] = df_res.loc[df_res.loc[:, col] == 0, col].index
         self.results["idx"] = df_res
-
+        print(self.results)
 
     def __return_typical_periods_outliers(self, idx, clusters, outliers):
         index = idx.name

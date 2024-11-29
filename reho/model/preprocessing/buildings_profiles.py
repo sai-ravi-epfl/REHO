@@ -7,20 +7,59 @@ Generates the buildings profiles for domestic hot water (DHW) demand, domestic e
 """
 
 
-def reference_temperature_profile(parameters_to_ampl, cluster):
+def reference_temperature_profile(self, parameters_to_ampl, cluster):
     """
     Returns a reference temperature timeseries.
     """
     # TODO: time dependent indoor temperature f.e. lower at night
+    if self.method_sp['time_dependent_profile']==True:
+        # Desired order of attributes
+        attribute_order = ['T', 'I', 'W', 'E', 'D']
+        # Sort and join the attributes based on the order
+        sorted_attributes = [attr for attr in attribute_order if attr in cluster['Attributes']]
+        attributes_string = '_'.join(sorted_attributes)
+        # Construct the file ID
+        file_path = path_to_clustering + '/T_' f"{cluster['Location']}_{cluster['Periods']}_{cluster['PeriodDuration']}_{attributes_string}" + '.dat'
+        df = pd.read_csv(file_path, header=None, names=['temperature'])
+        # Ensure there are exactly 1680 values
+        assert len(df) == 1682  # "The CSV must contain exactly 1682 values (10 weeks of hourly data + 2 extreme hours)."
 
-    total_timesteps = cluster['Periods'] * cluster['PeriodDuration'] + 2  #cluster is a dictionary that I defined in the frontend file.
-    T_comfort_min_0 = parameters_to_ampl['T_comfort_min_0']   #parameters_to_ampl is in
+        # Generate a datetime index starting from Monday 00:00 for 10 weeks
+        start_time = pd.Timestamp('2023-01-02 00:00')  # Example start date, Monday
+        time_index = pd.date_range(start=start_time, periods=1682, freq='H')
+        df['datetime'] = time_index
 
-    np_temperature = np.array([])
-    for key in parameters_to_ampl['T_comfort_min_0']:
-        np_temperature = np.append(np_temperature, np.tile(T_comfort_min_0[key], total_timesteps))
+        # Create a mask for working hours (weekdays 7 AM to 6 PM)
+        is_weekday = df['datetime'].dt.weekday < 5  # Monday to Friday are 0-4
+        is_working_hour = df['datetime'].dt.hour >= 7
+        is_working_hour &= df['datetime'].dt.hour < 18
 
-    return np_temperature
+        # Combine the conditions
+        working_hours_mask = is_weekday & is_working_hour
+
+        # Replace temperatures during working hours with 20
+        df.loc[working_hours_mask, 'temperature'] = 20
+
+        temperature_array = df['temperature'].to_numpy()
+
+        working_hours_mask = working_hours_mask.astype(int).to_numpy()
+
+        working_hours_mask = np.where(working_hours_mask == 0, 0.7,
+                                      1)  # will be used to reducing the heating demand for the buildings during non working hours
+
+        np_temperature = np.array([])
+
+        np_temperature = np.where(temperature_array == 20, 20, 15)
+        return np_temperature, working_hours_mask
+    else:
+        total_timesteps = cluster['Periods'] * cluster['PeriodDuration'] + 2  # cluster is a dictionary that I defined in the frontend file.
+        T_comfort_min_0 = parameters_to_ampl['T_comfort_min_0']  # parameters_to_ampl is in subproblem.py
+        np_temperature = np.array([])
+        for key in parameters_to_ampl['T_comfort_min_0']:
+            np_temperature = np.append(np_temperature, np.tile(T_comfort_min_0[key], total_timesteps))
+        working_hours_mask = np.ones(total_timesteps)
+        return np_temperature, working_hours_mask
+
 
 
 

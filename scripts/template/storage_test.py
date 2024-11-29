@@ -8,7 +8,9 @@ if __name__ == '__main__':
     # you can as well define your district from a csv file instead of reading the database
     reader = QBuildingsReader()
     n_house = 1
-    qbuildings_data = reader.read_csv(buildings_filename='/Users/ravi/REHO/scripts/template/data/EPFL_2.csv', nb_buildings= n_house)
+    file_ID = "/EPFL_MOES.csv"
+    epfl_csv_path = path_to_buildings_csv + file_ID
+    qbuildings_data = reader.read_csv(buildings_filename=epfl_csv_path, nb_buildings= n_house)
 
     # Select weather data
     cluster = {'Location': 'Pully', 'Attributes': ['I', 'T','E','D'], 'Periods': 10, 'PeriodDuration': 24}
@@ -21,7 +23,7 @@ if __name__ == '__main__':
 
     #
     #
-    scenario['enforce_units'] = ['Battery_interperiod'] #'HeatPump_Geothermal_district','DHN_out_district','Battery_district','PV_district',
+    scenario['enforce_units'] = [] #'HeatPump_Geothermal_district','DHN_out_district','Battery_district','PV_district',
     scenario["specific"] = []
 
     # Initialize available units and grids
