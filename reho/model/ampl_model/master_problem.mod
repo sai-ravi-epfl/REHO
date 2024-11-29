@@ -15,6 +15,10 @@ set Units default {};
 set UnitsOfType{UnitTypes} within Units default {};
 set UnitsOfLayer{Layers} within Units;
 
+set Year := {1..8760} circular;
+param PeriodOfYear{y in Year} default 1;
+param TimeOfYear{y in Year} default 1;
+
 set House;
 set HousesOfLayer{Layers} within House;
 set FeasibleSolutions ordered;

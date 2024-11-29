@@ -1,4 +1,5 @@
 from reho.model.reho import *
+from reho.paths import path_to_profiles
 from reho.plotting import plotting
 from reho.model.preprocessing.clustering import Clustering
 
@@ -8,27 +9,29 @@ if __name__ == '__main__':
     # you can as well define your district from a csv file instead of reading the database
     reader = QBuildingsReader()
     n_house = 1
-    qbuildings_data = reader.read_csv(buildings_filename='/Users/ravi/REHO/scripts/template/data/EPFL_2.csv', nb_buildings= n_house)
+    file_ID = "/EPFL_MOES.csv"
+    epfl_csv_path = path_to_buildings_csv + file_ID
+    qbuildings_data = reader.read_csv(buildings_filename=epfl_csv_path, nb_buildings= n_house)
     #reader.establish_connection('Suisse')
     #qbuildings_data = reader.read_db(transformer=3216, egid=[280001550])
     # Select weather data
-    cluster = {'Location': 'Pully', 'Attributes': ['I', 'T','E'], 'Periods': 12, 'PeriodDuration': 24}
+    cluster = {'Location': 'Pully', 'Attributes': ['I', 'T','E'], 'Periods': 10, 'PeriodDuration': 24}
     attributes = ['Irr', 'Text', 'Weekday','DataLoad']
-    weather_file = '/Users/ravi/Desktop/PhD/My_Reho_Qgis_files/Reho_Sai_Fork/scripts/template/data/profiles/pully.csv'
+    weather_file = path_to_profiles+'/pully.csv'
     weather.data_centre_profile(size = 50)
     df_annual = weather.read_custom_weather(weather_file)
     df_annual = df_annual[attributes]
-    nb_clusters = [12]
+    nb_clusters = [cluster['Periods']]
     cl = Clustering(data=df_annual, nb_clusters=nb_clusters, option={"year-to-day": True, "extreme": []}, pd=24)
     cl.run_clustering()
-    val_cls = weather.generate_output_data(cl, attributes, "Pully")
+    val_cls = weather.generate_output_data(cl, attributes, "Pully",cluster)
     data_centre_heat_profile = weather.data_centre_profiles(val_cls)
     # Set scenario
 
     scenario = dict()
     scenario['Objective'] = 'GWP'
     scenario['name'] = 'gwp'
-    scenario['exclude_units'] = ['HeatPump_Geothermal','HeatPump_Anergy','HeatPump_DHN', 'ElectricalHeater_SH', 'ThermalSolar', 'Battery','HeatPump_Lake'] #'OIL_Boiler',  'NG_Boiler','HeatPump_Air', 'HeatPump_Lake''HeatPump_Anergy''DataHeatSH',
+    scenario['exclude_units'] = ['HeatPump_Geothermal','HeatPump_Anergy','HeatPump_DHN', 'ElectricalHeater_SH', 'ThermalSolar', 'Battery','HeatPump_Lake', 'HeatPump_Air'] #'OIL_Boiler',  'NG_Boiler','HeatPump_Air', 'HeatPump_Lake''HeatPump_Anergy''DataHeatSH',
 
     #
     #
@@ -43,7 +46,7 @@ if __name__ == '__main__':
 
     units = infrastructure.initialize_units(scenario, grids, district_data= True)
 
-    parameters = {'n_vehicles': np.array([0.0]), 'T_DHN_supply_cst': np.repeat(70.0, n_house),'T_DHN_return_cst': np.repeat(60.0, n_house), "TransformerCapacity": np.array([1e8, 0]) } #, 'Network_supply_heat': np.array([0.0])
+    parameters = {'n_vehicles': np.array([0.0]), 'T_DHN_supply_cst': np.repeat(70.0, n_house),'T_DHN_return_cst': np.repeat(60.0, n_house), "TransformerCapacity": np.array([1e8, 0])} #, 'Network_supply_heat': np.array([0.0])
     #parameters = {}
 
     # Set method options
@@ -58,7 +61,7 @@ if __name__ == '__main__':
     reho.save_results(format=['xlsx', 'pickle'], filename=filename)
     #plotting.plot_performance(reho.results, plot='costs', indexed_on='Scn_ID', label='EN_long').show()
    # plotting.plot_performance(reho.results, plot='gwp', indexed_on='Scn_ID', label='EN_long').show()
-    plotting.plot_sankey_1(reho.results['gwp'][0], label='EN_long', color='ColorPastel').show()
+    #plotting.plot_sankey_1(reho.results['gwp'][0], label='EN_long', color='ColorPastel').show()
     #plotting.plot_profiles(reho.results,['PV'], resolution='daily')
     # Construct the full file path
     # plotting.yearly_demand_plot(filename)

@@ -245,7 +245,7 @@ def calc_orientation_profiles(azimuth, tilt, design_lim_angle, local_data, typic
     for number, key in enumerate(list(typical_frequency.keys())[:-2]):
         hours_component = int(period_duration[number + 1])
         end = key + timedelta(hours=hours_component - 1)
-        irr_day = -1 * df_irradiation_panel_t.loc[key: end]
+        irr_day = -1 * df_irradiation_panel_t.loc[key:end]
         df_period = np.append(df_period, irr_day.values)
 
     df_period = np.append(df_period, [df_period.min(), df_period.max()])

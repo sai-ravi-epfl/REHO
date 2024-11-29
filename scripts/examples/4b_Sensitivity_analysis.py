@@ -1,5 +1,7 @@
 from reho.model.postprocessing.sensitivity_analysis import *
 from reho.plotting import plotting
+from reho.model.preprocessing.QBuildings import *
+from reho.model.reho import *
 
 
 if __name__ == '__main__':

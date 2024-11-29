@@ -193,20 +193,25 @@ class SubProblem:
         # TODO: integrate all storage units into district structure (avoid using ampl eval)
         if self.method_sp['use_Storage_Interperiod']:
             ampl.eval(
-                'set UnitsOfStorage := setof{u in UnitsOfType["Battery_interperiod"] union UnitsOfType["PTES_storage"]'
+                'set UnitsOfStorage := setof{u in UnitsOfType["Battery_interperiod"]} u;')
+
+            '''
+             union UnitsOfType["STES"]
+            union UnitsOfType["PTES_storage"]'
                 'union UnitsOfType["PTES_conversion"] union UnitsOfType["CH4storage"]'
                 'union UnitsOfType["H2storage"] union UnitsOfType["SOEFC"]'
                 'union UnitsOfType["Methanizer"] union UnitsOfType["FuelCell"]'
                 'union UnitsOfType["Electrolyzer"] union UnitsOfType["WaterTankSH_interperiod"]'
-                'union UnitsOfType["SolidLiquidLHS"]'
-                '} u;')
+                'union UnitsOfType["SolidLiquidLHS"] union UnitsOfType["STES"]'
+                '''
 
             # Storage Units
             ampl.cd(path_to_units_storage)
             #ampl.read('h2_storage.mod')
             #ampl.read('heatstorage_interperiod.mod')
             #ampl.read('LHS_storage.mod')
-            ampl.read('battery_interperiod.mod')
+            ampl.read('battery_interperiod_ettore.mod')
+            #ampl.read('STES_ettore.mod')
             #ampl.read('PTES.mod')
             #ampl.read('CH4_tank.mod')
 
@@ -287,6 +292,7 @@ class SubProblem:
         df_em = emissions.return_typical_emission_profiles(self.cluster_sp, File_ID, 'GWP100a', self.local_data["df_Timestamp"],
                                                            self.local_data["df_Emissions"])
         if self.method_sp['use_dynamic_emission_profiles']:
+
             self.parameters_to_ampl['GWP_supply'] = df_em
             self.parameters_to_ampl['GWP_demand'] = df_em.rename(columns={'GWP_supply': 'GWP_demand'})
             self.parameters_to_ampl['Gas_emission'] = self.infrastructure_sp.Grids_Parameters.drop('Electricity').drop(
@@ -295,7 +301,7 @@ class SubProblem:
     def set_temperature_and_EVs_profiles(self):
 
         # Reference temperature
-        self.parameters_to_ampl['T_comfort_min'] = buildings_profiles.reference_temperature_profile(self.parameters_to_ampl, self.cluster_sp)
+        self.parameters_to_ampl['T_comfort_min'],self.parameters_to_ampl['working_hour_mask'] = buildings_profiles.reference_temperature_profile(self, self.parameters_to_ampl, self.cluster_sp)
 
         # Set default EV plug out profile if EVs are allowed
         if "EV_plugged_out" not in self.parameters_to_ampl:
@@ -376,7 +382,7 @@ class SubProblem:
             self.parameters_to_ampl['T_source_cool'] = T_source_cool
             if 'T_source_cool' in self.parameters_sp:
                 del self.parameters_sp["T_source_cool"]
-        
+
     def set_streams_temperature(self, ampl):
 
         df_end = ampl.getParameter('TimeEnd').getValues().toPandas()
@@ -531,7 +537,6 @@ class SubProblem:
                         instance.setValues([self.set_indexed_sp[s][i]])
             else:
                 raise ValueError('Type Error setting AMPLPY Set', s)
-
         # set new input Parameter
         for i in self.parameters_to_ampl:
 
@@ -728,6 +733,8 @@ def initialize_default_methods(method):
         method["include_all_solutions"] = True
     if 'DHN_CO2' not in method:
         method['DHN_CO2'] = False
+    if 'time_dependent_profile' not in method:
+        method['time_dependent_profile']= False
 
     if 'use_Storage_Interperiod' not in method:
         method['use_Storage_Interperiod'] = False

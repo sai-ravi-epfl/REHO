@@ -36,7 +36,7 @@ def return_local_data(cluster, qbuildings_data):
     local_data['File_ID'] = File_ID
 
     path_to_timestamp = os.path.join(path_to_clustering, 'timestamp_' + File_ID + '.dat')
-    if not os.path.exists(path_to_timestamp):
+    if not os.path.exists(os.path.join(path_to_clustering, 'timestamp_' + File_ID + '.dat')):
         weather.generate_weather_data(cluster, qbuildings_data)
 
     local_data["df_Timestamp"] = pd.read_csv(path_to_timestamp, delimiter='\t', parse_dates=[0])
@@ -50,6 +50,7 @@ def return_local_data(cluster, qbuildings_data):
     # check if irradiation already exists:
     if not os.path.exists(path_to_westfacades_irr):
         local_data["df_Timestamp"].Date = pd.to_datetime(local_data["df_Timestamp"]['Date'], format="%m/%d/%Y/%H")
+        local_data["df_Timestamp"]['Date'] = local_data["df_Timestamp"]['Date'].apply(lambda x: x.replace(year=2005) if x.year != 2005 else x)
         frequency_dict = pd.Series(local_data["df_Timestamp"].Frequency.values, index=local_data["df_Timestamp"].Date).to_dict()
         frequency_dict['PeriodDuration'] = {p + 1: cluster['PeriodDuration'] for p in range(cluster['Periods'])}
         df_annual, irr_west = skydome.calc_orientation_profiles(270, 90, 0, local_data, frequency_dict)
@@ -57,6 +58,6 @@ def return_local_data(cluster, qbuildings_data):
     local_data["df_Westfacades_irr"] = pd.read_csv(path_to_westfacades_irr, header=None)[0].values
 
     # Carbon emissions
-    local_data["df_Emissions"] = file_reader(path_to_emissions, index_col=[0, 1, 2])
+    local_data["df_Emissions"] = file_reader(path_to_emissions, index_col=[0, 1, 2]) # will not be used if method dynamic emissions profile is used. implementation in return_typical_emission_profiles and set_emissions_profiles
 
     return local_data

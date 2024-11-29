@@ -445,7 +445,7 @@ def initialize_units(scenario, grids=None, building_data=os.path.join(path_to_in
     building_units = prepare_units_array(building_data, exclude_units, grids)
 
     # TODO: these storage units are not fully working
-    storage_units_to_exclude = ['BESS_IP', 'PTES_S_IP', 'PTES_C_IP', 'H2S_storage', 'H2_compression', 'SOEFC', 'FC']
+    storage_units_to_exclude = ['PTES_S_IP', 'PTES_C_IP', 'H2S_storage', 'H2_compression', 'SOEFC', 'FC']
 
     exclude_units = exclude_units + storage_units_to_exclude
     if storage_data is True:
