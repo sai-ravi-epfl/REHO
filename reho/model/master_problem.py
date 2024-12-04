@@ -430,7 +430,7 @@ class MasterProblem:
                 if 'district' in unit:
                     if 'DataCentre' in unit:
                         T_source = np.concatenate([T_source, np.repeat(20, timesteps)])
-                        file_path_to_data_centre_profile = '/Users/ravi/Desktop/PhD/My_Reho_Qgis_files/Reho_Sai_Fork/scripts/template/data/clustering/D_Pully_10_24_T_I_W_D.dat'
+                        file_path_to_data_centre_profile = r'C:\Users\there\Desktop\REHO2\scripts\template\data\clustering\D_Pully_10_24_T_I_E_D.dat'
                         data_centre_profile_kW = np.loadtxt(file_path_to_data_centre_profile)
                         max_cap =  data_centre_profile_kW #in kW data centre source is 288 kW max ,
                     elif 'Geothermal' in unit:

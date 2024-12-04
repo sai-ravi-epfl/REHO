@@ -1,6 +1,7 @@
 import pandas as pd
 import amplpy
 import matplotlib.pyplot as plt
+import numpy as np
 
 def process_and_optimize_data_GWP(path_to_load_profile, path_to_emissions, model_path, output_path, size=288):
     def read_and_process_dat(path_to_load_profile, path_to_emissions):
@@ -8,14 +9,10 @@ def process_and_optimize_data_GWP(path_to_load_profile, path_to_emissions, model
         load_profile = pd.read_csv(path_to_load_profile)
         load_profile = load_profile['Load_Profile'].values  # Extract the Load_Profile column as a numpy array
 
-
-        # Load GWP100a profile from electricity_matrix_2019_reduced.csv
-        emissions_matrix = pd.read_csv(path_to_emissions, index_col=[0, 1, 2])
-        gwp_row = emissions_matrix.loc[(emissions_matrix.index.get_level_values(2) == 'GWP100a') & (emissions_matrix.index.get_level_values(0) == 'CH')]
-        gwp_profile = gwp_row.T
-        gwp_profile.index = range(1, len(gwp_profile) + 1)
-        gwp_profile.index.name = 'Hour'
-        gwp_profile.columns = ['gwp']
+        # Load GWP100a profile from Elec_CO2_2023.txt
+        gwp_profile = pd.read_csv(path_to_emissions, sep=',', header=None)
+        gwp_profile.columns = ['Hour', 'gwp']
+        gwp_profile.set_index('Hour', inplace=True)
         return load_profile, gwp_profile
 
 
@@ -75,12 +72,14 @@ def extract_data_and_periods(excel_file, column_name):
     while len(periods) < len(csv_df):  # Ensure that the lengths of periods and time_of_year match the length of csv_df
         periods.append(12)
         time_of_year.append(len(time_of_year) % 24 + 1)
-    csv_df['PeriodOfYear'], csv_df['TimeOfYear'] = periods[:len(csv_df)], time_of_year[:len(csv_df)]  # Add PeriodOfYear and TimeOfYear columns
+    csv_df['PeriodOfYear'], csv_df['TimeOfYear'] = periods[:len(csv_df)], time_of_year[:len(
+        csv_df)]  # Add PeriodOfYear and TimeOfYear columns
     return csv_df[['HourOfYear', 'PeriodOfYear', column_name]]  # Reorder columns
 
 
 def extract_index(excel_file):
-    return pd.read_excel(excel_file, sheet_name='df_Index', usecols=['HourOfYear', 'PeriodOfYear'])  # Load the Excel file
+    return pd.read_excel(excel_file, sheet_name='df_Index',
+                         usecols=['HourOfYear', 'PeriodOfYear'])  # Load the Excel file
 
 
 def merge_dataframes(df_index, df_data, column_name):
@@ -92,12 +91,15 @@ def merge_dataframes(df_index, df_data, column_name):
         if not data_values_for_period.empty:
             hour_of_year = row['HourOfYear']
             data_value = data_values_for_period.iloc[(hour_of_year - 1) % len(data_values_for_period)][column_name]
-            load_profile_list.append({'HourOfYear': hour_of_year, 'PeriodOfYear': period_of_year, column_name: data_value})
+            load_profile_list.append(
+                {'HourOfYear': hour_of_year, 'PeriodOfYear': period_of_year, column_name: data_value})
     return pd.DataFrame(load_profile_list)  # Convert the list to a DataFrame
 
 
-def process_and_optimize_data(path_to_load_profile, path_to_excel_file_BAU, model_path, output_path, column_name, size=288):
-    load_profile = pd.read_csv(path_to_load_profile)['Load_Profile'].values  # Load profile of data centre after clustering
+def process_and_optimize_data(path_to_load_profile, path_to_excel_file_BAU, model_path, output_path, column_name,
+                              size=288):
+    load_profile = pd.read_csv(path_to_load_profile)[
+        'Load_Profile'].values  # Load profile of data centre after clustering
     df_data = extract_data_and_periods(path_to_excel_file_BAU, column_name)  # Extract data and periods from Excel file
     df_index = extract_index(path_to_excel_file_BAU)  # Extract index file from Excel file
     profile_data_df = merge_dataframes(df_index, df_data, column_name)  # Merge dataframes based on index and periods
@@ -125,6 +127,4 @@ def process_and_optimize_data(path_to_load_profile, path_to_excel_file_BAU, mode
 
     shifted_load.to_csv(output_path, sep=',', index=False, header=True)  # Save shifted load DataFrame to CSV file
 
-    return total_use, shifted_load, profile_data
-
-#
+    return total_use, shifted_load, profile_data_df#
