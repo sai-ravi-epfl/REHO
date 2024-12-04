@@ -1,7 +1,6 @@
-
 # Heat curtailment
-let {h in House,st in StreamsOfHouse[h] inter {'HC_'&h&'_c_lt'},p in Period, t in Time[p]} Streams_Tin[st,p,t] := 20;
-let {h in House,st in StreamsOfHouse[h] inter {'HC_'&h&'_c_lt'},p in Period, t in Time[p]} Streams_Tout[st,p,t] := 50;
+#let {h in House,st in StreamsOfHouse[h] inter {'HC_'&h&'_c_lt'},p in Period, t in Time[p]} Streams_Tin[st,p,t] := 20;
+#let {h in House,st in StreamsOfHouse[h] inter {'HC_'&h&'_c_lt'},p in Period, t in Time[p]} Streams_Tout[st,p,t] := 50;
 
 #
 

@@ -15,6 +15,10 @@ set Units default {};
 set UnitsOfType{UnitTypes} within Units default {};
 set UnitsOfLayer{Layers} within Units;
 
+set Year := {1..8760} circular;
+param PeriodOfYear{y in Year} default 1;
+param TimeOfYear{y in Year} default 1;
+
 set House;
 set HousesOfLayer{Layers} within House;
 set FeasibleSolutions ordered;
@@ -66,6 +70,7 @@ param Grid_demand{l in ResourceBalances, f in FeasibleSolutions, h in House, p i
 param TransformerCapacity{l in ResourceBalances} default 1e8;
 #adding this parameter here so that I can parse a temporal profile for the transformer capacity
 param TransformerCapacity_heat_t{l in ResourceBalances, p in Period, t in Time[p]: l = 'Heat'} default TransformerCapacity[l];
+
 
 
 param Grids_flowrate{l in ResourceBalances, h in House} default 1e9;

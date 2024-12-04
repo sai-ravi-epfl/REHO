@@ -87,7 +87,6 @@ class MasterProblem:
 
         # retrieve location data
         self.local_data = return_local_data(cluster, qbuildings_data)
-
         if parameters is None:
             self.parameters = {}
         else:
@@ -115,7 +114,7 @@ class MasterProblem:
 
         self.lists_MP = {"list_parameters_MP": ['utility_portfolio_min', 'owner_portfolio_min', 'EMOO_totex_renter', 'TransformerCapacity',
                                                 'EV_y', 'EV_plugged_out', 'n_vehicles', 'EV_capacity', 'EV_displacement_init', 'monthly_grid_connection_cost',
-                                                "area_district", "velocity", "density", "delta_enthalpy", "cinv1_dhn", "cinv2_dhn", "TransformerCapacity_heat_t", "elec_demand_datacentre"],
+                                                "area_district", "velocity", "density", "delta_enthalpy", "cinv1_dhn", "cinv2_dhn", "TransformerCapacity_heat_t", "elec_demand_datacentre", 'DC_heat_recovery'],
                          "list_constraints_MP": []
                          }
 
@@ -391,6 +390,8 @@ class MasterProblem:
         if self.method["actors_problem"]:
             ampl_MP.read('actors_problem.mod')
 
+
+
         if len(self.infrastructure.UnitsOfDistrict) > 0:
             ampl_MP.cd(path_to_district_units)
             if "EV_district" in self.infrastructure.UnitsOfDistrict:
@@ -410,6 +411,11 @@ class MasterProblem:
             if "Battery_district" in self.infrastructure.UnitsOfDistrict:
                 ampl_MP.cd(path_to_units_storage)
                 ampl_MP.read('battery.mod')
+            if "BESS_IP" in self.infrastructure.UnitsOfDistrict:
+                ampl_MP.cd(path_to_units_storage)
+                ampl_MP.read('battery_interperiod_ettore.mod')
+
+
 
         if read_DHN:  # TODO: move DHN.mod into ampl_model > units > district_units
             ampl_MP.cd(path_to_units)
@@ -418,26 +424,35 @@ class MasterProblem:
 
         ampl_MP.cd(path_to_clustering)
         ampl_MP.readData('frequency_' + self.local_data['File_ID'] + '.dat')
+        ampl_MP.readData('index_' + self.local_data['File_ID'] + '.dat')
         ampl_MP.cd(path_to_ampl_model)
+        ntimes= self.cluster['Periods']*self.cluster['PeriodDuration'] + 2
+
 
         # Assuming T_source_array is the flat numpy array with 580 values
-        df_end = ampl_MP.getParameter('TimeEnd').getValues().toPandas()
-        timesteps = int(df_end['TimeEnd'].sum())
-        T_source = []
-        max_cap = []
+
         if 'HeatPump' in self.infrastructure.UnitsOfType:
+            df_end = ampl_MP.getParameter('TimeEnd').getValues().toPandas()
+            timesteps = int(df_end['TimeEnd'].sum())
+            T_source = []
+            max_cap = []
             for unit in self.infrastructure.UnitsOfType['HeatPump']:
                 if 'district' in unit:
                     if 'DataCentre' in unit:
-                        T_source = np.concatenate([T_source, np.repeat(20, timesteps)])
-                        file_path_to_data_centre_profile = r'C:\Users\there\Desktop\REHO2\scripts\template\data\clustering\D_Pully_10_24_T_I_E_D.dat'
-                        data_centre_profile_kW = np.loadtxt(file_path_to_data_centre_profile)
-                        max_cap =  data_centre_profile_kW #in kW data centre source is 288 kW max ,
+                        if 'Data' in self.infrastructure.grids.keys():
+                            T_source = np.concatenate([T_source, np.repeat(20, timesteps)])
+                            file_path_to_data_centre_profile = path_to_clustering + '/D_' + self.local_data['File_ID'] + '.dat'  # need to make this automatic at some point
+                            data_centre_profile_kW = np.loadtxt(file_path_to_data_centre_profile)
+                            max_cap = data_centre_profile_kW  # in kW data centre source is 288 kW max
+                        else:
+                            T_source = np.concatenate([T_source, np.repeat(20, timesteps)])
+                            max_cap= np.concatenate([max_cap, np.repeat(0, ntimes)])
+
+
                     elif 'Geothermal' in unit:
                         T_source = np.concatenate([T_source, np.repeat(15, timesteps)])
-                        max_cap = np.concatenate([max_cap, np.repeat(1e6, 242)])
-                    else:
-                        raise Exception('HP source undefined')
+                        max_cap = np.concatenate([max_cap, np.repeat(1e6, ntimes)]) #also this value, needs to be automatic
+
 
 
         # -------------------------------------------------------------------------------------------------------------
@@ -499,10 +514,14 @@ class MasterProblem:
         if 'EV_plugged_out' not in MP_parameters:
             if len(self.infrastructure.UnitsOfDistrict) != 0:
                 if 'EV_district' in self.infrastructure.UnitsOfDistrict:
+                    if 'n_vehicles' not in MP_parameters.keys():
+                        MP_parameters['n_vehicles']=1
                     MP_parameters['EV_plugged_out'], MP_parameters['EV_plugging_in'] = EV_gen.generate_EV_plugged_out_profiles_district(self.cluster, self.local_data["df_Timestamp"])
 
-        MP_parameters["T_source"] = T_source
-        MP_parameters["max_cap"] = max_cap
+        for unit in self.infrastructure.UnitsOfType['HeatPump']:
+            if 'district' in unit:
+                MP_parameters["T_source"] = T_source
+                MP_parameters["max_cap"] = max_cap
 
 
         if read_DHN:

@@ -7,8 +7,10 @@ from SALib.sample import morris as morris_sample
 from SALib.sample import sobol as sobol_sample
 from qmcpy import Sobol
 from scipy.stats import qmc
-
 from reho.model.reho import *
+import time
+import numpy as np
+import os
 
 __doc__ = """
 Performs a sensitivity analysis on the optimization.
@@ -158,7 +160,6 @@ class SensitivityAnalysis:
         objective_values : list
             Values of the objective function for each optimization
         """
-
         path_to_SA_results = 'results/'
         folder = os.path.join(path_to_SA_results, "computational_results")
         if not os.path.exists(path_to_SA_results):

@@ -83,6 +83,7 @@ param Streams_Mcp{s in Streams,p in Period,t in Time[p]}:=
 		(Streams_Hin[s]-Streams_Hout[s])/(Streams_Tin[s,p,t]-Streams_Tout[s,p,t])
 	; 																	#kJ/kg K
 
+
 ######################################################################################################################
 #--------------------------------------------------------------------------------------------------------------------#
 # UNITS
@@ -366,15 +367,24 @@ param T_comfort_min{h in House,p in Period,t in Time[p]} default T_comfort_min_0
 param T_comfort_max_0{h in House} default 25;											#deg C		: Reference upper comfort bound
 param T_penality{h in House} default 3;													#CHF/C hr	: Comfort Penality costs
 param T_inf_limit{h in House} default 5;												#deg C		: Maximum delta of cold temperature acceptable
-param T_sup_limit{h in House} default 10;												#deg C		: Maximum delta of hot temperature acceptable
+param T_sup_limit{h in House} default 3;												#deg C		: Maximum delta of hot temperature acceptable
+param working_hour_mask{p in Period,t in Time[p]} default 1;
 
 param HeatGains{h in House,p in Period,t in Time[p]}>= 0, default 0;	            	#kW : Internal heat gains
 param SolarGains{h in House,p in Period,t in Time[p]} >= 0, default 0;              	#kW	: Solar heat gains
 
 var Costs_House_cft{h in House} >= 0;										        	#CHF/hr
 var T_in{h in House,p in Period,t in Time[p]} >= 0;							        	#deg C
+
+#sai the great
+/*
+param T_inf{h in House,p in PeriodStandard,t in Time[p]} default T_inf_limit[h];
+param T_sup{h in House,p in PeriodStandard,t in Time[p]} default T_sup_limit[h];
+x*/
 var T_inf{h in House,p in PeriodStandard,t in Time[p]} >= 0, <= T_inf_limit[h];			#deg C
 var T_sup{h in House,p in PeriodStandard,t in Time[p]} >= 0, <= T_sup_limit[h];			#deg C
+
+
 var House_Q_heating{h in House,p in Period,t in Time[p]} >= 0;				        	#kW
 var House_Q_cooling{h in House,p in Period,t in Time[p]} >= 0;				        	#kW
 
@@ -382,7 +392,7 @@ subject to House_Penality_inf{h in House,p in PeriodStandard,t in Time[p]}:
 T_inf[h,p,t] >= T_comfort_min[h,p,t] - T_in[h,p,t];
 
 subject to House_Penality_sup{h in House,p in PeriodStandard,t in Time[p]}:
-T_sup[h,p,t] >= Cooling[h]*(T_in[h,p,t] - T_comfort_max_0[h]);
+T_sup[h,p,t] >= Cooling[h]*(T_in[h,p,t] - T_comfort_max_0[h]); 
 
 subject to House_Comfort_c1{h in House}:
 Costs_House_cft[h] = sum{p in PeriodStandard,t in Time[p]} T_penality[h]*(T_inf[h,p,t] + T_sup[h,p,t])*dp[p]*dt[p];	#CHF/yr
@@ -393,7 +403,7 @@ Costs_House_cft[h] = sum{p in PeriodStandard,t in Time[p]} T_penality[h]*(T_inf[
 
 #-Design parameters
 param Tc_out_0 default 35;																																#deg C	: Warm nominal ambient temperature 
-param Th_out_0 default if card(Period) > 1 then T_ext[card(Period)-1,1] else -6;															#deg C	: Cold nominal ambient temperature
+param Th_out_0 default if card(Period) > 1 then T_ext[card(Period)-1,1] else -6;																		#deg C	: Cold nominal ambient temperature
 param Tc_supply_0{h in House} default 12;																												#deg C	: Warm nominal supply temperature 
 param Th_supply_0{h in House} default 65;																												#deg C	: Cold nominal supply temperature 	
 param Tc_return_0{h in House} default 17;																												#deg C	: Warm nominal return temperature 
@@ -410,28 +420,36 @@ param Mcp_0h{h in House} 	:= Qh_0[h]/(Th_supply_0[h]-Th_return_0[h]);											
 param alpha_h{h in House}	:= (1/Mcp_0h[h])/(exp(UAh_0[h]/Mcp_0h[h])-1);														#K/kW
 param alpha_c{h in House}	:= (1/Mcp_0c[h])/(exp(UAc_0[h]/Mcp_0c[h])-1);														#K/kW
 
+/* Sai the great
+
 #-Standard requirements
-param Qh{h in House,p in Period,t in Time[p]} 			:= if U_h[h]*ERA[h]*(T_comfort_min_0[h]-T_ext[p,t])-(HeatGains[h,p,t]+SolarGains[h,p,t])>0 and U_h[h]>0 then U_h[h]*ERA[h]*(T_comfort_min_0[h]-T_ext[p,t])-(HeatGains[h,p,t]+SolarGains[h,p,t]) else 0;
+param Qh{h in House,p in Period,t in Time[p]} 			:= if U_h[h]*ERA[h]*(T_comfort_min_0[h]-T_ext[p,t])-(HeatGains[h,p,t]+SolarGains[h,p,t])>0 and U_h[h]>0 then (U_h[h]*ERA[h]*(T_comfort_min_0[h]-T_ext[p,t])-(HeatGains[h,p,t]+SolarGains[h,p,t])) else 0;
 param Th_return{h in House,p in Period,t in Time[p]} 	:= if U_h[h]>0 then T_comfort_min_0[h] + Qh[h,p,t]*alpha_h[h] else T_comfort_min_0[h];
 param Th_supply{h in House,p in Period,t in Time[p]} 	:= if U_h[h]>0 then Qh[h,p,t]/Mcp_0h[h] + Th_return[h,p,t] else T_comfort_min_0[h];
 param Qc{h in House,p in Period,t in Time[p]} 			:= if U_h[h]*ERA[h]*(T_comfort_min_0[h]-T_ext[p,t])-(HeatGains[h,p,t]+SolarGains[h,p,t])<0 and Cooling[h] > 0 then -U_h[h]*ERA[h]*(T_comfort_min_0[h]-T_ext[p,t])+(HeatGains[h,p,t]+SolarGains[h,p,t]) else 0;
 param Tc_return{h in House,p in Period,t in Time[p]} 	:= T_comfort_min_0[h] - Qc[h,p,t]*alpha_c[h];
 param Tc_supply{h in House,p in Period,t in Time[p]} 	:= -Qc[h,p,t]/Mcp_0c[h] + Tc_return[h,p,t];
 
-#-Non-standard requirements																					
+*/
+#-Standard requirements
+param Qh{h in House,p in Period,t in Time[p]} 			:= if U_h[h]*ERA[h]*(T_comfort_min[h,p,t]-T_ext[p,t])-(HeatGains[h,p,t]+SolarGains[h,p,t])>0 and U_h[h]>0 then working_hour_mask[p,t]*(U_h[h]*ERA[h]*(T_comfort_min[h,p,t]-T_ext[p,t])-(HeatGains[h,p,t]+SolarGains[h,p,t])) else 0;
+param Th_return{h in House,p in Period,t in Time[p]} 	:= if U_h[h]>0 then T_comfort_min[h,p,t] + Qh[h,p,t]*alpha_h[h] else T_comfort_min[h,p,t];
+param Th_supply{h in House,p in Period,t in Time[p]} 	:= if U_h[h]>0 then Qh[h,p,t]/Mcp_0h[h] + Th_return[h,p,t] else T_comfort_min[h,p,t];
+param Qc{h in House,p in Period,t in Time[p]} 			:= if U_h[h]*ERA[h]*(T_comfort_min[h,p,t]-T_ext[p,t])-(HeatGains[h,p,t]+SolarGains[h,p,t])<0 and Cooling[h] > 0 then -U_h[h]*ERA[h]*(T_comfort_min[h,p,t]-T_ext[p,t])+(HeatGains[h,p,t]+SolarGains[h,p,t]) else 0;
+param Tc_return{h in House,p in Period,t in Time[p]} 	:= T_comfort_min[h,p,t] - Qc[h,p,t]*alpha_c[h];
+param Tc_supply{h in House,p in Period,t in Time[p]} 	:= -Qc[h,p,t]/Mcp_0c[h] + Tc_return[h,p,t];
+
+
+#-Non-standard requirements									These two lines are never used!???												
 param House_Q_heating_max_d{h in House,p in Period,t in Time[p]} := Qh[h,p,t]+0.25*Qh_0[h]+epsilon;
 param House_Q_cooling_max_d{h in House,p in Period,t in Time[p]} := Qc[h,p,t]+0.25*Qc_0[h]+epsilon;
 
 #-heating
 subject to House_streams_heating_c1{h in House,p in Period,t in Time[p]}:
-sum{se in Services,st in StreamsOfService[se] inter StreamsOfBuilding[h]:se='SH' and Streams_Hin[st]=0}(Streams_Mcp[st,p,t]*HC_Streams_Mult[se,st,p,t]) <= Mcp_0h[h];
+sum{se in Services,st in StreamsOfService[se] inter StreamsOfBuilding[h]:se='SH' and Streams_Hin[st]=0}(Streams_Mcp[st,p,t]*HC_Streams_Mult[se,st,p,t]) <= Mcp_0h[h]; #Mcp_0h[h]
 
 subject to House_streams_heating_c2{h in House,p in Period,t in Time[p]}:
 sum{se in Services,st in StreamsOfService[se] inter StreamsOfBuilding[h]:se='SH' and Streams_Hin[st]=0}(Streams_Q[se,st,p,t]) = House_Q_heating[h,p,t];
-
-#-cooling 
-#subject to House_streams_cooling_c1{h in House,p in Period,t in Time[p]}:
-#sum{se in Services,st in StreamsOfService[se] inter StreamsOfBuilding[h]:se='Cooling' and Streams_Hout[st]=0}(Streams_Mcp[st,p,t]*HC_Streams_Mult[se,st,p,t]) <= Mcp_0c[h];
 
 subject to House_streams_cooling_c2{h in House,p in Period,t in Time[p]}:
 sum{se in Services,st in StreamsOfService[se] inter StreamsOfBuilding[h]:se='Cooling' and Streams_Hout[st]=0}(Streams_Q[se,st,p,t]) = House_Q_cooling[h,p,t];
