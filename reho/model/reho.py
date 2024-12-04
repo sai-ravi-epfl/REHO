@@ -6,6 +6,7 @@ from reho.model.postprocessing.KPIs import *
 from reho.model.postprocessing.building_scale_network_builder import *
 from reho.paths import *
 
+
 __doc__ = """
 File for constructing and solving the optimization problem.
 """

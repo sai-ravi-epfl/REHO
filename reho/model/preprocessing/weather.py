@@ -216,6 +216,7 @@ def generate_output_data(cl, attributes, location, cluster):
     T_max['Irr'] = cl.data_org.loc[T_day[1] * 24: T_day[1] * 24 + 24, 'Irr'].max()
     T_min.loc[:, ['time.dd', 'time.hh', 'dt']] = [T_day[0], 1, 1]
     T_max.loc[:, ['time.dd', 'time.hh', 'dt']] = [T_day[1], 1, 1]
+    T_min['Text']= -1
     data_cls = pd.concat([data_cls, T_min.rename({T_idx[0]: 240}), T_max.rename({T_idx[1]: 241})])
     # Add a 10% margin for the extreme over 20 years
     data_cls.loc[[240, 241], ['Text', 'Irr']] = data_cls.loc[[240, 241], ['Text', 'Irr']] * 1.1
@@ -252,6 +253,12 @@ def get_metric(cluster):
         return 'method 1'
 
 def data_centre_profile(size): # size to be mentioned in kW # This part is still using old data of data centre, need to update this part with Theresa's work
+    file_path= path_to_profiles+'/yearly_data_centre_profile_repeated2.csv'
+    df_load_profile = pd.read_csv(file_path)
+    df_load_profile = df_load_profile['Load_Profile'].div(288).mul(size)  # profile data created by observing trend from this study: https://arxiv.org/abs/1804.00703
+    path = os.path.join(path_to_weather, 'yearly_data_centre_profile_repeated.csv')
+    df_load_profile.to_csv(path)
+    '''
     data_centre_profile_week = '/data_centre_hourly_week.csv'
     file_path = path_to_profiles+data_centre_profile_week
     df_load_profile = pd.read_csv(file_path)
@@ -270,6 +277,8 @@ def data_centre_profile(size): # size to be mentioned in kW # This part is still
         writer = csv.writer(file)
         writer.writerow(['Hour', 'Load_Profile'])  # Header row
         writer.writerows(csv_data)
+        
+    '''
 def write_dat_files( attributes, location, values_cluster, index_inter, cluster):
     """
     Writes the clustering results computed from ``generate_output_data`` as .dat files.
@@ -466,7 +475,7 @@ def write_dat_files( attributes, location, values_cluster, index_inter, cluster)
     IterationFile.write(header)
     for key in dict_index:
         pt = df_time.iloc[0].timesteps  # take the same period duration also for modulo
-        date = dt.datetime(2005, 1, 1) + dt.timedelta(hours=float((key - 1) * pt))
+        date = dt.datetime(2005, 1, 1) + dt.timedelta(hours=float((key) * pt))
 
         if 'Weekday' in attributes:
             text = date.strftime("%m/%d/%Y/%H") + '\t' + str(key) + '\t' + str(dp[dict_index[key] - 1]) + '\t' + str(
@@ -739,7 +748,7 @@ def plot_LDC(cl, save_fig):
     plt.tight_layout()
     if save_fig:
         format = 'pdf'
-        plt.savefig(('Temp' + '.' + format), format=format, dpi=300)
+        plt.savefig(('Temp_' +str(cl.nb_clusters[0])+ '.' + format), format=format, dpi=300)
     else:
         plt.show()
 
@@ -757,7 +766,7 @@ def plot_LDC(cl, save_fig):
     plt.tight_layout()
     if save_fig:
         format = 'pdf'
-        plt.savefig(('IRR' + '.' + format), format=format, dpi=300)
+        plt.savefig(('IRR_'+str(cl.nb_clusters[0])+ '.' + format), format=format, dpi=300)
     else:
         plt.show()
 
@@ -774,7 +783,7 @@ def plot_LDC(cl, save_fig):
     plt.tight_layout()
     if save_fig:
         format = 'pdf'
-        plt.savefig(('GWP' + '.' + format), format=format, dpi=300)
+        plt.savefig(('GWP_'+str(cl.nb_clusters[0])+'.' + format), format=format, dpi=300)
     else:
         plt.show()
 
@@ -791,7 +800,7 @@ def plot_LDC(cl, save_fig):
     plt.tight_layout()
     if save_fig:
         format = 'pdf'
-        plt.savefig(('Data' + '.' + format), format=format, dpi=300)
+        plt.savefig(('Data_'+str(cl.nb_clusters[0])+ '.' + format), format=format, dpi=300)
     else:
         plt.show()
 
@@ -804,14 +813,14 @@ if __name__ == '__main__':
     #nb_clusters = [10]
     nb_clusters = [16]
 
-    df_annual = read_custom_weather(weather_file)
+    df_annual = read_custom_weather(weather_file, weeks = True)
     print(df_annual)
     df_annual = df_annual[Attributes]
 
-    cl = Clustering(data=df_annual, nb_clusters=nb_clusters, option={"year-to-day": True, "extreme": []}, pd=24)
+    cl = Clustering(data=df_annual, nb_clusters=nb_clusters, option={"year-to-day": True, "extreme": []}, pd=168)
     cl.run_clustering()
 
     #plot_cluster_KPI_separate(cl.kpis_clu, save_fig=False)
-    plot_LDC(cl, save_fig=True)
-
-    generate_output_data(cl, Attributes, "Pully")
+    plot_LDC(cl, save_fig= True)
+    cluster = {'Location': 'Pully', 'Attributes': ['I', 'T', 'E', 'D'], 'Periods': 16, 'PeriodDuration': 168}
+    generate_output_data(cl, Attributes, "Pully", cluster)
