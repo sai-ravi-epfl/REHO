@@ -114,7 +114,7 @@ class MasterProblem:
 
         self.lists_MP = {"list_parameters_MP": ['utility_portfolio_min', 'owner_portfolio_min', 'EMOO_totex_renter', 'TransformerCapacity',
                                                 'EV_y', 'EV_plugged_out', 'n_vehicles', 'EV_capacity', 'EV_displacement_init', 'monthly_grid_connection_cost',
-                                                "area_district", "velocity", "density", "delta_enthalpy", "cinv1_dhn", "cinv2_dhn", "TransformerCapacity_heat_t", "elec_demand_datacentre"],
+                                                "area_district", "velocity", "density", "delta_enthalpy", "cinv1_dhn", "cinv2_dhn", "TransformerCapacity_heat_t", "elec_demand_datacentre", 'DC_heat_recovery'],
                          "list_constraints_MP": []
                          }
 
@@ -516,7 +516,7 @@ class MasterProblem:
                 if 'EV_district' in self.infrastructure.UnitsOfDistrict:
                     if 'n_vehicles' not in MP_parameters.keys():
                         MP_parameters['n_vehicles']=1
-                    MP_parameters['EV_plugged_out'], MP_parameters['EV_plugging_in'] = EV_gen.generate_EV_plugged_out_profiles_district(self.cluster, self.local_data["df_Timestamp"],MP_parameters['n_vehicles']!=0)
+                    MP_parameters['EV_plugged_out'], MP_parameters['EV_plugging_in'] = EV_gen.generate_EV_plugged_out_profiles_district(self.cluster, self.local_data["df_Timestamp"])
 
         for unit in self.infrastructure.UnitsOfType['HeatPump']:
             if 'district' in unit:
