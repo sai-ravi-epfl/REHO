@@ -113,9 +113,9 @@ class MasterProblem:
             self.DW_params = DW_params
         self.DW_params = self.initialise_DW_params(self.DW_params, self.cluster, self.buildings_data)
 
-        self.lists_MP = {"list_parameters_MP": ['utility_portfolio_min', 'owner_portfolio_min', 'EMOO_totex_renter', 'TransformerCapacity',
+        self.lists_MP = {"list_parameters_MP": ['Cost_demand_cst','utility_portfolio_min', 'owner_portfolio_min', 'EMOO_totex_renter', 'TransformerCapacity',
                                                 'EV_y', 'EV_plugged_out', 'n_vehicles', 'EV_capacity', 'EV_displacement_init', 'monthly_grid_connection_cost',
-                                                "area_district", "velocity", "density", "delta_enthalpy", "cinv1_dhn", "cinv2_dhn", "TransformerCapacity_heat_t",'STC_Tml_district','I_global_STC','TransformerCapacity_heat'],
+                                                "area_district", "velocity", "density", "delta_enthalpy", "cinv1_dhn", "cinv2_dhn", "TransformerCapacity_heat_t",'STC_Tlm_district','I_global_STC','TransformerCapacity_heat','Cost_supply_network','Cost_demand_network'],
                          "list_constraints_MP": []
                          }
 
@@ -398,8 +398,8 @@ class MasterProblem:
                 self.lists_MP["list_constraints_MP"] = self.lists_MP["list_constraints_MP"] + ['unidirectional_service', 'unidirectional_service2']
             if "NG_Boiler_district" in self.infrastructure.UnitsOfDistrict:
                 ampl_MP.read('ng_boiler_district.mod')
-            #if "ThermalSolar_district" in self.infrastructure.UnitsOfDistrict:
-                #ampl_MP.read('solarthermal_district.mod')
+            if "ThermalSolar_district" in self.infrastructure.UnitsOfDistrict:
+                ampl_MP.read('solarthermal_district.mod')
             if "HeatPump_Geothermal_district" in self.infrastructure.UnitsOfDistrict:
                 ampl_MP.read('heatpump_district.mod')
             if "NG_Cogeneration_district" in self.infrastructure.UnitsOfDistrict:
@@ -1200,6 +1200,7 @@ class MasterProblem:
                 else:
                     parameters_SP[key] = self.parameters[key][ID]
         return buildings_data_SP, parameters_SP
+
 
     def build_infrastructure_SP(self):
         for h in self.buildings_data:

@@ -42,6 +42,10 @@ param n_years default 25;
 param i_rate default 0.02;
 param tau := i_rate*(1+i_rate)^n_years/(((1+i_rate)^n_years)-1);
 
+# for solarthermal district
+param STC_Tlm_district{p in Period, t in Time[p]} default 50;
+param I_global_STC{p in Period, t in Time[p]} default 1;
+
 
 ######################################################################################################################
 #--------------------------------------------------------------------------------------------------------------------#

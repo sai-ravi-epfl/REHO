@@ -561,6 +561,12 @@ class REHO(MasterProblem):
         df_Unit_t = pd.concat([df_Unit_t, df_district_units])
         df_Results["df_Unit_t"] = df_Unit_t
 
+        #STES
+        if "STES_district" in self.infrastructure.UnitsOfDistrict:
+            df_storage_stes = last_results["df_storage_stes"]
+            df_Results["df_storage_stes"] = df_storage_stes
+
+
         if self.method["save_streams"]:
             # df_Streams_t
             df_Streams_t = self.get_final_SPs_results(MP_selection, 'df_Streams_t')

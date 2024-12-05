@@ -157,6 +157,7 @@ def get_df_Results_from_SP(ampl, scenario, method, buildings_data, filter=True):
         #df_Unit_t.to_csv('/Users/ravi/Desktop/df_unit_t_withDHNHEX.csv')
         return df_Unit, df_Unit_t
 
+
     def set_df_storage(ampl):
         try:
             df1 = get_ampl_data(ampl, 'BAT_E_stored_IP', multi_index=True)
@@ -165,34 +166,13 @@ def get_df_Results_from_SP(ampl, scenario, method, buildings_data, filter=True):
         except:
             df1 = None
 
-        try:
-            df2 = get_ampl_data(ampl, 'HS_E_stored_IP', multi_index=True)
-            if df2.empty:
-                df2 = None
-        except:
-            df2 = None
-
-        if df1 is not None and df2 is not None:
-            df_storage = pd.concat([df1, df2], axis=1)
-        elif df1 is not None:
+        if df1 is not None:
             df_storage = df1
-        elif df2 is not None:
-            df_storage = df2
         else:
             df_storage = pd.DataFrame()
 
-        if not df_storage.empty:
-            df_storage.index.names = ['Layer', 'Unit', 'HourOfYear']
-            df_storage = df_storage.sort_index()
-
         return df_storage
 
-
-    def set_df_M_HS_IP(ampl):
-        df1 = get_ampl_data(ampl, 'TES_IP_mf_hot', multi_index=True)
-        df2 = get_ampl_data(ampl, 'TES_IP_mf_cold', multi_index=True)
-        df_M_HS_IP = pd.concat([df1, df2], axis=1)
-        return df_M_HS_IP
 
     def set_df_grid(ampl, method):
         # Grid_t
@@ -394,7 +374,7 @@ def get_df_Results_from_SP(ampl, scenario, method, buildings_data, filter=True):
 
     if method['use_Storage_Interperiod']:
         df_Results["df_storage"] = set_df_storage(ampl)
-        df_Results["df_M_HS_IP"] = set_df_M_HS_IP(ampl)
+
 
     if method['save_data_input']:
         df_Results["df_Buildings"] = set_df_buildings(buildings_data)
@@ -444,6 +424,12 @@ def get_df_Results_from_MP(ampl, binary=False, method=None, district=None, read_
     df_DW = pd.concat([df1], axis=1)
     df_DW.index.names = ['FeasibleSolution', 'Hub']
     df_Results["df_DW"] = df_DW.sort_index()
+
+    if "STES_district" in district.UnitsOfDistrict:
+        df1 = get_ampl_data(ampl, 'STES_E_stored_IP', multi_index=True)
+        df_stes_energy = pd.concat([df1], axis=1)
+        df_Results["df_storage_stes"] = df_stes_energy
+
 
     if method["save_data_input"] or binary:
         # Building_t
@@ -602,6 +588,33 @@ def get_df_Results_from_MP(ampl, binary=False, method=None, district=None, read_
     else:
         df_Results["df_Unit_t"] = pd.DataFrame()
 
+
+
+    '''
+    df1 = get_ampl_data(ampl, 'STES_E_stored_IP', multi_index=True)
+    df_stes_energy = df1
+    df_Results["df_storage_stes"] = df_stes_energy
+    '''
+
+    '''
+    def set_df_storage_stes(ampl):
+        try:
+            df1 = get_ampl_data(ampl, 'STES_E_stored_IP', multi_index=True)
+            if df1.empty:
+                df1 = None
+        except:
+            df1 = None
+
+        if df1 is not None:
+            df_storage_stes = df1
+        else:
+            df_storage_stes = pd.DataFrame()
+
+        return df_storage_stes 
+        
+    df_Results["df_storage_stes"] = set_df_storage_stes(ampl)'''
+
+
     # LCA
     if method["save_lca"]:
         LCA_units = get_ampl_data(ampl, 'lca_units', multi_index=True)
@@ -640,6 +653,7 @@ def get_df_Results_from_MP(ampl, binary=False, method=None, district=None, read_
         df_Actors = pd.concat([df_Actors, df_6], axis=0)
         df_Results["df_District"] = pd.concat([df_Results["df_District"], df_Actors], axis=1)
         df_Results["df_District"].loc["Network", "Objective"] = ampl.getObjective("TOTEX_bui").getValues().toList()[0]
+
 
     return df_Results
 

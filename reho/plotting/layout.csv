@@ -76,3 +76,5 @@ Isolation,Thermal insulation,INS,Isolation,#69B58A,green,#9AC0CD,bluegrey
 Isolation_roof,Roof insulation,INS1,Isolation toiture,#a9d6bc,green_light,#9AC0CD,bluegrey
 Isolation_facade,Facade insulation,INS2,Isolation façade,#87c5a1,green_medium,#9AC0CD,bluegrey
 Isolation_full,Complete insulation,INS3,Isolation complète,#53ac7a,green_dark,#9AC0CD,bluegrey
+STES_district,seasonal thermal storage,STES,,#6A5ACD,,,
+ThermalSolar_district,thermal solar collector,TSC,,#32CD32,,,

@@ -21,8 +21,8 @@ if __name__ == '__main__':
     scenario['EMOO'] = {}  # remain empty for now
     scenario['specific'] = []  # remain empty for now
     scenario['name'] = 'totex'  # any name is possible here
-    scenario['exclude_units'] = ['NG_boiler']  # specify some units to be excluded    'WaterTankSH','ElectricalHeater_SH','ElectricalHeater_DHW','HeatPump_Air','HeatPump_Geothermal','HeatPump_Geothermal','NG_Cogeneration'
-    scenario['enforce_units'] = ['ThermalSolar']  # specify some units to be enforced
+    scenario['exclude_units'] = ['WaterTankSH','ElectricalHeater_SH','ElectricalHeater_DHW','HeatPump_Air','HeatPump_Geothermal','HeatPump_Geothermal','NG_Cogeneration']  # specify some units to be excluded    'WaterTankSH','ElectricalHeater_SH','ElectricalHeater_DHW','HeatPump_Air','HeatPump_Geothermal','HeatPump_Geothermal','NG_Cogeneration'
+    scenario['enforce_units'] = []  # specify some units to be enforced
 
     # Initialize available units and grids
     grids = infrastructure.initialize_grids()  # grids parameters are based on data/infrastructure/grids.csv
@@ -44,9 +44,9 @@ if __name__ == '__main__':
     # plotting.plot_performance(reho.results, plot='costs', indexed_on='Scn_ID', label='EN_long').show()
     # plotting.plot_performance(reho.results, plot='gwp', indexed_on='Scn_ID', label='EN_long').show()
 
-    #units_to_plot = ['BESS_IP', 'HeatPump', 'PV']
-    #plotting.plot_energy_balance_for_battery(reho.results['totex'][0], units_to_plot, color='ColorPastel', day_of_the_year = 9,time_range='2weeks', label='EN_long').show()
+    units_to_plot = ['BESS_IP', 'PV']
+    plotting.plot_energy_balance_for_battery(reho.results['totex'][0], units_to_plot, color='ColorPastel', day_of_the_year = 190,time_range='2weeks', label='EN_long').show()
 
-    #plotting.plot_storage_profile(reho.results['totex'][0], resolution='daily').show()
+    plotting.plot_storage_profile(reho.results['totex'][0], resolution='daily').show()
 
     #plotting.plot_sankey(reho.results['totex'][0], label='EN_long', color='ColorPastel').show()
