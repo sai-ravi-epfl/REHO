@@ -252,11 +252,10 @@ def get_metric(cluster):
     else:
         return 'method 1'
 
-<<<<<<< HEAD
 
 def data_centre_profile(size): # size to be mentioned in kW
     # df_load_profile = pd.read_csv(r'C:\Users\there\Desktop\REHO2\scripts\templates\shifted_load_GWP_before_clustering.csv')
-    df_load_profile = pd.read_csv(r'C:\Users\there\Desktop\REHO2\scripts\templates\yearly_data_centre_profile_repeated2.csv')
+    df_load_profile = pd.read_csv(r'C:\Users\there\Desktop\REHO2\scripts\templates\yearly_data_centre_profile_repeated12.csv')
     #df_load_profile = pd.read_csv(r'C:\Users\there\Desktop\REHO2\scripts\templates\yearly_data_centre_profile_repeated4.csv')
     #df_load_profile = pd.read_csv(r'C:\Users\there\Desktop\REHO2\scripts\templates\yearly_data_centre_profile_repeated3.csv')
     #df_load_profile = pd.read_csv(r'C:\Users\there\Desktop\REHO2\scripts\templates\yearly_data_centre_profile_repeated2.csv')
@@ -265,46 +264,9 @@ def data_centre_profile(size): # size to be mentioned in kW
     path = os.path.join(path_to_weather, 'yearly_data_centre_profile_repeated.csv')
     df_load_profile.to_csv(path)
 
-=======
-def data_centre_profile(size): # size to be mentioned in kW # This part is still using old data of data centre, need to update this part with Theresa's work
-    file_path= path_to_profiles+'/yearly_data_centre_profile_repeated2.csv'
-    df_load_profile = pd.read_csv(file_path)
-    df_load_profile = df_load_profile['Load_Profile'].div(288).mul(size)  # profile data created by observing trend from this study: https://arxiv.org/abs/1804.00703
-    path = os.path.join(path_to_weather, 'yearly_data_centre_profile_repeated.csv')
-    df_load_profile.to_csv(path)
-    '''
-    data_centre_profile_week = '/data_centre_hourly_week.csv'
-    file_path = path_to_profiles+data_centre_profile_week
-    df_load_profile = pd.read_csv(file_path)
-    df_load_profile= df_load_profile['Load_Profile'].div(50).mul(size) #profile data created by observing trend from this study: https://arxiv.org/abs/1804.00703
-    df_load_annual = pd.concat([df_load_profile]*70).to_frame().reset_index()
-    df_load_annual = df_load_annual['Load_Profile'].to_frame()
-# Replace with your actual data
->>>>>>> origin/Sai_fork_branch
-# Repeat data for the entire year (8760 hours)
-# Prepare data in the format for CSV
-'''   csv_data = []
-    for hour in range(8760):
-        value = df_load_annual['Load_Profile'][hour]  # Repeat data cyclically
-        csv_data.append([hour + 1, value])  # Hour starts from 1
-<<<<<<< HEAD
-
-    writer = csv.writer(df_lod)
-    writer.writerow(['Hour', 'Load_Profile'])  # Header row
-    writer.writerows(csv_data)
- '''
-
-def write_dat_files(attributes, location, values_cluster, index_inter):
-=======
-    csv_filename = path_to_weather + '/yearly_data_centre_profile_repeated.csv'
-    with open(csv_filename, mode='w', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow(['Hour', 'Load_Profile'])  # Header row
-        writer.writerows(csv_data)
         
-    '''
+
 def write_dat_files( attributes, location, values_cluster, index_inter, cluster):
->>>>>>> origin/Sai_fork_branch
     """
     Writes the clustering results computed from ``generate_output_data`` as .dat files.
 

@@ -159,17 +159,17 @@ def process_and_optimize_data(path_to_load_profile, path_to_excel_file_BAU, mode
 # Example call for GWP
 path_to_data_centre_heat_profile = r'C:\Users\there\Desktop\REHO2\scripts\templates\yearly_data_centre_profile_repeated2.csv'
 path_to_emissions = r'C:\Users\there\Desktop\REHO2\reho\data\weather\Elec_CO2_2023.txt'
-model_path = r'C:\Users\there\Desktop\REHO2\scripts\templates\switchLoad\data_heat_switch_before_clustering_gwp.mod'
+model_path = r'C:\Users\there\Desktop\REHO2\manipluateLoadDC\data_heat_switch_before_clustering_gwp_horizon_shift.mod'
 size = 288
-output_path = r'C:\Users\there\Desktop\REHO2\scripts\templates\yearly_data_centre_profile_repeated3.csv'
+output_path = r'C:\Users\there\Desktop\REHO2\scripts\templates\yearly_data_centre_profile_repeated7.csv'
 
 total_gwp, shifted_load_df_GWP, gwp_profile = process_and_optimize_data_GWP(path_to_data_centre_heat_profile, path_to_emissions, model_path, output_path, size)
 
 # Example call for Q_heating
 path_to_load_profile = r'C:\\Users\\there\\Desktop\\REHO2\\scripts\\templates\\yearly_data_centre_profile_repeated2.csv'
 path_to_excel_file_BAU = r'C:\\Users\\there\\Desktop\\REHO2\\scripts\\template\\results\\ALL_EPFL_BAU_gwp.xlsx'
-model_path_SH = r'C:\\Users\\there\\Desktop\\REHO2\\scripts\\templates\\switchLoad\\data_heat_switch_before_clustering_use.mod'
-output_path_SH = r'C:\\Users\\there\\Desktop\\REHO2\\scripts\\templates\\yearly_data_centre_profile_repeated4.csv'
+model_path_SH = r'C:\Users\there\Desktop\REHO2\manipluateLoadDC\data_heat_switch_before_clustering_use_horizon_shift.mod'
+output_path_SH = r'C:\\Users\\there\\Desktop\\REHO2\\scripts\\templates\\yearly_data_centre_profile_repeated8.csv'
 
 total_SH, shifted_load_df_SH, heating_data_df = process_and_optimize_data(path_to_load_profile, path_to_excel_file_BAU, model_path_SH, output_path_SH, 'House_Q_heating')
 
@@ -178,8 +178,8 @@ total_SH, shifted_load_df_SH, heating_data_df = process_and_optimize_data(path_t
 # Example call for Domestic_electricity
 path_to_load_profile = r'C:\\Users\\there\\Desktop\\REHO2\\scripts\\templates\\yearly_data_centre_profile_repeated2.csv'
 path_to_excel_file_BAU = r'C:\\Users\\there\\Desktop\\REHO2\\scripts\\template\\results\\ALL_EPFL_BAU_gwp.xlsx'
-model_path_electricity = r'C:\\Users\\there\\Desktop\\REHO2\\scripts\\templates\\switchLoad\\data_heat_switch_before_clustering_use.mod'
-output_path_electricity = r'C:\\Users\\there\\Desktop\\REHO2\\scripts\\templates\\yearly_data_centre_profile_repeated6.csv'
+model_path_electricity = r'C:\Users\there\Desktop\REHO2\manipluateLoadDC\data_heat_switch_before_clustering_use_horizon_shift.mod'
+output_path_electricity = r'C:\\Users\\there\\Desktop\\REHO2\\scripts\\templates\\yearly_data_centre_profile_repeated9.csv'
 
 total_electricity, shifted_load_df_electricity, electricity_data_df = process_and_optimize_data(path_to_load_profile, path_to_excel_file_BAU, model_path_electricity, output_path_electricity, 'Domestic_electricity', additional_sheet='df_Unit_t', additional_column='Units_demand', filter_value='HeatPump_Geothermal_district')
 
@@ -239,8 +239,13 @@ fig.legend(loc='upper right', bbox_to_anchor=(1,1), bbox_transform=ax1.transAxes
 plt.show()
 fig.savefig('shifted_load_week_comparison_SH_grid_vs_original.png', dpi=300)
 
-# Plotting for Domestic_electricity
-load_profile = pd.read_csv(path_to_load_profile)
+# Shift the green graph (electricity data) to the right by one unit
+electricity_data_df['Domestic_electricity'] = electricity_data_df['Domestic_electricity'].shift(1)
+
+# Remove NaN values that result from shifting
+electricity_data_df = electricity_data_df.dropna(subset=['Domestic_electricity'])
+
+# Plotting the graphs
 fig, ax1 = plt.subplots(figsize=(12, 6))
 ax1.plot(shifted_load_df_electricity['Hour'][:168], shifted_load_df_electricity['Load_Profile'][:168], linestyle='-', marker='', color='b', linewidth=1.5, label='Shifted Load')
 ax1.plot(load_profile['Load_Profile'][:168], linestyle='-', marker='', color='r', linewidth=1.5, label='Original Load')
@@ -262,4 +267,3 @@ ax2.tick_params(axis='y', labelsize=12)
 fig.legend(loc='upper right', bbox_to_anchor=(1,1), bbox_transform=ax1.transAxes)
 plt.show()
 fig.savefig('shifted_load_week_comparison_electricity_grid_vs_original.png', dpi=300)
-
