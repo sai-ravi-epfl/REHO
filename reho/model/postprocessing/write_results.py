@@ -372,6 +372,9 @@ def get_df_Results_from_SP(ampl, scenario, method, buildings_data, filter=True):
     df_Results["df_Grid_t"] = set_df_grid(ampl, method)
     df_Results["df_Time"], df_Weather, df_Index = set_dfs_other(ampl)
 
+
+    
+
     if method['use_Storage_Interperiod']:
         df_Results["df_storage"] = set_df_storage(ampl)
 

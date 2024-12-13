@@ -22,7 +22,7 @@ if __name__ == '__main__':
     scenario['specific'] = []  # remain empty for now
     scenario['name'] = 'totex'  # any name is possible here
     scenario['exclude_units'] = ['WaterTankSH','ElectricalHeater_SH','ElectricalHeater_DHW','HeatPump_Air','HeatPump_Geothermal','HeatPump_Geothermal','NG_Cogeneration']  # specify some units to be excluded    'WaterTankSH','ElectricalHeater_SH','ElectricalHeater_DHW','HeatPump_Air','HeatPump_Geothermal','HeatPump_Geothermal','NG_Cogeneration'
-    scenario['enforce_units'] = []  # specify some units to be enforced
+    scenario['enforce_units'] = ['ThermalSolar']  # specify some units to be enforced
 
     # Initialize available units and grids
     grids = infrastructure.initialize_grids()  # grids parameters are based on data/infrastructure/grids.csv

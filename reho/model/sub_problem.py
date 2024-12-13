@@ -253,13 +253,26 @@ class SubProblem:
         # Design Structure: Building Cluster, Units and Layers
         # -----------------------------------------------------------------------------------------------------#
 
+
+        file_name3 = 'C:/Users/ettor/Desktop/REHO/reho/data/infrastructure/supply_cost.csv'
+        supply_cost = np.loadtxt(file_name3)
+        heat_supply_cst = np.repeat(0.15, 242)
+        supply_cost = np.append(supply_cost, heat_supply_cst)
+        self.parameters_to_ampl['Cost_supply_network'] = supply_cost
+
+        file_name4 = 'C:/Users/ettor/Desktop/REHO/reho/data/infrastructure/demand_cost.csv'
+        demand_cost = np.loadtxt(file_name4)
+        heat_demand_cst = np.repeat(0.01, 242)
+        demand_cost = np.append(demand_cost, heat_demand_cst)
+        self.parameters_to_ampl['Cost_demand_network'] = demand_cost
+
         self.parameters_to_ampl['Units_flowrate'] = self.infrastructure_sp.Units_flowrate
         self.parameters_to_ampl['Grids_flowrate'] = self.infrastructure_sp.Grids_flowrate
         self.parameters_to_ampl['Grids_Parameters'] = self.infrastructure_sp.Grids_Parameters
         self.parameters_to_ampl['Grids_Parameters_lca'] = self.infrastructure_sp.Grids_Parameters_lca
         self.parameters_to_ampl['Units_Parameters'] = self.infrastructure_sp.Units_Parameters
         self.parameters_to_ampl['Units_Parameters_lca'] = self.infrastructure_sp.Units_Parameters_lca
-        self.parameters_to_ampl['Streams_H'] = self.infrastructure_sp.Streams_H
+        self.parameters_to_ampl['Streams_H'] = self.infrastructure_sp.Streams_H 
 
         for key in self.infrastructure_sp.HP_parameters:
             self.parameters_to_ampl[key] = self.infrastructure_sp.HP_parameters[key]

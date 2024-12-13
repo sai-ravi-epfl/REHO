@@ -45,7 +45,7 @@ param tau := i_rate*(1+i_rate)^n_years/(((1+i_rate)^n_years)-1);
 # for solarthermal district
 param STC_Tlm_district{p in Period, t in Time[p]} default 50;
 param I_global_STC{p in Period, t in Time[p]} default 1;
-
+param STC_efficiency_district{p in Period, t in Time[p]} default 1;
 
 ######################################################################################################################
 #--------------------------------------------------------------------------------------------------------------------#
@@ -346,7 +346,7 @@ subject to TransformerCapacity_supply{l in ResourceBalances,p in PeriodStandard,
 Network_supply[l,p,t] <= TransformerCapacity[l] * dp[p] * dt[p];
 
 subject to TransformerCapacity_supply_t{l in ResourceBalances,p in PeriodStandard,t in Time[p]: l =  'Heat'}:
-Network_supply[l,p,t] <= TransformerCapacity_heat_t[l,p,t] * dp[p] * dt[p];
+Network_supply[l,p,t] = TransformerCapacity_heat_t[l,p,t] * dp[p] * dt[p];
 
 subject to TransformerCapacity_supply_heat{l in ResourceBalances,p in PeriodStandard,t in Time[p]: l =  'Heat'}:
 Network_supply[l,p,t] <= TransformerCapacity_heat[l] * dp[p] * dt[p];
