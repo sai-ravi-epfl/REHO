@@ -349,6 +349,9 @@ Network_supply[l,p,t] <= TransformerCapacity[l] * dp[p] * dt[p];
 subject to TransformerCapacity_supply_t{l in ResourceBalances,p in PeriodStandard,t in Time[p]: l =  'Heat'}:
 Network_supply[l,p,t] <= TransformerCapacity_heat_t[l,p,t] * dp[p] * dt[p];
 
+subject to TransformerCapacity_demand_t{l in ResourceBalances,p in PeriodStandard,t in Time[p]: l =  'Heat'}:
+Network_demand[l,p,t] <= TransformerCapacity_heat_t[l,p,t] * dp[p] * dt[p];
+
 subject to TransformerCapacity_demand{l in ResourceBalances,p in PeriodStandard,t in Time[p]}:
 Network_demand[l,p,t] <= TransformerCapacity[l] * dp[p] * dt[p];
 

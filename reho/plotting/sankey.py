@@ -52,12 +52,12 @@ def add_label_value(df_label, df_stv, precision, units):
     df_source_value.index = df_label.pos
 
     for i in list(df_source_value.index):
-        if df_label.loc['ORC_EPFL_district', 'pos'] == i and len(
-                df_stv.loc['value', df_stv.loc['source', :] == i]) == 1:
-            source_val = df_stv.loc['value', df_stv.loc['source', :] == i].sum()
-            target_val = df_stv.loc['value', df_stv.loc['target', :] == i].sum()
-            # higher value on the node is displayed, (i.e. size of the box node on the sankey)
-            df_source_value.loc[i, 'value'] = min(source_val, target_val)
+        if 'ORC_EPFL_district' in df_label.index:
+            if df_label.loc['ORC_EPFL_district', 'pos'] == i and len(df_stv.loc['value', df_stv.loc['source', :] == i]) == 1:
+                source_val = df_stv.loc['value', df_stv.loc['source', :] == i].sum()
+                target_val = df_stv.loc['value', df_stv.loc['target', :] == i].sum()
+                # higher value on the node is displayed, (i.e. size of the box node on the sankey)
+                df_source_value.loc[i, 'value'] = min(source_val, target_val)
         else:
             source_val = df_stv.loc['value', df_stv.loc['source', :] == i].sum()
             target_val = df_stv.loc['value', df_stv.loc['target', :] == i].sum()
@@ -294,11 +294,13 @@ def df_sankey(df_results, label='FR_long', color='ColorPastel', precision=2, uni
     df_source_value = pd.DataFrame()
     df_source_value.index = df_label.pos
 
-    for i in list(df_source_value.index):
-        if df_label.loc['ORC_EPFL_district', 'pos'] == i and len(
-                df_stv.loc['value', df_stv.loc['source', :] == i]) == 1:
-            df_label, df_stv, _ = add_flow('Thermal_grid', 'Heat', 'Heat', 'Network', 'Supply_MWh', df_annuals,
-                                           df_label, df_stv, elec_storage_use, 'Heat', -heat_diff)
+    if 'ORC_EPFL_district' in df_label.index:
+        for i in list(df_source_value.index):
+            if df_label.loc['ORC_EPFL_district', 'pos'] == i and len(
+                    df_stv.loc['value', df_stv.loc['source', :] == i]) == 1:
+                df_label, df_stv, _ = add_flow('Thermal_grid', 'Heat', 'Heat', 'Network', 'Supply_MWh', df_annuals,
+                                               df_label, df_stv, elec_storage_use, 'Heat', -heat_diff)
+
 
 
 

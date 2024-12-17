@@ -15,8 +15,8 @@ if __name__ == '__main__':
     #reader.establish_connection('Suisse')
     #qbuildings_data = reader.read_db(transformer=3216, egid=[280001550])
     # Select weather data
-    cluster = {'Location': 'Pully', 'Attributes': ['I', 'T','E','D'], 'Periods': 10, 'PeriodDuration': 24}
-    attributes = ['Irr', 'Text', 'Emissions','DataLoad']
+    cluster = {'Location': 'Pully', 'Attributes': ['I', 'T','E','D','CS'], 'Periods': 14, 'PeriodDuration': 24}
+    attributes = ['Irr', 'Text', 'Emissions','DataLoad','Cost_supply_elec']
     weather_file = path_to_profiles+'/pully.csv'
     weather.data_centre_profile(size = 50)
     df_annual = weather.read_custom_weather(weather_file)
