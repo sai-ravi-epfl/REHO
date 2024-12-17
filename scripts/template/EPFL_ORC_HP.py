@@ -31,34 +31,33 @@ if __name__ == '__main__':
     scenario = dict()
     scenario['Objective'] = 'GWP'
     scenario['name'] = 'gwp'
-    scenario['exclude_units'] = ['HeatPump_Geothermal','HeatPump_Air','HeatPump_Lake','HeatPump_Anergy','HeatPump_DHN', 'ElectricalHeater_SH', 'ThermalSolar', 'Battery'] #'OIL_Boiler',  'NG_Boiler','HeatPump_Air', 'HeatPump_Lake''HeatPump_Anergy''DataHeatSH',
+    scenario['exclude_units'] = ['HeatPump_Geothermal','HeatPump_Air','HeatPump_Lake','HeatPump_Anergy','HeatPump_DHN', 'ElectricalHeater_SH', 'ThermalSolar', 'Battery', 'DHN_out_district'] #'OIL_Boiler',  'NG_Boiler','HeatPump_Air', 'HeatPump_Lake''HeatPump_Anergy''DataHeatSH',
 
     scenario['enforce_units'] = [] #'HeatPump_Geothermal_district','DHN_out_district','Battery_district','PV_district','ORC_EPFL_district'
     scenario["specific"] = ["enforce_PV_max"]
 
     # Initialize available units and grids
-    grids = infrastructure.initialize_grids({'Electricity': {"Cost_demand_cst": 0.08, "Cost_supply_cst": 0.20},'Data': {"Cost_demand_cst": 0.0001, "Cost_supply_cst": 0.0002},
-                                            "Heat": {"Cost_demand_cst": 0.0001, "Cost_supply_cst": 0.0002,  "GWP_supply_cst": 0.000}})  #'NaturalGas': {"Cost_demand_cst": 0.01, "Cost_supply_cst": 0.10},
+    grids = infrastructure.initialize_grids({'Electricity': {"Cost_demand_cst": 0.08, "Cost_supply_cst": 0.20},"Data": {"Cost_demand_cst": 0.0001, "Cost_supply_cst": 0.0002},"Heat": {}})  #'NaturalGas': {"Cost_demand_cst": 0.01, "Cost_supply_cst": 0.10},
                                                                                                                 #"Data": {"Cost_demand_cst": 0.0001, "Cost_supply_cst": 0.0002}}
 
 
     units = infrastructure.initialize_units(scenario, grids, district_data= True)
-    parameters = {'n_vehicles': np.array([0.0]), 'T_DHN_supply_cst': np.repeat(70.0, n_house),'T_DHN_return_cst': np.repeat(60.0, n_house), 'elec_demand_datacentre': data_centre_heat_profile,'TransformerCapacity': np.array([1e8, 1e8,0]) }
+    parameters = {'n_vehicles': np.array([0.0]), 'T_DHN_supply_cst': np.repeat(70.0, n_house),'T_DHN_return_cst': np.repeat(60.0, n_house),'TransformerCapacity': np.array([1e8,1e8,0]),'elec_demand_datacentre': data_centre_heat_profile}
     #parameters = {}
 
     # Set method options
-    method = {'building-scale': True,'save_stream_t': True, 'use_dynamic_emission_profiles': True, 'save_streams': True, 'ORC_all_the_time': True} #, 'use_pv_orientation': True
+    method = {'building-scale': True,'save_stream_t': True, 'use_dynamic_emission_profiles': True, 'save_streams': True,'ORC_all_the_time': True} #, 'use_pv_orientation': True
     # Run optimization
     reho = REHO(qbuildings_data=qbuildings_data, units=units,parameters=parameters, grids=grids, cluster=cluster, scenario=scenario, method=method, solver ='gurobi') #parameters=parameters,
     reho.single_optimization()
     #plotting.plot_composite_curve(reho.results["totex"][0], cluster, plot= True, periods =["Yearly"]) #,"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"
     #plotting.yearly_demand_plot(reho.results["totex"][0], cluster, plot=True)
     # Save results
-    filename='ALL_EPFL_ORC_247_HP'
+    filename='now_20'
     reho.save_results(format=['xlsx', 'pickle'], filename=filename)
     #plotting.plot_performance(reho.results, plot='costs', indexed_on='Scn_ID', label='EN_long').show()
     #plotting.plot_performance(reho.results, plot='gwp', indexed_on='Scn_ID', label='EN_long').show()
-    plotting.plot_sankey(reho.results['gwp'][0], label='EN_long', color='ColorPastel').show()
+    #plotting.plot_sankey(reho.results['gwp'][0], label='EN_long', color='ColorPastel').show()
     # Construct the full file path
     # plotting.yearly_demand_plot(filename)
 

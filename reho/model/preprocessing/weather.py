@@ -56,9 +56,13 @@ def get_cluster_file_ID(cluster):
         D = '_D'
     else:
         D = ''
+    if 'CS' in cluster['Attributes']:
+        CS = '_CS'
+    else:
+        CS = ''
 
     File_ID = cluster['Location'] + '_' + str(cluster['Periods']) + '_' + str(cluster['PeriodDuration']) + \
-              T + I + W + E + D
+              T + I + W + E + D + CS
 
     return File_ID
 
@@ -70,7 +74,11 @@ def generate_weather_data(cluster, qbuildings_data):
     """
 
     if 'custom_weather' in cluster.keys():
-        df = read_custom_weather(cluster['custom_weather'])
+        if cluster['PeriodDuration']==168:
+            weeks=True
+        else:
+            weeks = False
+        df = read_custom_weather(cluster['custom_weather'],weeks=weeks)
     else:
         df = get_weather_data(qbuildings_data).reset_index(drop=True)
 
@@ -85,6 +93,8 @@ def generate_weather_data(cluster, qbuildings_data):
         attributes.append('Emissions')
     if 'D' in cluster['Attributes']:
         attributes.append('DataLoad')
+    if 'CS' in cluster['Attributes']:
+        attributes.append('Cost_supply_elec')
 
 
 
@@ -93,6 +103,9 @@ def generate_weather_data(cluster, qbuildings_data):
 
     df4 = pd.read_csv(os.path.join(path_to_weather, 'yearly_data_centre_profile_repeated.csv'))['Load_Profile']
     df['DataLoad'] = df4
+
+    df5 = pd.read_csv(os.path.join(path_to_weather, 'elec_supply_cst.csv'))['prices']
+    df['Cost_supply_elec'] = df5
 
     df = df[attributes]
     cl = Clustering(data=df, nb_clusters=[cluster['Periods']], option={"year-to-day": True, "extreme": []}, pd=cluster['PeriodDuration'])
@@ -148,6 +161,10 @@ def read_custom_weather(path_to_weather_file,  weeks = False):
     print(df4)
     df4 = df4.astype(float)
     df['DataLoad'] = df4
+
+    df5 = pd.read_csv(os.path.join(path_to_weather, 'elec_supply_cst.csv'))['prices']
+    df['Cost_supply_elec'] = df5
+
     if weeks == True:
         df.drop(df.tail(24).index, inplace=True)
 
@@ -216,7 +233,6 @@ def generate_output_data(cl, attributes, location, cluster):
     T_max['Irr'] = cl.data_org.loc[T_day[1] * 24: T_day[1] * 24 + 24, 'Irr'].max()
     T_min.loc[:, ['time.dd', 'time.hh', 'dt']] = [T_day[0], 1, 1]
     T_max.loc[:, ['time.dd', 'time.hh', 'dt']] = [T_day[1], 1, 1]
-    T_min['Text']= -1
     data_cls = pd.concat([data_cls, T_min.rename({T_idx[0]: 240}), T_max.rename({T_idx[1]: 241})])
     # Add a 10% margin for the extreme over 20 years
     data_cls.loc[[240, 241], ['Text', 'Irr']] = data_cls.loc[[240, 241], ['Text', 'Irr']] * 1.1
@@ -301,9 +317,22 @@ def write_dat_files( attributes, location, values_cluster, index_inter, cluster)
         - 'index_File_ID.dat'
         - 'timestamp_File_ID.dat'
     """
+    normal_unique= values_cluster['time.dd'][:-2].unique()
+    iteration =0
+    all_values = set(range(365))
+
+    # Find the values not in the unique list
+
+    for i in values_cluster['time.dd'][-2:]:
+        missing_values = all_values - set(normal_unique)
+        if i in normal_unique:
+            iteration = iteration+1
+            values_cluster['time.dd'][-2:][239+iteration] = next(iter(missing_values))
+            normal_unique = np.append(normal_unique, [next(iter(missing_values))])
 
     df_dd = values_cluster['time.dd'].unique()  # id of typical period
-
+    #extreme_hours = values_cluster['time.dd'][-2:]
+    #df_dd = pd.concat([pd.Series(df_dd),extreme_hours])
     dp = np.array([])  # duration of period e.g. frequency
     pt = np.array([])  # period duration / number of timesteps in period
 
@@ -313,6 +342,8 @@ def write_dat_files( attributes, location, values_cluster, index_inter, cluster)
 
         dp = np.append(dp, p)
         pt = np.append(pt, t)
+    #if cluster['PeriodDuration']==168:
+    #    pt = np.append(pt,[1])
 
     # -------------------------------------------------------------------------------------
     # attributes for saving
@@ -337,9 +368,12 @@ def write_dat_files( attributes, location, values_cluster, index_inter, cluster)
         D = '_D'
     else:
         D = ''
+    if 'Cost_supply_elec' in attributes:
+        CS = '_CS'
+    else:
+        CS = ''
 
-
-    File_ID = location + '_' + str(len(df_dd) - 2) + '_' + str(int(max(pt))) + T + I + W + E + D
+    File_ID = location + '_' + str(len(df_dd) - 2) + '_' + str(int(max(pt))) + T + I + W + E + D + CS
 
     if not os.path.isdir(path_to_clustering):
         os.makedirs(path_to_clustering)
@@ -351,7 +385,7 @@ def write_dat_files( attributes, location, values_cluster, index_inter, cluster)
     df_T = values_cluster['Text']
     filename = os.path.join(path_to_clustering, 'T_' + File_ID + '.dat')
     df_T.to_csv(filename, index=False, header=False)
-    period = cluster['Periods']
+    period = int(cluster['Periods'])
     period_duration = cluster['PeriodDuration']
 
     # -------------------------------------------------------------------------------------
@@ -361,6 +395,11 @@ def write_dat_files( attributes, location, values_cluster, index_inter, cluster)
         df_D = values_cluster['DataLoad']
         filename = os.path.join(path_to_clustering, 'D_' + File_ID + '.dat')
         df_D.to_csv(filename, index=False, header=False)
+
+    if 'Cost_supply_elec' in attributes:
+        df_CS = values_cluster['Cost_supply_elec']
+        filename = os.path.join(path_to_clustering, 'CS_' + File_ID + '.dat')
+        df_CS.to_csv(filename, index=False, header=False)
 
 
 
@@ -475,7 +514,7 @@ def write_dat_files( attributes, location, values_cluster, index_inter, cluster)
     IterationFile.write(header)
     for key in dict_index:
         pt = df_time.iloc[0].timesteps  # take the same period duration also for modulo
-        date = dt.datetime(2005, 1, 1) + dt.timedelta(hours=float((key) * pt))
+        date = dt.datetime(2005, 1, 1) + dt.timedelta(hours=float((key-1) * pt))
 
         if 'Weekday' in attributes:
             text = date.strftime("%m/%d/%Y/%H") + '\t' + str(key) + '\t' + str(dp[dict_index[key] - 1]) + '\t' + str(
@@ -498,18 +537,21 @@ def plot_cluster_KPI_separate(df, save_fig):
     df_T = df.xs('Ambient Temperature', level=1)
     df_Emissions = df.xs('Emissions', level=1)
     df_DataLoad = df.xs('DataLoad', level=1)
+    df_cost_supply_elec = df.xs('Cost_supply_elec', level=1)
 
     fig, ax = plt.subplots()
     fig.set_size_inches(4, 8)
     df_irr['RMSD'].plot(linestyle='--', color='black', label='RMSD (Irr)', ax=ax)
     df_T['RMSD'].plot(linestyle='-', color='black', label='RMSD (T)', ax=ax)
-    df_Emissions['RMSD'].plot(linestyle='-.', color='black', label='RMSD (T)', ax=ax)
-    df_DataLoad['RMSD'].plot(linestyle=':', color='black', label='RMSD (T)', ax=ax)
+    df_Emissions['RMSD'].plot(linestyle='-.', color='black', label='RMSD (Emissions)', ax=ax)
+    df_DataLoad['RMSD'].plot(linestyle=':', color='black', label='RMSD (DataLoad)', ax=ax)
+    df_cost_supply_elec['RMSD'].plot(linestyle=':', color='black', label='RMSD (Electricty Supply Cost)', ax=ax)
 
     df_irr['LDC'].plot(linestyle='--', color="red", label='LDC (Irr)', ax=ax)
     df_T['LDC'].plot(linestyle='-', color="red", label='LDC (T)', ax=ax)
-    df_Emissions['LDC'].plot(linestyle='-.', color="red", label='LDC (T)', ax=ax)
-    df_DataLoad['LDC'].plot(linestyle=':', color="red", label='LDC (T)', ax=ax)
+    df_Emissions['LDC'].plot(linestyle='-.', color="red", label='LDC (Emissions)', ax=ax)
+    df_DataLoad['LDC'].plot(linestyle=':', color="red", label='LDC (DataLoad)', ax=ax)
+    df_cost_supply_elec['LDC'].plot(linestyle=':', color="red", label='LDC (Electricty Supply Cost)', ax=ax)
 
     plt.xlabel('number of clusters [-]')
     plt.ylabel('key performance indicator (KPI) [-]')
@@ -530,6 +572,7 @@ def plot_cluster_KPI_separate(df, save_fig):
     df_T['MAE'].plot(linestyle='-', color='black', label='MAE (T)', ax=ax)
     df_Emissions['MAE'].plot(linestyle='-.', color='black', label='MAE (Emissions)', ax=ax)
     df_DataLoad['MAE'].plot(linestyle=':', color='black', label='MAE (DataLoad)', ax=ax)
+    df_cost_supply_elec['MAE'].plot(linestyle=':', color='black', label='MAE (Electricty Supply Cost)', ax=ax)
 
     plt.xlabel('number of clusters [-]')
     plt.ylabel('mean average error (MAE)  [-]')
@@ -545,7 +588,7 @@ def plot_cluster_KPI_separate(df, save_fig):
 
     fig, ax = plt.subplots()
     fig.set_size_inches(4, 8)
-    df_T['cummulative_MAE'] = df_T['MAE']+df_irr['MAE']+df_Emissions['MAE']+df_DataLoad['MAE']
+    df_T['cummulative_MAE'] = df_T['MAE']+df_irr['MAE']+df_Emissions['MAE']+df_DataLoad['MAE']+df_cost_supply_elec['MAE']
     df_T['cummulative_MAE'].plot(linestyle='--', color='black', label='Cummulative MAE ', ax=ax)
     plt.xlabel('number of clusters [-]')
     plt.ylabel('cummulative mean average error (MAE) across attributes [-]')
@@ -565,9 +608,25 @@ def plot_cluster_KPI_separate(df, save_fig):
     df_T['MAPE'].plot(linestyle='-', color='black', label='MAPE  (T)', ax=ax)
     df_Emissions['MAPE'].plot(linestyle='-.', color='black', label='MAPE  (Emissions)', ax=ax)
     df_DataLoad['MAPE'].plot(linestyle=':', color='black', label='MAPE  (DataLoad)', ax=ax)
-
+    df_cost_supply_elec['MAPE'].plot(linestyle=':', color='black', label='MAPE  (Electricty Supply Cost)', ax=ax)
     plt.xlabel('number of clusters [-]')
     plt.ylabel('mean average percentage error  [-]')
+    # plt.title('KPI for $ \u2B27 $ =  Global Irradiation, $\u00D7$ = Ambient Temperature', size = 14)
+    plt.legend(title="KPI")
+    # plt.ylim([0,0.40])
+    if save_fig:
+        plt.tight_layout()
+        export_format = 'pdf'
+        plt.savefig(('MAPE_KPIs' + '.' + export_format), format=export_format, dpi=300)
+    else:
+        plt.show()
+
+    fig, ax = plt.subplots()
+    fig.set_size_inches(4, 8)
+    df_T['cummulative_MAPE'] = df_T['MAPE']+df_irr['MAPE']+df_Emissions['MAPE']+df_DataLoad['MAPE']+df_cost_supply_elec['MAPE']
+    df_T['cummulative_MAPE'].plot(linestyle='--', color='black', label='Cummulative MAPE ', ax=ax)
+    plt.xlabel('number of clusters [-]')
+    plt.ylabel('cummulative mean average percentage error (MAPE) across attributes [-]')
     # plt.title('KPI for $ \u2B27 $ =  Global Irradiation, $\u00D7$ = Ambient Temperature', size = 14)
     plt.legend(title="KPI")
     # plt.ylim([0,0.40])
@@ -589,7 +648,7 @@ def plot_LDC(cl, save_fig):
     #W_org = cl.data_org['Weekday']
     E_org = cl.data_org['Emissions']
     D_org = cl.data_org['DataLoad']
-
+    CS_org = cl.data_org['Cost_supply_elec']
 
     # get clustered data and undo normalization
     df_clu = cl.attr_clu.xs(str(nbr_plot), axis=1)
@@ -598,6 +657,7 @@ def plot_LDC(cl, save_fig):
     E_clu= df_clu['Emissions']* (E_org.max() - E_org.min()) + E_org.min()
     #W_clu = df_clu['Weekday'] * (W_org.max() - W_org.min()) + W_org.min()
     D_clu = df_clu['DataLoad'] * (D_org.max() - D_org.min()) + D_org.min()
+    CS_clu = df_clu['Cost_supply_elec'] * (CS_org.max() - CS_org.min()) + CS_org.min()
 
 
 
@@ -675,10 +735,15 @@ def plot_LDC(cl, save_fig):
     df_D['Period'] = res
     df_D = df_D.sort_values(by=['DataLoad'], ignore_index=True, ascending=False)
 
+    df_CS = pd.DataFrame(CS_clu)
+    df_CS['Period'] = res
+    df_CS = df_CS.sort_values(by=['Cost_supply_elec'], ignore_index=True, ascending=False)
+
     T_sort = T_org.sort_values(ascending=False, ignore_index=True)
     IRR_sort = IRR_org.sort_values(ascending=False, ignore_index=True)
     E_sort = E_org.sort_values(ascending=False, ignore_index=True)
     D_sort = D_org.sort_values(ascending=False, ignore_index=True)
+    CS_sort = CS_org.sort_values(ascending=False, ignore_index=True)
     #W_sort = IRR_org.sort_values(ascending=False, ignore_index=True)
   #  E_sort =  E_org.sort_values(ascending=False, ignore_index=True)
 
@@ -800,27 +865,44 @@ def plot_LDC(cl, save_fig):
     plt.tight_layout()
     if save_fig:
         format = 'pdf'
-        plt.savefig(('Data_'+str(cl.nb_clusters[0])+ '.' + format), format=format, dpi=300)
+        plt.savefig(('Data_' + str(cl.nb_clusters[0]) + '.' + format), format=format, dpi=300)
     else:
         plt.show()
 
+    # Scatter Plot 5: Electricity Supply Cost
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.scatter(CS_sort.index, CS_sort.values, color='grey', alpha=0.5)  # Background scatter
+    sc = ax.scatter(df_CS.index, df_CS['Cost_supply_elec'], c=[period_to_color[p] for p in df_CS['Period']],
+                    s=20)  # Colored scatter
+    ax.set_ylabel('Supply cost of electricity')
+    ax.set_xlabel('Hours [h]')
+    handles = [plt.Line2D([0], [0], marker='o', color=color, linestyle='', markersize=8, label=str(period))
+               for period, color in period_to_color.items()]
+    ax.legend(handles=handles, title="Period", loc='upper right', ncol=2)
+    plt.tight_layout()
+    if save_fig:
+        format = 'pdf'
+        plt.savefig(('ElectricityCost_'+str(cl.nb_clusters[0])+ '.' + format), format=format, dpi=300)
+    else:
+        plt.show()
 
 if __name__ == '__main__':
     cm = plt.cm.get_cmap('Spectral_r')
 
     weather_file = '../../../scripts/template/data/profiles/pully.csv'
-    Attributes = ['Text', 'Irr','Emissions', 'DataLoad']
+    Attributes = ['Text', 'Irr','Emissions', 'DataLoad','Cost_supply_elec']
     #nb_clusters = [10]
-    nb_clusters = [16]
+    nb_clusters = [10,12,14,15,18,20,30,35]
 
-    df_annual = read_custom_weather(weather_file, weeks = True)
+    df_annual = read_custom_weather(weather_file, weeks = False)
     print(df_annual)
     df_annual = df_annual[Attributes]
 
-    cl = Clustering(data=df_annual, nb_clusters=nb_clusters, option={"year-to-day": True, "extreme": []}, pd=168)
+    cl = Clustering(data=df_annual, nb_clusters=nb_clusters, option={"year-to-day": True, "extreme": []}, pd=24)
     cl.run_clustering()
 
-    #plot_cluster_KPI_separate(cl.kpis_clu, save_fig=False)
-    plot_LDC(cl, save_fig= True)
-    cluster = {'Location': 'Pully', 'Attributes': ['I', 'T', 'E', 'D'], 'Periods': 16, 'PeriodDuration': 168}
+
+    plot_cluster_KPI_separate(cl.kpis_clu, save_fig=False)
+    plot_LDC(cl, save_fig= False)
+    cluster = {'Location': 'Pully', 'Attributes': ['I', 'T', 'E', 'D','CS'], 'Periods':cl.nbr_opt, 'PeriodDuration': 24}
     generate_output_data(cl, Attributes, "Pully", cluster)

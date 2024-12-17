@@ -414,6 +414,9 @@ class MasterProblem:
             if "BESS_IP" in self.infrastructure.UnitsOfDistrict:
                 ampl_MP.cd(path_to_units_storage)
                 ampl_MP.read('battery_interperiod_ettore.mod')
+            if "STES_district" in self.infrastructure.UnitsOfDistrict:
+                ampl_MP.cd(path_to_units_storage)
+                ampl_MP.read('STES_ettore.mod')
 
 
 
@@ -450,7 +453,7 @@ class MasterProblem:
 
 
                     elif 'Geothermal' in unit:
-                        T_source = np.concatenate([T_source, np.repeat(15, timesteps)])
+                        T_source = np.concatenate([T_source, np.repeat(20, timesteps)])
                         max_cap = np.concatenate([max_cap, np.repeat(1e6, ntimes)]) #also this value, needs to be automatic
 
 
@@ -493,7 +496,25 @@ class MasterProblem:
         MP_parameters['Units_flowrate'] = self.infrastructure.Units_flowrate.query('Unit.str.contains("district")')
         MP_parameters['Units_Parameters'] = self.infrastructure.Units_Parameters.query('index.str.contains("district")')
         MP_parameters['Units_Parameters_lca'] = self.infrastructure.Units_Parameters_lca.query('index.get_level_values("Units").str.contains("district")')
-
+        cost_demand = []
+        cost_supply = []
+        self.infrastructure.Grids_Parameters = self.infrastructure.Grids_Parameters.sort_index(ascending=True)
+        for i in range(0, self.infrastructure.Grids_Parameters.shape[0]):
+            cost_demand_0 = np.repeat(self.infrastructure.Grids_Parameters.iloc[0 + i, 1],
+                                      self.cluster['Periods'] * self.cluster['PeriodDuration'] + 2)
+            cost_demand = np.append(cost_demand, cost_demand_0)
+            cost_supply_0 = np.repeat(self.infrastructure.Grids_Parameters.iloc[0 + i, 0],
+                                      self.cluster['Periods'] * self.cluster['PeriodDuration'] + 2)
+            cost_supply = np.append(cost_supply, cost_supply_0)
+        File_ID = weather.get_cluster_file_ID(self.cluster)
+        if 'CS' in File_ID:
+            cost_supply_elec = pd.read_csv(os.path.join(path_to_clustering, 'CS_' + File_ID + '.dat'),header=None).to_numpy().flatten()
+            index_of_electricity = sorted(self.infrastructure.Grids_Parameters.index.to_list()).index('Electricity')
+            start_idx = index_of_electricity * len(cost_supply_elec)
+            # Update the corresponding slice of cost_demand
+            cost_demand[start_idx:start_idx + len(cost_supply_elec)] = cost_supply_elec/ 1000 #in the day ahead market there is only price - info from DESL lab
+            MP_parameters['Cost_supply_network'] = cost_demand
+            MP_parameters['Cost_demand_network'] = cost_demand
         if self.method['use_dynamic_emission_profiles']:
             ids = self.number_SP_solutions.iloc[-1]
             df = df_Grid_t[['GWP_supply']].xs("Electricity", level="Layer", drop_level=False)

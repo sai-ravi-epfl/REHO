@@ -90,4 +90,12 @@ def generate_EV_plugged_out_profiles_district(cluster, df_Timestamp):
     EV_plugging_in = EV_plugging_in + [0.0, 0.0]  # extreme hours
     EV_plugging_in = np.array(EV_plugging_in)
 
-    return EV_plugged_out, EV_plugging_in
+    if 'W' in cluster['Attributes']:
+        return EV_plugged_out, EV_plugging_in
+    else:
+        EV_plugged_out=[]
+        EV_plugging_in=[]
+        EV_plugged_out = np.repeat(0.1, cluster['Periods']*cluster['PeriodDuration']+2)
+        EV_plugged_in = np.repeat(0.1, cluster['Periods'] * cluster['PeriodDuration']+2)
+
+        return EV_plugged_out, EV_plugging_in
