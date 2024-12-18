@@ -69,8 +69,9 @@ def generate_weather_data(cluster, qbuildings_data):
     Runs the clustering through the Clustering class and creates the required files.
     """
 
-    if 'custom_weather' in cluster.keys():
-        df = read_custom_weather(cluster['custom_weather'])
+    if cluster['PeriodDuration'] == 168:
+        weeks = True
+        df = read_custom_weather(cluster['custom_weather'], weeks=weeks)
     else:
         df = get_weather_data(qbuildings_data).reset_index(drop=True)
 

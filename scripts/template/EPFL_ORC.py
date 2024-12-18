@@ -12,14 +12,18 @@ if __name__ == '__main__':
     #reader.establish_connection('Suisse')
     #qbuildings_data = reader.read_db(transformer=3216, egid=[280001550])
     # Select weather data
-    cluster = {'Location': 'Pully', 'Attributes': ['I','T','E','D'], 'Periods': 10, 'PeriodDuration': 24}
+    cluster = {'Location': 'Pully', 'Attributes': ['I','T','E','D'], 'Periods': 10, 'PeriodDuration': 168, 'custom_weather': path_to_profiles+'/pully.csv'}
     attributes = ['Irr', 'Text', 'Emissions','DataLoad']
     weather_file = path_to_profiles + '/pully.csv'
     weather.data_centre_profile(size = 50)
-    df_annual = weather.read_custom_weather(weather_file)
+    if cluster['PeriodDuration'] == 168:
+        weeks =True
+    else:
+        weeks =False
+    df_annual = weather.read_custom_weather(weather_file, weeks)
     df_annual = df_annual[attributes]
     nb_clusters = [cluster['Periods']]
-    cl = Clustering(data=df_annual, nb_clusters=nb_clusters, option={"year-to-day": True, "extreme": []}, pd=24)
+    cl = Clustering(data=df_annual, nb_clusters=nb_clusters, option={"year-to-day": True, "extreme": []}, pd=168)
     cl.run_clustering()
     val_cls = weather.generate_output_data(cl, attributes, "Pully",cluster)
     data_centre_heat_profile = weather.data_centre_profiles(val_cls)
