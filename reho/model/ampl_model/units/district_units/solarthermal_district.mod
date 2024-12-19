@@ -30,8 +30,6 @@ else
 */
 
 var STC_Area_T_district{u in UnitsOfType['ThermalSolar_district']}>= 0;
-var STC_module_nbr_district{u in UnitsOfType['ThermalSolar_district']} >= 0, integer;
-
 
 subject to STC_energy_balance_district{u in UnitsOfType['ThermalSolar_district'],T in STCindex_district,p in Period,t in Time[p]}:
 Units_supply['Heat',u,p,t] = STC_Area_T_district[u]*STC_efficiency_district[p,t]*(I_global_STC[p,t]/1000);
@@ -39,11 +37,7 @@ Units_supply['Heat',u,p,t] = STC_Area_T_district[u]*STC_efficiency_district[p,t]
 
 #--Sizing
 subject to STC_c1_district{u in UnitsOfType['ThermalSolar_district'],p in Period,t in Time[p]}:
-sum{T in STCindex_district} (STC_Area_T_district[u]) <= Units_Mult[u];																	#m2
+STC_Area_T_district[u] = Units_Mult[u];																	#m2
 
-subject to STC_c2district{u in UnitsOfType['ThermalSolar_district']}:
-Units_Mult[u] >= STC_Area_T_district[u];
 
-#--Sizing
-subject to STC_c_district{u in UnitsOfType['ThermalSolar_district'],p in Period,t in Time[p]}:
-(STC_Area_T_district[u]) = 150;		
+	

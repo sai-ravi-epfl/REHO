@@ -422,6 +422,7 @@ param Tc_supply{h in House,p in Period,t in Time[p]} 	:= -Qc[h,p,t]/Mcp_0c[h] + 
 param House_Q_heating_max_d{h in House,p in Period,t in Time[p]} := Qh[h,p,t]+0.25*Qh_0[h]+epsilon;
 param House_Q_cooling_max_d{h in House,p in Period,t in Time[p]} := Qc[h,p,t]+0.25*Qc_0[h]+epsilon;
 
+
 #-heating
 subject to House_streams_heating_c1{h in House,p in Period,t in Time[p]}:
 sum{se in Services,st in StreamsOfService[se] inter StreamsOfBuilding[h]:se='SH' and Streams_Hin[st]=0}(Streams_Mcp[st,p,t]*HC_Streams_Mult[se,st,p,t]) <= Mcp_0h[h];

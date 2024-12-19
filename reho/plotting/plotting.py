@@ -1583,8 +1583,8 @@ def plot_storage_profile_stes(df_Results, resolution='daily'):
         items_average = 1
 
     SOC = df_Results["df_storage_stes"]["STES_E_stored_IP"]
-    #SOC_max = df_Results["df_storage_stes"]["STES_E_stored_IP"].max()
-    #SOC_perc = SOC/SOC_max
+    Units_mult_STES = df_Results['df_Unit']['Units_Mult'].xs('STES_district')
+
 
     time_index = np.arange(0, 8760)
 
@@ -1594,7 +1594,7 @@ def plot_storage_profile_stes(df_Results, resolution='daily'):
     fig = go.Figure()
     fig.add_trace(go.Scatter(
         x=time_index_average,
-        y=SOC_average,
+        y=(SOC_average/Units_mult_STES)*100,
         mode='lines',
         name='SOC',
         line=dict(color='blue')
@@ -1779,14 +1779,10 @@ def plot_energy_balance_for_STES(df_Results, units_to_plot, color='ColorPastel',
     # selection of the period
     ending_hour = starting_hour + period*24
 
-    SOC = df_Results["df_storage_stes"]["STES_E_stored_IP"][starting_hour:ending_hour]
-    SOC_max = df_Results["df_storage_stes"]["STES_E_stored_IP"].max()
-
-
     units_demand = []
     units_supply = []
     for unit in units_to_plot:
-        if unit in ["ThermalSolar_district","HeatPump_Geothermal_district"]:
+        if unit in ["ThermalSolar_district","HeatPump_Geothermal_district",'PV']:
             units_supply.append(unit)
         elif unit in ['STES_district']:
             units_demand.append(unit)
@@ -1876,6 +1872,15 @@ def plot_energy_balance_for_STES(df_Results, units_to_plot, color='ColorPastel',
             line=dict(color="blue", dash="dot")
         ))
 
+    if import_profile["Electricity"].any() > 0:
+        fig.add_trace(go.Scatter(
+            x=idx,
+            y=-import_profile["Electricity"],
+            mode="lines",
+            name='Electricity_import',
+            line=dict(color="green", dash="dot")
+        ))
+
     for unit in units_demand:
         if demands[unit].any() > 0:
             fig.add_trace(go.Scatter(
@@ -1895,19 +1900,12 @@ def plot_energy_balance_for_STES(df_Results, units_to_plot, color='ColorPastel',
                 line=dict(color=layout.loc[unit, color], dash='dash')
             ))
 
-    fig.add_trace(go.Scatter(
-        x=idx,
-        y=SOC,
-        mode="lines",
-        name="State of Charge (SOC)",
-        line=dict(color="green", dash="solid")
-    ))
 
     fig.add_trace(go.Scatter(
         x=idx,
         y=building_demand_SH,
         mode="lines",
-        name="building_demand",
+        name="building_demand_SH",
         line=dict(color="red", dash="solid")
     ))
 
@@ -1915,7 +1913,7 @@ def plot_energy_balance_for_STES(df_Results, units_to_plot, color='ColorPastel',
         x=idx,
         y=building_demand_DHW,
         mode="lines",
-        name="building_demand",
+        name="building_demand_DHW",
         line=dict(color="orange", dash="solid")
     ))
 
@@ -1933,29 +1931,6 @@ def plot_energy_balance_for_STES(df_Results, units_to_plot, color='ColorPastel',
 
 def plot_c_d_STES(df_Results):
 
-    '''
-    units_to_plot = ['STES_district']
-
-    demands = dict()
-    supplies = dict()
-    monthly_demands = dict()
-    monthly_supplies = dict()
-
-    for unit in units_to_plot:
-        df_aggregated = df_Results['df_Unit_t'][df_Results['df_Unit_t'].index.get_level_values('Unit').str.contains(unit)]
-        if unit in units_to_plot:
-            demand = df_aggregated.droplevel('Layer').Units_demand[:-2].groupby(['Period', 'Time']).sum()
-            demands[unit] = np.array([])
-            for i in range(1, 365):
-                t = df_Results['df_Index'].PeriodOfYear[i * 24]
-                demands[unit] = np.concatenate((demands[unit], demand.xs(t)))
-        if unit in units_to_plot:
-            supply = df_aggregated.droplevel('Layer').Units_supply[:-2].groupby(['Period', 'Time']).sum()
-            supplies[unit] = np.array([])
-            for i in range(1, 365):
-                t = df_Results['df_Index'].PeriodOfYear[i * 24]
-                supplies[unit] = np.concatenate((supplies[unit], supply.xs(t))) '''
-
     units_to_plot = ['STES_district']
 
     demands = dict()
@@ -1968,8 +1943,7 @@ def plot_c_d_STES(df_Results):
     hours_in_month = [days * 24 for days in days_in_month]  # Convert days to hours
 
     for unit in units_to_plot:
-        df_aggregated = df_Results['df_Unit_t'][
-            df_Results['df_Unit_t'].index.get_level_values('Unit').str.contains(unit)]
+        df_aggregated = df_Results['df_Unit_t'][df_Results['df_Unit_t'].index.get_level_values('Unit').str.contains(unit)]
 
         # Process hourly demand
         if unit in units_to_plot:
@@ -2040,4 +2014,359 @@ def plot_c_d_STES(df_Results):
 
     return plt
 
+def plot_contribution_each_technology(df_Results):
 
+    # Days in each month for the year
+    days_in_month = [calendar.monthrange(2023, month)[1] for month in range(1, 13)]  # List of days in each month
+    hours_in_month = [days * 24 for days in days_in_month]  # Convert days to hours
+
+
+
+    ### house demnad of DHW and SH ###
+
+    df_aggregated = df_Results["df_Buildings_t"]
+    demand_SH = df_aggregated.droplevel('Hub').House_Q_heating[:-2].groupby(['Period', 'Time']).sum()
+    building_demand_SH = np.array([])
+
+    for i in range(1, 365):  # Loop through each day
+        t = df_Results['df_Index'].PeriodOfYear[i * 24]
+        building_demand_SH = np.concatenate((building_demand_SH, demand_SH.xs(t)))
+
+
+    monthly_demand_SH = []
+    start_hour = 0
+    for hours in hours_in_month:
+        monthly_demand_SH.append(np.sum(building_demand_SH[start_hour:start_hour + hours]))
+        start_hour += hours
+
+
+
+    '''
+    df_aggregated = df_Results["df_Buildings_t"]
+    demand_DHW = df_aggregated.droplevel('Hub').House_Q_DHW[:-2].groupby(['Period', 'Time']).sum()
+    building_demand_DHW = np.array([])
+
+    for i in range(1, 365):  # Loop through each day
+        t = df_Results['df_Index'].PeriodOfYear[i * 24]
+        building_demand_DHW = np.concatenate((building_demand_DHW, demand_DHW.xs(t)))
+
+
+    monthly_demand_DHW = []
+    start_hour = 0
+    for hours in hours_in_month:
+        monthly_demand_DHW.append(np.sum(building_demand_DHW[start_hour:start_hour + hours]))
+        start_hour += hours
+
+    montly_demand_heating_total = np.array(monthly_demand_DHW) + np.array(monthly_demand_SH)
+    montly_demand_heating_total = montly_demand_heating_total.tolist()
+    '''
+    montly_demand_heating_total =  np.array(monthly_demand_SH)    #np.array(monthly_demand_DHW) +
+    montly_demand_heating_total = montly_demand_heating_total.tolist()
+
+
+    ### electricity from the grid to the heat pump ###
+
+    demand_el = df_Results['df_Grid_t']['Grid_supply'].xs('Electricity').xs('Network')
+    Electricity_demand_HP = np.array([])
+
+    for i in range(1, 365):  # Loop through each day
+        t = df_Results['df_Index'].PeriodOfYear[i * 24]
+        Electricity_demand_HP = np.concatenate((Electricity_demand_HP, demand_el.xs(t)))
+
+
+    monthly_HP_el_from_grid = []
+    start_hour = 0
+    for hours in hours_in_month:
+        monthly_HP_el_from_grid.append(np.sum(Electricity_demand_HP[start_hour:start_hour + hours]))
+        start_hour += hours
+
+
+    ### electricity from PV to the heat pump ###
+
+    units_to_plot = ['HeatPump_Geothermal_district']
+
+    supplies = dict()
+    monthly_supplies = dict()
+
+    for unit in units_to_plot:
+        df_aggregated = df_Results['df_Unit_t'][
+            df_Results['df_Unit_t'].index.get_level_values('Unit').str.contains(unit)]
+
+        # Process hourly supply
+        if unit in units_to_plot:
+            supply = df_aggregated.droplevel('Layer').Units_demand[:-2].groupby(['Period', 'Time']).sum()
+            supplies[unit] = np.array([])
+            for i in range(1, 365):  # Loop through each day
+                t = df_Results['df_Index'].PeriodOfYear[i * 24]
+                supplies[unit] = np.concatenate((supplies[unit], supply.xs(t)))
+
+            # Calculate monthly supply by summing slices of the hourly data
+            monthly_supplies[unit] = []
+            start_hour = 0
+            for hours in hours_in_month:
+                monthly_supplies[unit].append(np.sum(supplies[unit][start_hour:start_hour + hours]))
+                start_hour += hours
+
+    for unit in units_to_plot:
+        # Retrieve monthly demand and supply for the unit
+        monthly_supply_units = monthly_supplies[unit]
+
+    montly_electricity_from_PV_to_HP = np.array(monthly_supply_units) - np.array(monthly_HP_el_from_grid)
+    montly_electricity_from_PV_to_HP = montly_electricity_from_PV_to_HP.tolist()
+
+
+
+
+    ### Units Supply ###
+    units_to_plot = ['STES_district', 'HeatPump_Geothermal_district']
+
+    supplies = dict()
+    monthly_supplies = dict()
+
+    for unit in units_to_plot:
+        df_aggregated = df_Results['df_Unit_t'][df_Results['df_Unit_t'].index.get_level_values('Unit').str.contains(unit)]
+
+        # Process hourly supply
+        if unit in units_to_plot:
+            supply = df_aggregated.droplevel('Layer').Units_supply[:-2].groupby(['Period', 'Time']).sum()
+            supplies[unit] = np.array([])
+            for i in range(1, 365):  # Loop through each day
+                t = df_Results['df_Index'].PeriodOfYear[i * 24]
+                supplies[unit] = np.concatenate((supplies[unit], supply.xs(t)))
+
+            # Calculate monthly supply by summing slices of the hourly data
+            monthly_supplies[unit] = []
+            start_hour = 0
+            for hours in hours_in_month:
+                monthly_supplies[unit].append(np.sum(supplies[unit][start_hour:start_hour + hours]))
+                start_hour += hours
+
+    for unit in units_to_plot:
+        # Retrieve monthly demand and supply for the unit
+        monthly_supply_units = monthly_supplies[unit]
+
+    # Plotting Section
+    months = [calendar.month_abbr[i] for i in range(1, 13)]  # Month abbreviations
+    x = np.arange(len(months))  # Month indices
+
+    # Prepare data for plotting
+    bar_width = 0.15  # Adjust for more bars
+    fig, ax = plt.subplots(figsize=(12, 6))
+
+    # Plot total heating demand
+    ax.bar(x, montly_demand_heating_total, width=bar_width, label='Monthly Heating Demand')
+
+    # Plot supplies for each unit
+    for i, unit in enumerate(units_to_plot):
+        ax.bar(x + bar_width * (i + 1), monthly_supplies[unit], width=bar_width, label=f'{unit} Supply')
+
+    # Plot monthly_HP_el_from_grid
+    ax.bar(x + bar_width * (len(units_to_plot) + 1), monthly_HP_el_from_grid, width=bar_width,
+           label='el_from_grid_to_HP')
+
+    # Plot montly_electricity_from_PV_to_HP
+    ax.bar(x + bar_width * (len(units_to_plot) + 2), montly_electricity_from_PV_to_HP, width=bar_width,
+           label='PV_to_HP')
+
+    # Add labels and formatting
+    ax.set_xticks(x + bar_width * ((len(units_to_plot) + 2) / 2))
+    ax.set_xticklabels(months)
+    ax.set_ylabel('Energy (kWh)')
+    ax.set_xlabel('Months')
+    ax.set_title('Monthly Heating Demand vs Supply Contribution')
+    ax.legend()
+
+    plt.tight_layout()
+
+
+    return plt
+
+
+def solar_fraction(df_Results):
+    # Days in each month for the year
+    days_in_month = [calendar.monthrange(2023, month)[1] for month in range(1, 13)]  # List of days in each month
+    hours_in_month = [days * 24 for days in days_in_month]  # Convert days to hours
+
+
+    ### creation of monthly heat requirement ###
+    units_to_plot = ['DHN_hex_in']
+
+    supplies = dict()
+    monthly_supplies = dict()
+
+    for unit in units_to_plot:
+        df_aggregated = df_Results['df_Unit_t'][
+            df_Results['df_Unit_t'].index.get_level_values('Unit').str.contains(unit)]
+
+        # Process hourly supply
+        if unit in units_to_plot:
+            supply = df_aggregated.droplevel('Layer').Units_demand[:-2].groupby(['Period', 'Time']).sum()
+            supplies[unit] = np.array([])
+            for i in range(1, 365):  # Loop through each day
+                t = df_Results['df_Index'].PeriodOfYear[i * 24]
+                supplies[unit] = np.concatenate((supplies[unit], supply.xs(t)))
+
+            # Calculate monthly supply by summing slices of the hourly data
+            monthly_supplies[unit] = []
+            start_hour = 0
+            for hours in hours_in_month:
+                monthly_supplies[unit].append(np.sum(supplies[unit][start_hour:start_hour + hours]))
+                start_hour += hours
+
+    for unit in units_to_plot:
+        # Retrieve monthly demand and supply for the unit
+        monthly_supply_units = monthly_supplies[unit]
+
+    Demand_of_heat = np.array(monthly_supply_units)
+    Demand_of_heat = Demand_of_heat.tolist()
+
+
+
+    ### energy supply by the storage ###
+    units_to_plot = ['STES_district']
+
+    supplies = dict()
+    monthly_supplies = dict()
+
+    for unit in units_to_plot:
+        df_aggregated = df_Results['df_Unit_t'][
+            df_Results['df_Unit_t'].index.get_level_values('Unit').str.contains(unit)]
+
+        # Process hourly supply
+        if unit in units_to_plot:
+            supply = df_aggregated.droplevel('Layer').Units_supply[:-2].groupby(['Period', 'Time']).sum()
+            supplies[unit] = np.array([])
+            for i in range(1, 365):  # Loop through each day
+                t = df_Results['df_Index'].PeriodOfYear[i * 24]
+                supplies[unit] = np.concatenate((supplies[unit], supply.xs(t)))
+
+            # Calculate monthly supply by summing slices of the hourly data
+            monthly_supplies[unit] = []
+            start_hour = 0
+            for hours in hours_in_month:
+                monthly_supplies[unit].append(np.sum(supplies[unit][start_hour:start_hour + hours]))
+                start_hour += hours
+
+    for unit in units_to_plot:
+        # Retrieve monthly demand and supply for the unit
+        STES_supply = monthly_supplies[unit]
+
+    ### amount of heat produced by the heat pump from PV ###
+
+
+    # electricity from the grid to the heat pump #
+
+    demand_el = df_Results['df_Grid_t']['Grid_supply'].xs('Electricity').xs('Network')
+    Electricity_demand_HP = np.array([])
+
+    for i in range(1, 365):  # Loop through each day
+        t = df_Results['df_Index'].PeriodOfYear[i * 24]
+        Electricity_demand_HP = np.concatenate((Electricity_demand_HP, demand_el.xs(t)))
+
+
+    monthly_HP_el_from_grid = []
+    start_hour = 0
+    for hours in hours_in_month:
+        monthly_HP_el_from_grid.append(np.sum(Electricity_demand_HP[start_hour:start_hour + hours]))
+        start_hour += hours
+
+
+    # electricity from PV to the heat pump #
+
+    units_to_plot = ['HeatPump_Geothermal_district']
+
+    supplies = dict()
+    monthly_supplies = dict()
+
+    for unit in units_to_plot:
+        df_aggregated = df_Results['df_Unit_t'][
+            df_Results['df_Unit_t'].index.get_level_values('Unit').str.contains(unit)]
+
+        # Process hourly supply
+        if unit in units_to_plot:
+            supply = df_aggregated.droplevel('Layer').Units_demand[:-2].groupby(['Period', 'Time']).sum()
+            supplies[unit] = np.array([])
+            for i in range(1, 365):  # Loop through each day
+                t = df_Results['df_Index'].PeriodOfYear[i * 24]
+                supplies[unit] = np.concatenate((supplies[unit], supply.xs(t)))
+
+            # Calculate monthly supply by summing slices of the hourly data
+            monthly_supplies[unit] = []
+            start_hour = 0
+            for hours in hours_in_month:
+                monthly_supplies[unit].append(np.sum(supplies[unit][start_hour:start_hour + hours]))
+                start_hour += hours
+
+    for unit in units_to_plot:
+        # Retrieve monthly demand and supply for the unit
+        monthly_demand_units = monthly_supplies[unit]
+
+
+
+    percentual_from_PV= 1-(np.array(monthly_HP_el_from_grid)/monthly_demand_units)
+
+
+    # units supply of the heat pump#
+
+    units_to_plot = ['HeatPump_Geothermal_district']
+
+    supplies = dict()
+    monthly_supplies = dict()
+
+    for unit in units_to_plot:
+        df_aggregated = df_Results['df_Unit_t'][df_Results['df_Unit_t'].index.get_level_values('Unit').str.contains(unit)]
+
+        # Process hourly supply
+        if unit in units_to_plot:
+            supply = df_aggregated.droplevel('Layer').Units_supply[:-2].groupby(['Period', 'Time']).sum()
+            supplies[unit] = np.array([])
+            for i in range(1, 365):  # Loop through each day
+                t = df_Results['df_Index'].PeriodOfYear[i * 24]
+                supplies[unit] = np.concatenate((supplies[unit], supply.xs(t)))
+
+            # Calculate monthly supply by summing slices of the hourly data
+            monthly_supplies[unit] = []
+            start_hour = 0
+            for hours in hours_in_month:
+                monthly_supplies[unit].append(np.sum(supplies[unit][start_hour:start_hour + hours]))
+                start_hour += hours
+
+    for unit in units_to_plot:
+        # Retrieve monthly demand and supply for the unit
+        HP_supply = monthly_supplies[unit]
+
+    HP_supply_from_PV = percentual_from_PV*np.array(HP_supply)
+
+    ### total montly heat from RE ##
+
+    Heat_from_RE = HP_supply_from_PV + np.array(STES_supply)
+
+    montly_SF =   Heat_from_RE/Demand_of_heat
+
+    average_SF = np.mean(montly_SF)
+
+    # Append the yearly average SF as the 13th value
+    months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Average']
+    montly_SF_with_average = np.append(montly_SF, average_SF)
+
+    # Define colors: one color for months, a distinct color for the average
+    bar_colors = ['skyblue'] * 12 + ['orange']
+
+    # Plot the column graph
+    plt.figure(figsize=(12, 6))
+    bars = plt.bar(months, montly_SF_with_average, width=0.6, color=bar_colors)
+
+    # Add percentage values above each bar
+    for bar, value in zip(bars, montly_SF_with_average):
+        plt.text(bar.get_x() + bar.get_width() / 2, bar.get_height(),
+                 f'{value * 100:.1f}%',  # Convert to percentage and format
+                 ha='center', va='bottom', fontsize=10)
+
+    # Add labels and title
+    plt.title('Monthly Solar Fraction (SF) with Yearly Average', fontsize=14)
+    plt.xlabel('Month', fontsize=12)
+    plt.ylabel('Solar Fraction (SF)', fontsize=12)
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    plt.tight_layout()
+
+    return plt

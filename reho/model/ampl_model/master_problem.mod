@@ -75,8 +75,9 @@ param Grid_supply{l in ResourceBalances, f in FeasibleSolutions, h in House, p i
 param Grid_demand{l in ResourceBalances, f in FeasibleSolutions, h in House, p in Period, t in  Time[p]};
 param TransformerCapacity{l in ResourceBalances} default 1e8;
 #adding this parameter here so that I can parse a temporal profile for the transformer capacity
-param TransformerCapacity_heat_t{l in ResourceBalances, p in Period, t in Time[p]: l = 'Heat'} default TransformerCapacity[l];
-param TransformerCapacity_heat{l in ResourceBalances: l = 'Heat'} default TransformerCapacity[l];
+param TransformerCapacity_heat_t{l in ResourceBalances, p in Period, t in Time[p]: l = 'Heat'} default TransformerCapacity[l];  #: l = 'Heat'
+param TransformerCapacity_supply{l in ResourceBalances} default TransformerCapacity[l];   #: l = 'Heat'
+param TransformerCapacity_demand{l in ResourceBalances} default TransformerCapacity[l]; 
 
 param Grids_flowrate{l in ResourceBalances, h in House} default 1e9;
 param Grid_usage_max_demand default 0;
@@ -342,16 +343,19 @@ Grid_demand[l,f,h,p,t] * lambda[f,h] <= LineCapacity[l,h];
 #--------------------------------------------------------------------------------------------------------------------#
 # Transformer capacity constraints
 #--------------------------------------------------------------------------------------------------------------------#
-subject to TransformerCapacity_supply{l in ResourceBalances,p in PeriodStandard,t in Time[p]}:
+subject to TransformerCapacity_supply1{l in ResourceBalances,p in PeriodStandard,t in Time[p]}:
 Network_supply[l,p,t] <= TransformerCapacity[l] * dp[p] * dt[p];
 
-subject to TransformerCapacity_supply_t{l in ResourceBalances,p in PeriodStandard,t in Time[p]: l =  'Heat'}:
+subject to TransformerCapacity_supply_t{l in ResourceBalances,p in PeriodStandard,t in Time[p]:l =  'Heat'}:     #:l =  'Heat'}:
 Network_supply[l,p,t] <= TransformerCapacity_heat_t[l,p,t] * dp[p] * dt[p];
 
-subject to TransformerCapacity_supply_heat{l in ResourceBalances,p in PeriodStandard,t in Time[p]: l =  'Heat'}:
-Network_supply[l,p,t] <= TransformerCapacity_heat[l] * dp[p] * dt[p];
+subject to TransformerCapacity_supply_heat{l in ResourceBalances,p in PeriodStandard,t in Time[p]}:    #: l =  'Heat'  
+Network_supply[l,p,t] <= TransformerCapacity_supply[l] * dp[p] * dt[p];
 
-subject to TransformerCapacity_demand{l in ResourceBalances,p in PeriodStandard,t in Time[p]}:
+subject to TransformerCapacity_demand_heat{l in ResourceBalances,p in PeriodStandard,t in Time[p]}:    #: l =  'Heat'  
+Network_demand[l,p,t] <= TransformerCapacity_demand[l] * dp[p] * dt[p];
+
+subject to TransformerCapacity_demand1{l in ResourceBalances,p in PeriodStandard,t in Time[p]}:
 Network_demand[l,p,t] <= TransformerCapacity[l] * dp[p] * dt[p];
 
 subject to EMOO_grid_constraint {l in ResourceBalances , p in Period, t in Time[p]: l =  'Electricity'}:
