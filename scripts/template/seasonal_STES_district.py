@@ -44,12 +44,12 @@ if __name__ == '__main__':
     scenario = dict()
     scenario['Objective'] = 'TOTEX'
     scenario['name'] = 'totex'
-    scenario['exclude_units'] = ['HeatPump_Geothermal','ThermalSolar_district','ThermalSolar','HeatPump_Air','BESS_IP_district','HeatPump_Lake','HeatPump_Anergy','HeatPump_DHN', 'ElectricalHeater_SH', 'Battery']  #,'ThermalSolar_district''HeatPump'
+    scenario['exclude_units'] = ['HeatPump_Geothermal','ThermalSolar','HeatPump_Air','BESS_IP_district','HeatPump_Lake','HeatPump_Anergy','HeatPump_DHN', 'ElectricalHeater_SH', 'Battery']  #,'ThermalSolar_district''HeatPump'
     scenario["specific"] = []
-    scenario['enforce_units'] = ['STES_district','HeatPump_Geothermal_district','PV'] #'HeatPump_Geothermal_district'
+    scenario['enforce_units'] = ['STES_district','HeatPump_Geothermal_district','PV','ThermalSolar_district'] #'HeatPump_Geothermal_district'
     # Initialize available units and grids
-    grids = infrastructure.initialize_grids({'Electricity': {"Cost_demand_cst": 0.1746, "Cost_supply_cst": 0.3346},
-                                            "Heat": {}})  #'NaturalGas': {"Cost_demand_cst": 0.01, "Cost_supply_cst": 0.10},
+    grids = infrastructure.initialize_grids({'Electricity': {"Cost_demand_cst": 0.1746, "Cost_supply_cst": 20},
+                                            "Heat": {"Cost_demand_cst": -150, "Cost_supply_cst": 0}})  #'NaturalGas': {"Cost_demand_cst": 0.01, "Cost_supply_cst": 0.10},
                                                                                                                 #"Data": {"Cost_demand_cst": 0.0001, "Cost_supply_cst": 0.0002}}
 
     #grids = infrastructure.initialize_grids({'Electricity': {"Cost_demand_cst": demand_cost, "Cost_supply_cst": supply_cost},
@@ -59,7 +59,8 @@ if __name__ == '__main__':
     units = infrastructure.initialize_units(scenario, grids, district_data= True)
 
     parameters = {'n_vehicles': np.array([0.0]), 'T_DHN_supply_cst': np.repeat(70.0, n_house),'T_DHN_return_cst': np.repeat(60.0, n_house),
-                  'STC_Tlm_district': STC_Tlm_district,'TransformerCapacity_heat_t':Waste_heat,'I_global_STC': Irr_Geneva, 'STC_efficiency_district': STC_efficiency_district, 'Cost_demand_network': demand_cost, 'Cost_supply_network':supply_cost} #'Cost_demand_network': demand_cost, "TransformerCapacity": np.array([1e8, 0]),'TransformerCapacity_heat':np.array([0]),'Cost_supply_network':supply_cost , , 'TransformerCapacity_heat_t':Waste_heat
+                  'STC_Tlm_district': STC_Tlm_district,'TransformerCapacity_heat_t':Waste_heat,'I_global_STC': Irr_Geneva, 'STC_efficiency_district': STC_efficiency_district,
+                  'TransformerCapacity_supply': np.array([1e8,0]),'TransformerCapacity_demand': np.array([1e8,1e8]) } #'Cost_demand_network': demand_cost, "TransformerCapacity": np.array([1e8, 0]),'TransformerCapacity_heat':np.array([0]),'Cost_supply_network':supply_cost , , 'TransformerCapacity_heat_t':Waste_heat
 
 
     # Set method options
@@ -77,3 +78,7 @@ if __name__ == '__main__':
     plotting.plot_energy_balance_for_STES(reho.results['totex'][0], units_to_plot, color='ColorPastel', day_of_the_year= 150, time_range='3days',label='EN_long').show()
 
     plotting.plot_c_d_STES(reho.results['totex'][0]).show()
+
+    plotting.plot_contribution_each_technology(reho.results['totex'][0]).show()
+
+    plotting.solar_fraction(reho.results['totex'][0]).show()
