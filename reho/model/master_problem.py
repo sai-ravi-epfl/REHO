@@ -450,7 +450,7 @@ class MasterProblem:
 
 
                     elif 'Geothermal' in unit:
-                        T_source = np.concatenate([T_source, np.repeat(15, timesteps)])
+                        T_source = np.concatenate([T_source, np.repeat(13, timesteps)])
                         max_cap = np.concatenate([max_cap, np.repeat(1e6, ntimes)]) #also this value, needs to be automatic
 
 

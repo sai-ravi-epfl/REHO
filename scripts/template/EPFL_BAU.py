@@ -8,20 +8,27 @@ if __name__ == '__main__':
     # Set building parameters
     # you can as well define your district from a csv file instead of reading the database
     reader = QBuildingsReader()
-    n_house = 1
-    qbuildings_data = reader.read_csv(buildings_filename='C:/Users/there/Desktop/REHO2/scripts/template/data/EPFL_MOES.csv', nb_buildings=n_house)
+    n_house = 24
+    file_ID = "/EPFL_MOES.csv"
+    epfl_csv_path = path_to_buildings_csv + file_ID
+    qbuildings_data = reader.read_csv(buildings_filename=epfl_csv_path, nb_buildings=n_house)
+    #qbuildings_data = reader.read_csv(buildings_filename='C:/Users/there/Desktop/REHO2/scripts/template/data/EPFL_MOES.csv', nb_buildings=n_house)
     # reader.establish_connection('Suisse')
     #reader.establish_connection('Suisse')
     #qbuildings_data = reader.read_db(transformer=3216, egid=[280001550])
     # Select weather data
-    cluster = {'Location': 'Pully', 'Attributes': ['I', 'T','E','D'], 'Periods': 10, 'PeriodDuration': 24}
+    cluster = {'Location': 'Pully', 'Attributes': ['I', 'T','E','D'], 'Periods': 16, 'PeriodDuration': 168, 'custom_weather': path_to_profiles+'/pully.csv'}
     attributes = ['Irr', 'Text', 'Emissions','DataLoad']
     weather_file = path_to_profiles+'/pully.csv'
     weather.data_centre_profile(size = 50)
-    df_annual = weather.read_custom_weather(weather_file)
+    if cluster['PeriodDuration'] == 168:
+        weeks =True
+    else:
+        weeks =False
+    df_annual = weather.read_custom_weather(weather_file, weeks)
     df_annual = df_annual[attributes]
     nb_clusters = [cluster['Periods']]
-    cl = Clustering(data=df_annual, nb_clusters=nb_clusters, option={"year-to-day": True, "extreme": []}, pd=24)
+    cl = Clustering(data=df_annual, nb_clusters=nb_clusters, option={"year-to-day": True, "extreme": []}, pd=168)
     cl.run_clustering()
     val_cls = weather.generate_output_data(cl, attributes, "Pully",cluster)
     data_centre_heat_profile = weather.data_centre_profiles(val_cls)
@@ -56,19 +63,19 @@ if __name__ == '__main__':
     #plotting.plot_composite_curve(reho.results["totex"][0], cluster, plot= True, periods =["Yearly"]) #,"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"
     #plotting.yearly_demand_plot(reho.results["totex"][0], cluster, plot=True)
     # Save results
-    filename='ALL_EPFL_BAU'
+    filename='ALL_EPFL_BAU_50kW'
     reho.save_results(format=['xlsx', 'pickle'], filename=filename)
 
     # plot results
-    import uuid
-    tmp_folder = Path("tmp")
-    tmp_folder.mkdir(exist_ok=True)
-    plot_performance = plotting.plot_sankey_1(reho.results['gwp'][0], label='EN_long', color='ColorPastel')
-    plot_performance.write_html(tmp_folder / f"performance-{uuid.uuid4()}.html", auto_open=True)
-    performance = plotting.plot_performance(reho.results, plot='costs', indexed_on='Scn_ID', label='EN_long')
-    performance.write_html(tmp_folder / f"performance-{uuid.uuid4()}.html", auto_open=True)
-    plot_performance = plotting.plot_performance(reho.results, plot='gwp', indexed_on='Scn_ID', label='EN_long')
-    plot_performance.write_html(tmp_folder / f"plot_performance-{uuid.uuid4()}.html", auto_open=True)
+    #import uuid
+    #tmp_folder = Path("tmp")
+    #tmp_folder.mkdir(exist_ok=True)
+   # plot_performance = plotting.plot_sankey_1(reho.results['gwp'][0], label='EN_long', color='ColorPastel')
+    #plot_performance.write_html(tmp_folder / f"performance-{uuid.uuid4()}.html", auto_open=True)
+    #performance = plotting.plot_performance(reho.results, plot='costs', indexed_on='Scn_ID', label='EN_long')
+    #performance.write_html(tmp_folder / f"performance-{uuid.uuid4()}.html", auto_open=True)
+    #plot_performance = plotting.plot_performance(reho.results, plot='gwp', indexed_on='Scn_ID', label='EN_long')
+    #plot_performance.write_html(tmp_folder / f"plot_performance-{uuid.uuid4()}.html", auto_open=True)
     #plotting.plot_performance(reho.results, plot='costs', indexed_on='Scn_ID', label='EN_long').show()
    # plotting.plot_performance(reho.results, plot='gwp', indexed_on='Scn_ID', label='EN_long').show()
     #plotting.plot_sankey_1(reho.results['gwp'][0], label='EN_long', color='ColorPastel').show()
@@ -78,3 +85,7 @@ if __name__ == '__main__':
 
     # path_egid_map =
     # Read typical day distribution and buildings profiles
+
+
+    ##plot 1
+    # plot size of the DC

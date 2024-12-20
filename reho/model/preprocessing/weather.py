@@ -217,7 +217,7 @@ def generate_output_data(cl, attributes, location, cluster):
     T_max['Irr'] = cl.data_org.loc[T_day[1] * 24: T_day[1] * 24 + 24, 'Irr'].max()
     T_min.loc[:, ['time.dd', 'time.hh', 'dt']] = [T_day[0], 1, 1]
     T_max.loc[:, ['time.dd', 'time.hh', 'dt']] = [T_day[1], 1, 1]
-    T_min['Text']= -1
+    # T_min['Text']= -1
     data_cls = pd.concat([data_cls, T_min.rename({T_idx[0]: 240}), T_max.rename({T_idx[1]: 241})])
     # Add a 10% margin for the extreme over 20 years
     data_cls.loc[[240, 241], ['Text', 'Irr']] = data_cls.loc[[240, 241], ['Text', 'Irr']] * 1.1
@@ -256,7 +256,7 @@ def get_metric(cluster):
 
 def data_centre_profile(size): # size to be mentioned in kW
     # df_load_profile = pd.read_csv(r'C:\Users\there\Desktop\REHO2\scripts\templates\shifted_load_GWP_before_clustering.csv')
-    df_load_profile = pd.read_csv(r'C:\Users\there\Desktop\REHO2\scripts\templates\yearly_data_centre_profile_repeated12.csv')
+    df_load_profile = pd.read_csv(r'C:\Users\there\Desktop\REHO2\scripts\templates\yearly_data_centre_profile_repeated2.csv')
     #df_load_profile = pd.read_csv(r'C:\Users\there\Desktop\REHO2\scripts\templates\yearly_data_centre_profile_repeated4.csv')
     #df_load_profile = pd.read_csv(r'C:\Users\there\Desktop\REHO2\scripts\templates\yearly_data_centre_profile_repeated3.csv')
     #df_load_profile = pd.read_csv(r'C:\Users\there\Desktop\REHO2\scripts\templates\yearly_data_centre_profile_repeated2.csv')
@@ -289,8 +289,23 @@ def write_dat_files( attributes, location, values_cluster, index_inter, cluster)
         - 'index_File_ID.dat'
         - 'timestamp_File_ID.dat'
     """
+    normal_unique= values_cluster['time.dd'][:-2].unique()
+    iteration =0
+    all_values = set(range(365))
+
+    # Find the values not in the unique list
+
+    for i in values_cluster['time.dd'][-2:]:
+        missing_values = all_values - set(normal_unique)
+        if i in normal_unique:
+            iteration = iteration + 1
+            values_cluster['time.dd'][-2:][239 + iteration] = next(iter(missing_values))
+            normal_unique = np.append(normal_unique, [next(iter(missing_values))])
 
     df_dd = values_cluster['time.dd'].unique()  # id of typical period
+    #extreme_hours = values_cluster['time.dd'][-2:]
+    #df_dd = pd.concat([pd.Series(df_dd),extreme_hours]
+
 
     dp = np.array([])  # duration of period e.g. frequency
     pt = np.array([])  # period duration / number of timesteps in period
@@ -301,6 +316,8 @@ def write_dat_files( attributes, location, values_cluster, index_inter, cluster)
 
         dp = np.append(dp, p)
         pt = np.append(pt, t)
+        # if cluster['PeriodDuration']==168:
+        #    pt = np.append(pt,[1])
 
     # -------------------------------------------------------------------------------------
     # attributes for saving
@@ -339,7 +356,7 @@ def write_dat_files( attributes, location, values_cluster, index_inter, cluster)
     df_T = values_cluster['Text']
     filename = os.path.join(path_to_clustering, 'T_' + File_ID + '.dat')
     df_T.to_csv(filename, index=False, header=False)
-    period = cluster['Periods']
+    period = int(cluster['Periods'])
     period_duration = cluster['PeriodDuration']
 
     # -------------------------------------------------------------------------------------
@@ -463,7 +480,7 @@ def write_dat_files( attributes, location, values_cluster, index_inter, cluster)
     IterationFile.write(header)
     for key in dict_index:
         pt = df_time.iloc[0].timesteps  # take the same period duration also for modulo
-        date = dt.datetime(2005, 1, 1) + dt.timedelta(hours=float((key) * pt))
+        date = dt.datetime(2005, 1, 1) + dt.timedelta(hours=float((key-1) * pt))
 
         if 'Weekday' in attributes:
             text = date.strftime("%m/%d/%Y/%H") + '\t' + str(key) + '\t' + str(dp[dict_index[key] - 1]) + '\t' + str(
