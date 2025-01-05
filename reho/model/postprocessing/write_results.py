@@ -581,8 +581,7 @@ def get_df_Results_from_MP(ampl, binary=False, method=None, district=None, read_
     else:
         df_Results["df_Unit_t"] = pd.DataFrame()
 
-    df_Unit_t.to_excel(
-        '/Users/ravi/Desktop/PhD/My_Reho_Qgis_files/Reho_Sai_Fork/scripts/template/results/master_prob_no_filter.xlsx')
+    #df_Unit_t.to_excel('/Users/ravi/Desktop/PhD/My_Reho_Qgis_files/Reho_Sai_Fork/scripts/template/results/master_prob_no_filter.xlsx')
     # LCA
     if method["save_lca"]:
         LCA_units = get_ampl_data(ampl, 'lca_units', multi_index=True)

@@ -8,21 +8,21 @@ if __name__ == '__main__':
     # Set building parameters
     # you can as well define your district from a csv file instead of reading the database
     reader = QBuildingsReader()
-    n_house = 1
+    n_house = 26
     file_ID = "/EPFL_MOES.csv"
     epfl_csv_path = path_to_buildings_csv + file_ID
     qbuildings_data = reader.read_csv(buildings_filename=epfl_csv_path, nb_buildings= n_house)
     #reader.establish_connection('Suisse')
     #qbuildings_data = reader.read_db(transformer=3216, egid=[280001550])
     # Select weather data
-    cluster = {'Location': 'Pully', 'Attributes': ['I', 'T','E','D','CS'], 'Periods': 14, 'PeriodDuration': 24}
+    cluster = {'Location': 'Pully', 'Attributes': ['I', 'T','E','D'], 'Periods': 16, 'PeriodDuration': 168}
     attributes = ['Irr', 'Text', 'Emissions','DataLoad','Cost_supply_elec']
     weather_file = path_to_profiles+'/pully.csv'
-    weather.data_centre_profile(size = 50)
-    df_annual = weather.read_custom_weather(weather_file)
+    weather.data_centre_profile(size = 2000)
+    df_annual = weather.read_custom_weather(weather_file, weeks = cluster['PeriodDuration'] ==168)
     df_annual = df_annual[attributes]
     nb_clusters = [cluster['Periods']]
-    cl = Clustering(data=df_annual, nb_clusters=nb_clusters, option={"year-to-day": True, "extreme": []}, pd=24)
+    cl = Clustering(data=df_annual, nb_clusters=nb_clusters, option={"year-to-day": True, "extreme": []}, pd=cluster['PeriodDuration'])
     cl.run_clustering()
     val_cls = weather.generate_output_data(cl, attributes, "Pully",cluster)
     data_centre_heat_profile = weather.data_centre_profiles(val_cls)
@@ -31,7 +31,7 @@ if __name__ == '__main__':
     scenario = dict()
     scenario['Objective'] = 'GWP'
     scenario['name'] = 'gwp'
-    scenario['exclude_units'] = ['HeatPump_Geothermal','HeatPump_Anergy','HeatPump_DHN', 'ElectricalHeater_SH', 'ThermalSolar', 'Battery','HeatPump_Lake', 'HeatPump_Air','ORC_EPFL_district'] #'OIL_Boiler',  'NG_Boiler','HeatPump_Air', 'HeatPump_Lake''HeatPump_Anergy''DataHeatSH',
+    scenario['exclude_units'] = ['HeatPump_Geothermal','HeatPump_Anergy','HeatPump_DHN', 'ElectricalHeater_SH', 'ThermalSolar', 'Battery','HeatPump_Lake', 'HeatPump_Air','ORC_EPFL_district','STES_district','HeatPump_DataCentre_district','DHN_out_district'] #'OIL_Boiler',  'NG_Boiler','HeatPump_Air', 'HeatPump_Lake''HeatPump_Anergy''DataHeatSH',
 
     #
     #
@@ -57,11 +57,11 @@ if __name__ == '__main__':
     #plotting.plot_composite_curve(reho.results["totex"][0], cluster, plot= True, periods =["Yearly"]) #,"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"
     #plotting.yearly_demand_plot(reho.results["totex"][0], cluster, plot=True)
     # Save results
-    filename='ALL_EPFL_BAU'
+    filename='ALL_EPFL_BAU_weeks'
     reho.save_results(format=['xlsx', 'pickle'], filename=filename)
     #plotting.plot_performance(reho.results, plot='costs', indexed_on='Scn_ID', label='EN_long').show()
    # plotting.plot_performance(reho.results, plot='gwp', indexed_on='Scn_ID', label='EN_long').show()
-    #plotting.plot_sankey_1(reho.results['gwp'][0], label='EN_long', color='ColorPastel').show()
+    plotting.plot_sankey_1(reho.results['gwp'][0], label='EN_long', color='ColorPastel').show()
     #plotting.plot_profiles(reho.results,['PV'], resolution='daily')
     # Construct the full file path
     # plotting.yearly_demand_plot(filename)
