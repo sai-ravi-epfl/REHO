@@ -14,14 +14,14 @@ if __name__ == '__main__':
     #reader.establish_connection('Suisse')
     #qbuildings_data = reader.read_db(transformer=3216, egid=[280001550])
     # Select weather data
-    cluster = {'Location': 'Pully', 'Attributes': ['I', 'T','E','D'], 'Periods': 10, 'PeriodDuration': 24}
-    attributes = ['Irr', 'Text', 'Emissions','DataLoad']
+    cluster = {'Location': 'Pully', 'Attributes': ['I', 'T','E','D','CS'], 'Periods': 20, 'PeriodDuration': 168}
+    attributes = ['Irr', 'Text', 'Emissions','DataLoad','Cost_supply_elec']
     weather_file = path_to_profiles + '/pully.csv'
     weather.data_centre_profile(size = 50)
-    df_annual = weather.read_custom_weather(weather_file)
+    df_annual = weather.read_custom_weather(weather_file, weeks = cluster['PeriodDuration'] ==168)
     df_annual = df_annual[attributes]
     nb_clusters = [cluster['Periods']]
-    cl = Clustering(data=df_annual, nb_clusters=nb_clusters, option={"year-to-day": True, "extreme": []}, pd=24)
+    cl = Clustering(data=df_annual, nb_clusters=nb_clusters, option={"year-to-day": True, "extreme": []}, pd=cluster['PeriodDuration'] )
     cl.run_clustering()
     val_cls = weather.generate_output_data(cl, attributes, "Pully",cluster)
     data_centre_heat_profile = weather.data_centre_profiles(val_cls)
@@ -30,7 +30,7 @@ if __name__ == '__main__':
     scenario = dict()
     scenario['Objective'] = 'GWP'
     scenario['name'] = 'gwp'
-    scenario['exclude_units'] = ['HeatPump_Geothermal','HeatPump_Air','HeatPump_Lake','HeatPump_Anergy','HeatPump_DHN', 'ElectricalHeater_SH', 'ThermalSolar', 'Battery'] #'OIL_Boiler',  'NG_Boiler','HeatPump_Air', 'HeatPump_Lake''HeatPump_Anergy''DataHeatSH',
+    scenario['exclude_units'] = ['HeatPump_Geothermal','HeatPump_Air','HeatPump_Lake','HeatPump_Anergy','HeatPump_DHN', 'ElectricalHeater_SH', 'ThermalSolar', 'Battery','STES_district'] #'OIL_Boiler',  'NG_Boiler','HeatPump_Air', 'HeatPump_Lake''HeatPump_Anergy''DataHeatSH',
 
     #
     #
