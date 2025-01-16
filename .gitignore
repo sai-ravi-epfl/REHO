@@ -312,3 +312,6 @@ scripts/**/*
 !scripts/template/**/*
 !scripts/examples/**/*
 !scripts/test/**/*
+
+# results
+manipluateLoadDC/template/results/

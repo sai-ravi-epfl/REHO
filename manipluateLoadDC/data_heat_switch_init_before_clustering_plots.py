@@ -128,26 +128,26 @@ def process_and_optimize_data(path_to_load_profile, path_to_excel_file_BAU, mode
     return total_use, shifted_load, profile_data_df
 
 # Example call for GWP
-path_to_data_centre_heat_profile = r'C:\Users\there\Desktop\REHO2\scripts\templates\yearly_data_centre_profile_repeated2.csv'
-path_to_emissions = r'C:\Users\there\Desktop\REHO2\reho\data\weather\Elec_CO2_2023.txt'
-model_path = r'C:\Users\there\Desktop\REHO2\scripts\templates\switchLoad\data_heat_switch_before_clustering_gwp.mod'
+path_to_data_centre_heat_profile = r'/scripts/templates/yearly_data_centre_profile_repeated2.csv'
+path_to_emissions = r'/reho/data/weather/Elec_CO2_2023.txt'
+model_path = r'/scripts/templates/switchLoad/data_heat_switch_before_clustering_gwp.mod'
 size = 288
-output_path = r'C:\Users\there\Desktop\REHO2\scripts\templates\yearly_data_centre_profile_repeated3.csv'
+output_path = r'/scripts/templates/yearly_data_centre_profile_repeated3.csv'
 
 total_gwp, shifted_load_df_GWP, gwp_profile = process_and_optimize_data_GWP(path_to_data_centre_heat_profile, path_to_emissions, model_path, output_path, size)
 
 # Example call for Q_heating
-path_to_load_profile = r'C:\\Users\\there\\Desktop\\REHO2\\scripts\\templates\\yearly_data_centre_profile_repeated2.csv'
+path_to_load_profile = r'/scripts/templates/yearly_data_centre_profile_repeated2.csv'
 path_to_excel_file_BAU = r'C:\\Users\\there\\Desktop\\REHO2\\scripts\\template\\results\\ALL_EPFL_BAU_gwp.xlsx'
-model_path_SH = r'C:\\Users\\there\\Desktop\\REHO2\\scripts\\templates\\switchLoad\\data_heat_switch_before_clustering_use.mod'
-output_path_SH = r'C:\\Users\\there\\Desktop\\REHO2\\scripts\\templates\\yearly_data_centre_profile_repeated4.csv'
+model_path_SH = r'/scripts/templates/switchLoad/data_heat_switch_before_clustering_use.mod'
+output_path_SH = r'/scripts/templates/yearly_data_centre_profile_repeated4.csv'
 
 total_SH, shifted_load_df_SH, heating_data_df = process_and_optimize_data(path_to_load_profile, path_to_excel_file_BAU, model_path_SH, output_path_SH, 'House_Q_heating')
 
 
 # Example call for Domestic_electricity
-model_path_electricity = r'C:\\Users\\there\\Desktop\\REHO2\\scripts\\templates\\switchLoad\\data_heat_switch_before_clustering_use.mod'
-output_path_electricity = r'C:\\Users\\there\\Desktop\\REHO2\\scripts\\templates\\yearly_data_centre_profile_repeated5.csv'
+model_path_electricity = r'/scripts/templates/switchLoad/data_heat_switch_before_clustering_use.mod'
+output_path_electricity = r'/scripts/templates/yearly_data_centre_profile_repeated5.csv'
 
 total_electricity, shifted_load_df_electricity, electricity_data_df = process_and_optimize_data(path_to_load_profile, path_to_excel_file_BAU, model_path_electricity, output_path_electricity,'Domestic_electricity')
 
@@ -174,7 +174,7 @@ ax1.tick_params(axis='x', labelsize=12)
 ax1.tick_params(axis='y', labelsize=12)
 ax2.tick_params(axis='y', labelsize=12)
 fig.legend(loc='upper right', bbox_to_anchor=(1, 1), bbox_transform=ax1.transAxes)
-filename = 'shifted_load_week_comparison_GWP_grid_vs_original.png'
+filename = '../../shifted_load_week_comparison_GWP_grid_vs_original.png'
 plt.show()
 fig.savefig(filename, dpi=300)
 

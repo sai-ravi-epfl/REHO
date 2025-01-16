@@ -21,10 +21,10 @@ s.t. min_shift {t in 1..T}:
     shifted_load[t] >= 0.7 * load[t]; # max 30% shiftable
 
 # Define d as T/120
-param d := T div 120;
+param d := T div 168;
 
 s.t. total_load {period in 0..d-1}:  # d periods of 5 days
-    sum {h in 1..120} shifted_load[period*120 + h] = sum {h in 1..120} load[period*120 + h];
+    sum {h in 1..168} shifted_load[period*168 + h] = sum {h in 1..168} load[period*168 + h];
 
 # Objective
 minimize gwp:

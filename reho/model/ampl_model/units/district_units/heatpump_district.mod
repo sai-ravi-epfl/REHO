@@ -158,8 +158,6 @@ sum{T in HP_Tsupply} (HP_E_heating[u,p,t,T]/HP_Pmax[u,p,t,T]) <= Units_Mult[u]*H
 
 
 # ----------------------------------------- HEX Direct Cooling ---------------------------------------
-
-
 /*
 param DHN_efficiency_out{u in UnitsOfType['HeatPump'], p in Period,t in Time[p]}  := if min{T in HP_Tsupply} T >= T_source[u,p,t] + 2 then 1.0 else 0;
 param T_m{u in UnitsOfType['HeatPump'], p in Period,t in Time[p]}  := min{T in HP_Tsupply} (T) - T_source[u,p,t];
@@ -170,5 +168,5 @@ subject to HEX_cooling1{u in UnitsOfType['HeatPump'], v in UnitsOfType['DHN_dire
 
 subject to HEX_cooling3{u in UnitsOfType['HeatPump'], v in UnitsOfType['DHN_direct_cooling'], p in Period,t in Time[p]}:
 	Units_demand['Heat',v,p,t] <= 1e4 *  DHN_efficiency_out[u,p,t];	
-
 */
+

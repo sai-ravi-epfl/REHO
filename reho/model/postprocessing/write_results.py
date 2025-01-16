@@ -158,6 +158,20 @@ def get_df_Results_from_SP(ampl, scenario, method, buildings_data, filter=True):
 
         return df_Unit, df_Unit_t
 
+    def set_df_storage(ampl):
+        try:
+            df1 = get_ampl_data(ampl, 'BAT_E_stored_IP', multi_index=True)
+            if df1.empty:
+                df1 = None
+        except:
+            df1 = None
+
+        if df1 is not None:
+            df_storage = df1
+        else:
+            df_storage = pd.DataFrame()
+
+        return df_storage
     def set_df_grid(ampl, method):
         # Grid_t
         df1 = get_ampl_data(ampl, 'Grid_demand', multi_index=True)
@@ -356,6 +370,9 @@ def get_df_Results_from_SP(ampl, scenario, method, buildings_data, filter=True):
     df_Results["df_Grid_t"] = set_df_grid(ampl, method)
     df_Results["df_Time"], df_Weather, df_Index = set_dfs_other(ampl)
 
+    if method['use_Storage_Interperiod']:
+        df_Results["df_storage"] = set_df_storage(ampl)
+
     if method['save_data_input']:
         df_Results["df_Buildings"] = set_df_buildings(buildings_data)
         df_Results["df_Weather"] = df_Weather
@@ -386,6 +403,7 @@ def get_df_Results_from_SP(ampl, scenario, method, buildings_data, filter=True):
                 parameters_record[p] = ampl.getData(p).toPandas()
             except:
                 logging.info(p)
+
 
     if filter:
         for df_name, df in df_Results.items():
@@ -424,6 +442,11 @@ def get_df_Results_from_MP(ampl, binary=False, method=None, district=None, read_
         df_Buildings = pd.concat([df1, df2], axis=1)
         df_Buildings.index.names = ['FeasibleSolution', 'Hub']
         df_Results["df_Buildings"] = df_Buildings.sort_index()
+
+    if "STES_district" in district.UnitsOfDistrict:
+        df1 = get_ampl_data(ampl, 'STES_E_stored_IP', multi_index=True)
+        df_stes_energy = pd.concat([df1], axis=1)
+        df_Results["df_storage_stes"] = df_stes_energy
 
     # District
     df1 = get_ampl_data(ampl, 'Costs_House_op')
@@ -562,6 +585,7 @@ def get_df_Results_from_MP(ampl, binary=False, method=None, district=None, read_
     else:
         df_Results["df_Unit_t"] = pd.DataFrame()
 
+    #df_Unit_t.to_excel('/Users/ravi/Desktop/PhD/My_Reho_Qgis_files/Reho_Sai_Fork/scripts/template/results/master_prob_no_filter.xlsx')
     # LCA
     if method["save_lca"]:
         LCA_units = get_ampl_data(ampl, 'lca_units', multi_index=True)

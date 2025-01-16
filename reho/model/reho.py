@@ -568,6 +568,10 @@ class REHO(MasterProblem):
             df_Streams_t = df_Streams_t.droplevel(['Scn_ID', 'Pareto_ID', 'Iter', 'FeasibleSolution', 'house'])
             df_Results["df_Streams_t"] = df_Streams_t
 
+        if "STES_district" in self.infrastructure.UnitsOfDistrict:
+            df_storage_stes = last_results["df_storage_stes"]
+            df_Results["df_storage_stes"] = df_storage_stes
+
         if self.method["save_lca"]:
             df_lca_Units = self.get_final_SPs_results(MP_selection, 'df_lca_Units')
             df_lca_Units = df_lca_Units.droplevel(level=["Scn_ID", "Pareto_ID", "Iter", "FeasibleSolution", "house"])

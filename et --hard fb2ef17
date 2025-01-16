@@ -1,0 +1,50 @@
+[33m3053691[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mTheresa_branch[m[33m)[m HEAD@{0}: filter-branch: rewrite
+[33mfb2ef17[m HEAD@{1}: commit: test
+[33m6bfc48d[m HEAD@{2}: commit: Track large files with LFS
+[33md117e56[m HEAD@{3}: commit: deleted files
+[33m96e4a97[m HEAD@{4}: commit: update 09.01.2025 - hand in of semester project
+[33m80204ed[m HEAD@{5}: commit: update 07.01.2025 - heatpump_datacentre_working
+[33md4a6084[m HEAD@{6}: checkout: moving from Sai_fork_branch to Theresa_branch
+[33m87bf98e[m[33m ([m[1;31morigin/Sai_fork_branch[m[33m)[m HEAD@{7}: checkout: moving from Theresa_branch to Sai_fork_branch
+[33md4a6084[m HEAD@{8}: commit (merge): Merge remote-tracking branch 'origin/Sai_fork_branch' into Theresa_branch
+[33m0d08169[m HEAD@{9}: rebase (finish): returning to refs/heads/Theresa_branch
+[33m0d08169[m HEAD@{10}: rebase (start): checkout Theresa_branch
+[33m0d08169[m HEAD@{11}: checkout: moving from 87bf98ea40b927271621f410ec4e6843e7106e20 to Theresa_branch
+[33m87bf98e[m[33m ([m[1;31morigin/Sai_fork_branch[m[33m)[m HEAD@{12}: checkout: moving from Sai_fork_branch to origin/Sai_fork_branch
+[33m1b0af29[m[33m ([m[1;31morigin/ettore_branch[m[33m, [m[1;31morigin/Thomas_branch[m[33m)[m HEAD@{13}: checkout: moving from 09d2b665d7e6ac7369eaaf0f0f9cd348ea084062 to Sai_fork_branch
+[33m09d2b66[m HEAD@{14}: checkout: moving from Theresa_branch to refs/remotes/origin/Sai_fork_branch
+[33m0d08169[m HEAD@{15}: commit: update 06.01.2025
+[33m1da6a85[m HEAD@{16}: commit: adjusted problems with clustering
+[33m5fdacad[m HEAD@{17}: commit: added 7day clustering (168 hours)
+[33meed8959[m[33m ([m[1;31morigin/Theresa_branch[m[33m)[m HEAD@{18}: commit: updated folder manipulateLoadDC
+[33ma267c0e[m HEAD@{19}: commit (merge): Merge remote-tracking branch 'origin/Sai_fork_branch' into Theresa_branch
+[33m041a792[m HEAD@{20}: checkout: moving from Sai_fork_branch to Theresa_branch
+[33m1b0af29[m[33m ([m[1;31morigin/ettore_branch[m[33m, [m[1;31morigin/Thomas_branch[m[33m)[m HEAD@{21}: checkout: moving from 1b0af29dce765d08a056f16dc034e669bf7930a0 to Sai_fork_branch
+[33m1b0af29[m[33m ([m[1;31morigin/ettore_branch[m[33m, [m[1;31morigin/Thomas_branch[m[33m)[m HEAD@{22}: checkout: moving from Sai_fork_branch to 1b0af29dce765d08a056f16dc034e669bf7930a0
+[33m1b0af29[m[33m ([m[1;31morigin/ettore_branch[m[33m, [m[1;31morigin/Thomas_branch[m[33m)[m HEAD@{23}: checkout: moving from Sai_fork_branch to Sai_fork_branch
+[33m1b0af29[m[33m ([m[1;31morigin/ettore_branch[m[33m, [m[1;31morigin/Thomas_branch[m[33m)[m HEAD@{24}: checkout: moving from Sai_fork_branch to Sai_fork_branch
+[33m1b0af29[m[33m ([m[1;31morigin/ettore_branch[m[33m, [m[1;31morigin/Thomas_branch[m[33m)[m HEAD@{25}: checkout: moving from Sai_fork_branch to Sai_fork_branch
+[33m1b0af29[m[33m ([m[1;31morigin/ettore_branch[m[33m, [m[1;31morigin/Thomas_branch[m[33m)[m HEAD@{26}: checkout: moving from Sai_fork_branch to Sai_fork_branch
+[33m1b0af29[m[33m ([m[1;31morigin/ettore_branch[m[33m, [m[1;31morigin/Thomas_branch[m[33m)[m HEAD@{27}: checkout: moving from Sai_fork_branch to Sai_fork_branch
+[33m1b0af29[m[33m ([m[1;31morigin/ettore_branch[m[33m, [m[1;31morigin/Thomas_branch[m[33m)[m HEAD@{28}: checkout: moving from Sai_fork_branch to Sai_fork_branch
+[33m1b0af29[m[33m ([m[1;31morigin/ettore_branch[m[33m, [m[1;31morigin/Thomas_branch[m[33m)[m HEAD@{29}: checkout: moving from Sai_fork_branch to Sai_fork_branch
+[33m1b0af29[m[33m ([m[1;31morigin/ettore_branch[m[33m, [m[1;31morigin/Thomas_branch[m[33m)[m HEAD@{30}: checkout: moving from Sai_fork_branch to Sai_fork_branch
+[33m1b0af29[m[33m ([m[1;31morigin/ettore_branch[m[33m, [m[1;31morigin/Thomas_branch[m[33m)[m HEAD@{31}: checkout: moving from Theresa_branch to Sai_fork_branch
+[33m041a792[m HEAD@{32}: commit: updated folder manipulateLoadDC backup
+[33m736ce24[m HEAD@{33}: checkout: moving from Theresa_branch to Theresa_branch
+[33m736ce24[m HEAD@{34}: checkout: moving from Sai_fork_branch to Theresa_branch
+[33m1b0af29[m[33m ([m[1;31morigin/ettore_branch[m[33m, [m[1;31morigin/Thomas_branch[m[33m)[m HEAD@{35}: checkout: moving from Theresa_branch to Sai_fork_branch
+[33m736ce24[m HEAD@{36}: commit (merge): Merge remote-tracking branch 'origin/Sai_fork_branch' into Theresa_branch
+[33ma25c0d4[m HEAD@{37}: commit: updated folder manipulateLoadDC backup
+[33m5aca18d[m HEAD@{38}: commit: updated folder manipulateLoadDC
+[33md370468[m HEAD@{39}: commit: updated folder manipulateLoadDC
+[33maa8b09e[m HEAD@{40}: commit: included folder manipulateLoadDC
+[33m2fbece7[m HEAD@{41}: commit: load profile DC inlcluded
+[33m2be1745[m HEAD@{42}: commit: load profile DC inlcluded
+[33m4c41610[m HEAD@{43}: commit: first test
+[33m3cdfddc[m HEAD@{44}: pull origin Sai_fork_branch: Fast-forward
+[33m1b0af29[m[33m ([m[1;31morigin/ettore_branch[m[33m, [m[1;31morigin/Thomas_branch[m[33m)[m HEAD@{45}: checkout: moving from Sai_fork_branch to Theresa_branch
+[33m1b0af29[m[33m ([m[1;31morigin/ettore_branch[m[33m, [m[1;31morigin/Thomas_branch[m[33m)[m HEAD@{46}: checkout: moving from Theresa_branch to Sai_fork_branch
+[33m1b0af29[m[33m ([m[1;31morigin/ettore_branch[m[33m, [m[1;31morigin/Thomas_branch[m[33m)[m HEAD@{47}: checkout: moving from Sai_fork_branch to Theresa_branch
+[33m1b0af29[m[33m ([m[1;31morigin/ettore_branch[m[33m, [m[1;31morigin/Thomas_branch[m[33m)[m HEAD@{48}: checkout: moving from main to Sai_fork_branch
+[33m84feda1[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m HEAD@{49}: clone: from https://github.com/sai-ravi-epfl/REHO.git

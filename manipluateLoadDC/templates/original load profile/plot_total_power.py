@@ -49,9 +49,10 @@ def plot_yearly_data(hourly_averages, filename='yearly_data_centre_profile_repea
     """Plots the total power consumption over time and saves it as a high-quality image."""
     plt.figure(figsize=(12, 6))
     plt.plot(hourly_averages['Hour'], hourly_averages['Load_Profile'], linestyle='-', marker='')
-    plt.xlabel('Hours')
+    #start x-axis from 0
+    plt.xlim(0, 8760)
+    plt.xlabel('Hour of the year')
     plt.ylabel('Total Power Consumption [kW]')
-    plt.title('Total Power Consumption per Hour')
     plt.grid(True)
     plt.savefig(filename, dpi=300)  # Save the plot as a high-quality image
     plt.show()
@@ -72,7 +73,10 @@ def main():
     yearly_data = repeat_data_to_one_year(hourly_averages)
 
     # Plot and save the repeated data
-    plot_yearly_data(yearly_data, 'yearly_data_centre_profile_repeated2.png')
+    yearly_plot_fig = plot_yearly_data(yearly_data, 'yearly_data_centre_profile_repeated2.png')
+    #save as high quality image
+    yearly_plot_fig.savefig('yearly_data_centre_profile_repeated2.png', dpi=300)
+
     save_yearly_data_to_csv(yearly_data, '../yearly_data_centre_profile_repeated2.csv')
 
 if __name__ == "__main__":

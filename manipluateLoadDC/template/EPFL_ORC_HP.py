@@ -8,21 +8,23 @@ if __name__ == '__main__':
     # you can as well define your district from a csv file instead of reading the database
     reader = QBuildingsReader()
     n_house = 1
-    qbuildings_data = reader.read_csv(buildings_filename='/Users/ravi/REHO/scripts/template/data/EPFL_2.csv', nb_buildings= n_house)
+    file_ID = "/EPFL_MOES.csv"
+    epfl_csv_path = path_to_buildings_csv + file_ID
+    qbuildings_data = reader.read_csv(buildings_filename=epfl_csv_path, nb_buildings= n_house)
     #reader.establish_connection('Suisse')
     #qbuildings_data = reader.read_db(transformer=3216, egid=[280001550])
     #qbuildings_data = reader.read_db(transformer=3216, egid=[280001550])
     # Select weather data
     cluster = {'Location': 'Pully', 'Attributes': ['I', 'T', 'D','E'], 'Periods': 10, 'PeriodDuration': 24}
     attributes = ['Irr', 'Text', 'Weekday', 'DataLoad']
-    weather_file = '/Users/ravi/Desktop/PhD/My_Reho_Qgis_files/Reho_Sai_Fork/scripts/template/data/profiles/pully.csv'
+    weather_file = path_to_profiles + '/pully.csv'
     weather.data_centre_profile(size=50)
     df_annual = weather.read_custom_weather(weather_file)
     df_annual = df_annual[attributes]
-    nb_clusters = [10]
+    nb_clusters = [cluster['Periods']]
     cl = Clustering(data=df_annual, nb_clusters=nb_clusters, option={"year-to-day": True, "extreme": []}, pd=24)
     cl.run_clustering()
-    val_cls = weather.generate_output_data(cl, attributes, "Pully")
+    val_cls = weather.generate_output_data(cl, attributes, "Pully",cluster)
     data_centre_heat_profile = weather.data_centre_profiles(val_cls)
     # Set scenario
 
@@ -35,13 +37,13 @@ if __name__ == '__main__':
     scenario["specific"] = ["enforce_PV_max"]
 
     # Initialize available units and grids
-    grids = infrastructure.initialize_grids({'Electricity': {"Cost_demand_cst": 0.08, "Cost_supply_cst": 0.20},
+    grids = infrastructure.initialize_grids({'Electricity': {"Cost_demand_cst": 0.08, "Cost_supply_cst": 0.20},'Data': {"Cost_demand_cst": 0.0001, "Cost_supply_cst": 0.0002},
                                             "Heat": {"Cost_demand_cst": 0.0001, "Cost_supply_cst": 0.0002,  "GWP_supply_cst": 0.000}})  #'NaturalGas': {"Cost_demand_cst": 0.01, "Cost_supply_cst": 0.10},
                                                                                                                 #"Data": {"Cost_demand_cst": 0.0001, "Cost_supply_cst": 0.0002}}
 
 
     units = infrastructure.initialize_units(scenario, grids, district_data= True)
-    parameters = {'n_vehicles': np.array([0.0]), 'T_DHN_supply_cst': np.repeat(70.0, n_house),'T_DHN_return_cst': np.repeat(60.0, n_house),'TransformerCapacity_heat_t': data_centre_heat_profile}
+    parameters = {'n_vehicles': np.array([0.0]), 'T_DHN_supply_cst': np.repeat(70.0, n_house),'T_DHN_return_cst': np.repeat(60.0, n_house), 'elec_demand_datacentre': data_centre_heat_profile,'TransformerCapacity': np.array([1e8, 1e8,0]) }
     #parameters = {}
 
     # Set method options

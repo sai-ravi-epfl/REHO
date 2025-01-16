@@ -107,10 +107,10 @@ def process_and_optimize_data(path_to_load_profile, path_to_excel_file_BAU, mode
     return total_use, shifted_load, profile_data_df
 
 # Example call for Domestic_electricity
-path_to_load_profile = r'C:\\Users\\there\\Desktop\\REHO2\\scripts\\templates\\yearly_data_centre_profile_repeated2.csv'
+path_to_load_profile = r'/scripts/templates/yearly_data_centre_profile_repeated2.csv'
 path_to_excel_file_BAU = r'C:\\Users\\there\\Desktop\\REHO2\\scripts\\template\\results\\ALL_EPFL_BAU_gwp.xlsx'
-model_path_electricity = r'C:\\Users\\there\\Desktop\\REHO2\\scripts\\templates\\switchLoad\\data_heat_switch_before_clustering_use.mod'
-output_path_electricity = r'C:\\Users\\there\\Desktop\\REHO2\\scripts\\templates\\yearly_data_centre_profile_repeated6.csv'
+model_path_electricity = r'/scripts/templates/switchLoad/data_heat_switch_before_clustering_use.mod'
+output_path_electricity = r'/scripts/templates/yearly_data_centre_profile_repeated6.csv'
 
 total_electricity, shifted_load_df_electricity, electricity_data_df = process_and_optimize_data(path_to_load_profile, path_to_excel_file_BAU, model_path_electricity, output_path_electricity, 'Domestic_electricity', additional_sheet='df_Unit_t', additional_column='Units_demand', filter_value='HeatPump_Geothermal_district')
 
