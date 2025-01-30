@@ -356,6 +356,7 @@ def write_dat_files(attributes, location, values_cluster, index_inter):
     # -------------------------------------------------------------------------------------
     # Emissions
     # -------------------------------------------------------------------------------------
+
     if 'Emissions' in attributes:
         df_Emission = values_cluster['Emissions']
         df_E = df_Emission.to_frame().div(1000)
@@ -390,7 +391,6 @@ def write_dat_files(attributes, location, values_cluster, index_inter):
         df_E = pd.concat([row, df_E], ignore_index=True)
         filename = os.path.join(path_to_clustering, 'GWP100a_' + File_ID + '.dat')
         df_E.to_csv(filename, index=False, header=False)
-
     # -------------------------------------------------------------------------------------
     # Irr
     # -------------------------------------------------------------------------------------

@@ -8,8 +8,8 @@ if __name__ == '__main__':
 
     # Set building parameters
     reader = QBuildingsReader()
-    n_house = 1
-    qbuildings_data = reader.read_csv(buildings_filename='C:/Users/ettor/Desktop/REHO/scripts/template/data/EPFL_2.csv', nb_buildings= n_house)
+    n_house = 24
+    qbuildings_data = reader.read_csv(buildings_filename='C:/Users/ettor/Desktop/REHO/scripts/template/data/EPFL_MOES.csv', nb_buildings= n_house)
 
     # Select clustering options for weather data
     cluster = {'Location': 'Geneva', 'Attributes': ['T', 'I', 'W'], 'Periods': 10, 'PeriodDuration': 24}
@@ -27,16 +27,10 @@ if __name__ == '__main__':
     file_name6 ='C:/Users/ettor/Desktop/REHO/reho/data/infrastructure/waste_heat.csv'
     Waste_heat = np.loadtxt(file_name6)
 
-    file_name3 = 'C:/Users/ettor/Desktop/REHO/reho/data/infrastructure/supply_cost.csv'
-    supply_cost = np.loadtxt(file_name3)
-    heat_supply_cst = np.repeat(0.15,242)
-    supply_cost = np.append(supply_cost, heat_supply_cst)
+    file_name7 ='C:/Users/ettor/Desktop/REHO/reho/data/infrastructure/Text_geneva.csv'
+    Text_Geneva = np.loadtxt(file_name7)
 
 
-    file_name4 = 'C:/Users/ettor/Desktop/REHO/reho/data/infrastructure/demand_cost.csv'
-    demand_cost = np.loadtxt(file_name4)
-    heat_demand_cst = np.repeat(0.0, 242)
-    demand_cost = np.append(demand_cost, heat_demand_cst)
 
 
 
@@ -44,12 +38,12 @@ if __name__ == '__main__':
     scenario = dict()
     scenario['Objective'] = 'TOTEX'
     scenario['name'] = 'totex'
-    scenario['exclude_units'] = ['HeatPump_Geothermal','ThermalSolar','HeatPump_Air','BESS_IP_district','HeatPump_Lake','HeatPump_Anergy','HeatPump_DHN', 'ElectricalHeater_SH', 'Battery']  #,'ThermalSolar_district''HeatPump'
+    scenario['exclude_units'] = ['ThermalSolar','ElectricalHeater_DHW','Battery_district','HeatPump_Air','BESS_IP_district','HeatPump_Lake','HeatPump_Anergy','HeatPump_Geothermal','HeatPump_DHN', 'ElectricalHeater_SH', 'Battery']
     scenario["specific"] = []
-    scenario['enforce_units'] = ['STES_district','HeatPump_Geothermal_district','PV','ThermalSolar_district'] #'HeatPump_Geothermal_district'
+    scenario['enforce_units'] = ['STES_district','ThermalSolar_district','HeatPump_Geothermal_district','PV'] #'HeatPump_Geothermal_district' 'STES_district','ThermalSolar_district'
     # Initialize available units and grids
-    grids = infrastructure.initialize_grids({'Electricity': {"Cost_demand_cst": 0.1746, "Cost_supply_cst": 20},
-                                            "Heat": {"Cost_demand_cst": -150, "Cost_supply_cst": 0}})  #'NaturalGas': {"Cost_demand_cst": 0.01, "Cost_supply_cst": 0.10},
+    grids = infrastructure.initialize_grids({'Electricity': {"Cost_demand_cst": 0.1746, "Cost_supply_cst": 0.3346},
+                                            "Heat": {"Cost_demand_cst": 0.01, "Cost_supply_cst": 0.15}})  #'NaturalGas': {"Cost_demand_cst": 0.01, "Cost_supply_cst": 0.10},
                                                                                                                 #"Data": {"Cost_demand_cst": 0.0001, "Cost_supply_cst": 0.0002}}
 
     #grids = infrastructure.initialize_grids({'Electricity': {"Cost_demand_cst": demand_cost, "Cost_supply_cst": supply_cost},
@@ -59,8 +53,8 @@ if __name__ == '__main__':
     units = infrastructure.initialize_units(scenario, grids, district_data= True)
 
     parameters = {'n_vehicles': np.array([0.0]), 'T_DHN_supply_cst': np.repeat(70.0, n_house),'T_DHN_return_cst': np.repeat(60.0, n_house),
-                  'STC_Tlm_district': STC_Tlm_district,'TransformerCapacity_heat_t':Waste_heat,'I_global_STC': Irr_Geneva, 'STC_efficiency_district': STC_efficiency_district,
-                  'TransformerCapacity_supply': np.array([1e8,0]),'TransformerCapacity_demand': np.array([1e8,1e8]) } #'Cost_demand_network': demand_cost, "TransformerCapacity": np.array([1e8, 0]),'TransformerCapacity_heat':np.array([0]),'Cost_supply_network':supply_cost , , 'TransformerCapacity_heat_t':Waste_heat
+                  'STC_Tlm_district': STC_Tlm_district,'I_global_STC': Irr_Geneva, 'STC_efficiency_district': STC_efficiency_district, 'Text_Geneva': Text_Geneva,
+                  'TransformerCapacity_supply': np.array([1e8,0]),'TransformerCapacity_demand': np.array([1e8,0]) }
 
 
     # Set method options
@@ -69,16 +63,14 @@ if __name__ == '__main__':
     reho = REHO(qbuildings_data=qbuildings_data, units=units,parameters=parameters, grids=grids, cluster=cluster, scenario=scenario, method=method, solver ='gurobi') #parameters=parameters,
     reho.single_optimization()
     # Save results
-    reho.save_results(format=['xlsx', 'pickle'], filename='0')
+    reho.save_results(format=['xlsx', 'pickle'], filename='no_T_const')
 
-    plotting.plot_storage_profile_stes(reho.results['totex'][0], resolution='daily').show()
+    plotting.plot_SOC_STES(reho.results['totex'][0], resolution='daily').show()
 
-
-    units_to_plot = ['STES_district', 'HeatPump_Geothermal_district']
-    plotting.plot_energy_balance_for_STES(reho.results['totex'][0], units_to_plot, color='ColorPastel', day_of_the_year= 150, time_range='3days',label='EN_long').show()
+    #'ThermalSolar_district',
+    units_to_plot = ['ThermalSolar_district','STES_district',  'PV', 'HeatPump_Geothermal_district']
+    plotting.plot_energy_balance_for_STES(reho.results['totex'][0], units_to_plot, color='ColorPastel', day_of_the_year= 335, time_range='',label='EN_long').show()
 
     plotting.plot_c_d_STES(reho.results['totex'][0]).show()
 
-    plotting.plot_contribution_each_technology(reho.results['totex'][0]).show()
 
-    plotting.solar_fraction(reho.results['totex'][0]).show()

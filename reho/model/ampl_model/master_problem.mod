@@ -47,6 +47,8 @@ param STC_Tlm_district{p in Period, t in Time[p]} default 50;
 param I_global_STC{p in Period, t in Time[p]} default 1;
 param STC_efficiency_district{p in Period, t in Time[p]} default 1;
 
+param Text_Geneva{hy in Year};
+
 ######################################################################################################################
 #--------------------------------------------------------------------------------------------------------------------#
 # Convexity constraints

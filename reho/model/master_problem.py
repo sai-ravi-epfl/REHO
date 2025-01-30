@@ -115,7 +115,9 @@ class MasterProblem:
 
         self.lists_MP = {"list_parameters_MP": ['Cost_demand_cst','utility_portfolio_min', 'owner_portfolio_min', 'EMOO_totex_renter', 'TransformerCapacity',
                                                 'EV_y', 'EV_plugged_out', 'n_vehicles', 'EV_capacity', 'EV_displacement_init', 'monthly_grid_connection_cost',
-                                                "area_district", "velocity", "density", "delta_enthalpy", "cinv1_dhn", "cinv2_dhn", "TransformerCapacity_heat_t",'STC_Tlm_district','I_global_STC','TransformerCapacity_El_t','STC_efficiency_district','TransformerCapacity_supply','TransformerCapacity_demand','Cost_supply_network','Waste_heat','Cost_demand_network'],
+                                                "area_district", "velocity", "density", "delta_enthalpy", "cinv1_dhn", "cinv2_dhn", "TransformerCapacity_heat_t",
+                                                'STC_Tlm_district','I_global_STC','TransformerCapacity_El_t','STC_efficiency_district','TransformerCapacity_supply',
+                                                'TransformerCapacity_demand','Cost_supply_network','Waste_heat','Cost_demand_network', 'Text_Geneva'],
                          "list_constraints_MP": []
                          }
 
@@ -417,6 +419,7 @@ class MasterProblem:
                 ampl_MP.cd(path_to_units_storage)
                 ampl_MP.read('STES_ettore.mod')
 
+
         if read_DHN:  # TODO: move DHN.mod into ampl_model > units > district_units
             ampl_MP.cd(path_to_units)
             ampl_MP.read('DHN.mod')  # TODO: include DHN parameters into district_units.csv instead of hard coding
@@ -426,6 +429,7 @@ class MasterProblem:
         ampl_MP.readData('frequency_' + self.local_data['File_ID'] + '.dat')
         ampl_MP.readData('index_' + self.local_data['File_ID'] + '.dat')
         ampl_MP.cd(path_to_ampl_model)
+
 
         # -------------------------------------------------------------------------------------------------------------
         # Set Parameters, only bool to choose if including all solutions found also from other Pareto_IDs
@@ -483,10 +487,12 @@ class MasterProblem:
         MP_parameters['ERA'] = np.asarray([self.buildings_data[house]['ERA'] for house in self.buildings_data.keys()])
         MP_parameters['Area_tot'] = self.ERA
 
+
         if 'EV_plugged_out' not in MP_parameters:
             if len(self.infrastructure.UnitsOfDistrict) != 0:
                 if 'EV_district' in self.infrastructure.UnitsOfDistrict:
                     MP_parameters['EV_plugged_out'], MP_parameters['EV_plugging_in'] = EV_gen.generate_EV_plugged_out_profiles_district(self.cluster, self.local_data["df_Timestamp"])
+
 
         if read_DHN:
             if 'T_DHN_supply_cst' and 'T_DHN_return_cst' in self.parameters:

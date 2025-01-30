@@ -433,6 +433,12 @@ def get_df_Results_from_MP(ampl, binary=False, method=None, district=None, read_
         df_stes_energy = pd.concat([df1], axis=1)
         df_Results["df_storage_stes"] = df_stes_energy
 
+    if "HeatPump_Geothermal_district" in district.UnitsOfDistrict:
+        df1 = get_ampl_data(ampl, 'HP_COP', multi_index=True)
+        df_HP_COP = pd.concat([df1], axis=1)
+        df_Results["df_HP_COP"] = df_HP_COP
+
+
 
     if method["save_data_input"] or binary:
         # Building_t
@@ -590,32 +596,6 @@ def get_df_Results_from_MP(ampl, binary=False, method=None, district=None, read_
         df_Results["df_Unit_t"] = df_Unit_t.reset_index().set_index(['Layer', 'Unit', 'Period', 'Time']).sort_index()
     else:
         df_Results["df_Unit_t"] = pd.DataFrame()
-
-
-
-    '''
-    df1 = get_ampl_data(ampl, 'STES_E_stored_IP', multi_index=True)
-    df_stes_energy = df1
-    df_Results["df_storage_stes"] = df_stes_energy
-    '''
-
-    '''
-    def set_df_storage_stes(ampl):
-        try:
-            df1 = get_ampl_data(ampl, 'STES_E_stored_IP', multi_index=True)
-            if df1.empty:
-                df1 = None
-        except:
-            df1 = None
-
-        if df1 is not None:
-            df_storage_stes = df1
-        else:
-            df_storage_stes = pd.DataFrame()
-
-        return df_storage_stes 
-        
-    df_Results["df_storage_stes"] = set_df_storage_stes(ampl)'''
 
 
     # LCA

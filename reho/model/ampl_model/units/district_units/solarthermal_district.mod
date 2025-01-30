@@ -40,4 +40,8 @@ subject to STC_c1_district{u in UnitsOfType['ThermalSolar_district'],p in Period
 STC_Area_T_district[u] = Units_Mult[u];																	#m2
 
 
+
+
+
+
 	

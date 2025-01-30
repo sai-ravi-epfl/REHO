@@ -566,6 +566,11 @@ class REHO(MasterProblem):
             df_storage_stes = last_results["df_storage_stes"]
             df_Results["df_storage_stes"] = df_storage_stes
 
+        if "HeatPump_Geothermal_district" in self.infrastructure.UnitsOfDistrict:
+            df_HP_COP = last_results["df_HP_COP"]
+            df_Results["df_HP_COP"] = df_HP_COP
+
+
 
         if self.method["save_streams"]:
             # df_Streams_t
