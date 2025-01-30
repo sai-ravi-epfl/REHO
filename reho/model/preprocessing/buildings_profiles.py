@@ -190,7 +190,6 @@ def eud_profiles(buildings_data, cluster, df_SIA_380, df_SIA_2024, df_Timestamp,
         np_gain_all = np.append(np_gain_all, np_gain_class)
         np_dhw_all = np.append(np_dhw_all, np_dhw_class)
         np_el_all = np.append(np_el_all, np_el_class)
-        np_el_all = np.repeat(0.000000000001,len(np_el_all))
 
     return np_gain_all, np_dhw_all, np_el_all
 
