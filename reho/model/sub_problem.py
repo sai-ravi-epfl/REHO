@@ -248,18 +248,39 @@ class SubProblem:
             cost_demand = np.append(cost_demand, cost_demand_0)
             cost_supply_0 = np.repeat(self.infrastructure_sp.Grids_Parameters.iloc[0+i,0],self.cluster_sp['Periods'] * self.cluster_sp['PeriodDuration']+2)
             cost_supply = np.append(cost_supply, cost_supply_0)
+        '''
         if 'CS' in File_ID:
             cost_supply_elec = pd.read_csv(os.path.join(path_to_clustering, 'CS_' + File_ID + '.dat'),header=None).to_numpy().flatten()
-            cost_demand[:len(cost_supply_elec)]=cost_supply_elec/1000
-            cost_supply[:len(cost_supply_elec)]=cost_supply_elec/1000
+            cost_demand[:len(cost_supply_elec)]=(cost_supply_elec - 40)/1000
+            cost_supply[:len(cost_supply_elec)]= cost_supply_elec/1000
             self.parameters_to_ampl['Cost_supply_network']= cost_supply
             self.parameters_to_ampl['Cost_demand_network'] = cost_demand
+        '''
+        if 'CS' in File_ID:
+            # Load the cost supply data
+            cost_supply_elec = pd.read_csv(os.path.join(path_to_clustering, 'CS_' + File_ID + '.dat'),
+                                           header=None).to_numpy().flatten()
 
+            # Handle negative values in cost_supply_elec (e.g., set a minimum value)
+            cost_supply_elec = np.maximum(cost_supply_elec, 0)  # Set negative values to 0
 
+            # Initialize cost_supply_cs and cost_demand_cs as NumPy arrays
+            cost_supply[:len(cost_supply_elec)]  = cost_supply_elec / 1000  # Convert to desired units
+            cost_demand[:len(cost_supply_elec)]  = (cost_supply_elec - 40) / 1000  # Apply offset
 
+            # Ensure cost_demand is strictly smaller than cost_supply
+            cost_demand[:len(cost_supply_elec)]  = np.minimum(cost_demand[:len(cost_supply_elec)] , cost_supply[:len(cost_supply_elec)]  - 0.001)
+            cost_demand = [max(0, x) for x in cost_demand]
+            cost_supply = [max(0, x) for x in cost_supply]
+            # Assign to parameters_to_ampl
+            self.parameters_to_ampl['Cost_supply_network'] = cost_supply
+            self.parameters_to_ampl['Cost_demand_network'] = cost_demand
+            self.parameters_to_ampl['Cost_supply'] = cost_supply
+            self.parameters_to_ampl['Cost_demand'] = cost_demand
 
+        ampl.cd(path_to_ampl_model)
 
-
+        return ampl
 
         ampl.cd(path_to_ampl_model)
 
@@ -314,6 +335,8 @@ class SubProblem:
 
             self.parameters_to_ampl['GWP_supply'] = df_em
             self.parameters_to_ampl['GWP_demand'] = df_em.rename(columns={'GWP_supply': 'GWP_demand'})
+            # Reduce all values in GWP_demand by 0.019
+            self.parameters_to_ampl['GWP_demand']['GWP_demand'] -= 0.0019
             self.parameters_to_ampl['Gas_emission'] = self.infrastructure_sp.Grids_Parameters.drop('Electricity').drop(columns=['Cost_demand_cst', 'Cost_supply_cst'])
 
     def set_temperature_and_EVs_profiles(self):
@@ -726,6 +749,8 @@ def initialize_default_methods(method):
         method['use_dynamic_emission_profiles'] = False
     if 'ORC_all_the_time' not in method:
         method['ORC_all_the_time'] = False
+    if 'Link_DC_to_district_PV' not in method:
+        method['Link_DC_to_district_PV'] = False
     if 'use_custom_profiles' not in method:
         method['use_custom_profiles'] = False
 

@@ -16,8 +16,8 @@ if __name__ == '__main__':
     scenario = dict()
     scenario['Objective'] = 'TOTEX'
     scenario['name'] = 'totex'
-    scenario['exclude_units'] = ['Battery', 'NG_Cogeneration']
-    scenario['enforce_units'] = ['HeatPump_DHN']
+    scenario['exclude_units'] = ['Battery', 'NG_Cogeneration','STES_district','NG_Cogeneration_district']
+    scenario['enforce_units'] = []
     scenario["specific"] = ["enforce_DHN"]
     # Initialize available units and grids
     grids = infrastructure.initialize_grids({'Electricity': {},
@@ -27,7 +27,7 @@ if __name__ == '__main__':
 
     # Set method options
     # You can specify if the DHN is based on CO2. If not, a water DHN is assumed.
-    method = {'building-scale': True, 'DHN_CO2': True}
+    method = {'building-scale': True}
 
     # Set specific parameters
     # Specify the temperature of the DHN

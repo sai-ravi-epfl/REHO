@@ -64,13 +64,18 @@ lambda[f,h] = lambda_binary[f,h];
 # Network balances
 #--------------------------------------------------------------------------------------------------------------------#
 ######################################################################################################################
+# adding an end-demand profile for data to see if datacentre is sized
+
 
 param Grid_supply{l in ResourceBalances, f in FeasibleSolutions, h in House, p in Period, t in Time[p]};
-param Grid_demand{l in ResourceBalances, f in FeasibleSolutions, h in House, p in Period, t in  Time[p]};
+param Grid_demand{l in ResourceBalances, f in FeasibleSolutions, h in House, p in Period, t in Time[p]};
+
+param  data_EUD{l in ResourceBalances, p in Period, t in Time[p]: l = 'Data'};
+
 param TransformerCapacity{l in ResourceBalances} default 1e8;
 #adding this parameter here so that I can parse a temporal profile for the transformer capacity
 param TransformerCapacity_heat_t{l in ResourceBalances, p in Period, t in Time[p]: l = 'Heat'} default TransformerCapacity[l];
-
+param TransformerCapacity_elec_t{l in ResourceBalances, p in Period, t in Time[p]: l = 'Electricity'} default 0;
 
 
 param Grids_flowrate{l in ResourceBalances, h in House} default 1e9;
@@ -80,6 +85,7 @@ param Grid_usage_max_supply default 0;
 param Units_flowrate_in{l in ResourceBalances, u in Units}  >=0 default 0;
 param Units_flowrate_out{l in ResourceBalances, u in Units} >=0 default 0;
 param elec_demand_datacentre{l in ResourceBalances, p in Period, t in Time[p] : l ='Electricity'} default 0;
+
 
 var Units_supply{l in ResourceBalances, u in Units, p in Period, t in Time[p]} >= 0, <= Units_flowrate_out[l,u];
 var Units_demand{l in ResourceBalances, u in Units,  p in Period, t in Time[p]} >= 0, <= Units_flowrate_in[l,u];
@@ -94,22 +100,35 @@ var Profile_grid{l in ResourceBalances, p in Period,t in Time[p]}  >= -1e2*Area_
 var Profile_house{l in ResourceBalances, h in House,p in Period,t in Time[p]} >= -1e2*ERA[h],<= 1e2*ERA[h];
 
 
+
 # Constraints
-subject to complicating_cst{l in ResourceBalances, p in Period,t in Time[p]}: #pi_c
-   Network_supply[l,p,t] - Network_demand[l,p,t]   =  ( sum{f in FeasibleSolutions, h in House}(lambda[f,h] *(Grid_supply[l,f,h,p,t]-Grid_demand[l,f,h,p,t])) +sum {r in Units} Units_demand[l,r,p,t] -sum {b in Units} Units_supply[l,b,p,t])* dp[p] * dt[p];
+subject to complicating_cst{l in ResourceBalances, p in Period,t in Time[p]}: #pi_c 
+   Network_supply[l,p,t] - Network_demand[l,p,t]   = ( sum{f in FeasibleSolutions, h in House}(lambda[f,h] *(Grid_supply[l,f,h,p,t]-Grid_demand[l,f,h,p,t])) + sum {r in Units} Units_demand[l,r,p,t] - sum {b in Units} Units_supply[l,b,p,t])* dp[p] * dt[p];
+
+
+#adding ad hoc data network const
+subject to complicating_cst_data_profile_fix{l in ResourceBalances, p in Period,t in Time[p]: l = 'Data'}: #pi_c
+   Network_demand[l,p,t] = data_EUD[l,p,t]* dp[p] * dt[p];
+
+
+#subject to complicating_cst_data{l in ResourceBalances, p in Period,t in Time[p]: l = 'Data'}: #pi_c
+# Network_supply[l,p,t] - Network_demand[l,p,t]   =  ( sum{f in FeasibleSolutions, h in House}(lambda[f,h] *(Grid_supply[l,f,h,p,t]-Grid_demand[l,f,h,p,t])) + sum {r in Units} Units_demand[l,r,p,t] -sum {b in Units} Units_supply[l,b,p,t])* dp[p] * dt[p];
 
 
 subject to complicating_cst_GWP{l in ResourceBalances, p in Period, t in Time[p]}: #pi_g
    Network_supply_GWP[l,p,t] - Network_demand_GWP[l,p,t]   =  ( sum{f in FeasibleSolutions, h in House}(lambda[f,h] *(Grid_supply[l,f,h,p,t]-Grid_demand[l,f,h,p,t])) +sum {r in Units} Units_demand[l,r,p,t]-sum {b in Units} Units_supply[l,b,p,t])* dp[p] * dt[p];
 
 
+#adding ad hoc data network const
+subject to complicating_cst_data_profile_fix_GWP{l in ResourceBalances, p in Period,t in Time[p]: l = 'Data'}: #pi_c
+   Network_demand_GWP[l,p,t] = data_EUD[l,p,t]* dp[p] * dt[p];
+
+
 subject to TOTAL_profile_c1{l in ResourceBalances, p in Period,t in Time[p]}:
-Profile_grid[l,p,t] =  sum{f in FeasibleSolutions, h in House} ( (Grid_supply[l,f,h,p,t] - Grid_demand[l,f,h,p,t]) * lambda[f,h])
-;
+   Profile_grid[l,p,t] =  sum{f in FeasibleSolutions, h in House} ( (Grid_supply[l,f,h,p,t] - Grid_demand[l,f,h,p,t]) * lambda[f,h]);
 
 subject to TOTAL_profile_c2{l in ResourceBalances, h in House,p in Period,t in Time[p]}:
-Profile_house[l,h,p,t] =  sum{f in FeasibleSolutions} ( (Grid_supply[l,f,h,p,t] - Grid_demand[l,f,h,p,t]) * lambda[f,h])
-;
+   Profile_house[l,h,p,t] =  sum{f in FeasibleSolutions} ( (Grid_supply[l,f,h,p,t] - Grid_demand[l,f,h,p,t]) * lambda[f,h]);
 
 #subject to TOTAL_profile_c3{l in ResourceBalances, p in Period,t in Time[p]}:
 #Network_supply[l,p,t] <=  sum{f in FeasibleSolutions, h in House} ( Grid_supply[l,f,h,p,t]  * lambda[f,h] * dp[p] * dt[p]) ;
@@ -159,9 +178,11 @@ param GWP_house_constr_SPs{f in FeasibleSolutions, h in House} >= 0;
 #--------------------------------------------------------------------------------------------------------------------#
 param Cost_supply_cst{l in ResourceBalances} default 0;   # CHF/kWh
 param Cost_demand_cst{l in ResourceBalances} default 0;   # CHF/kWh
-param Cost_supply_network{l in ResourceBalances, p in Period,t in Time[p]} default Cost_supply_cst[l];
-param Cost_demand_network{l in ResourceBalances, p in Period,t in Time[p]} default Cost_demand_cst[l];
+param Data_no_sell_cst default 0;
+param Cost_supply_network{l in ResourceBalances , p in Period,t in Time[p]} default Cost_supply_cst[l];
+param Cost_demand_network{l in ResourceBalances , p in Period,t in Time[p]} default Cost_demand_cst[l];
 
+ 
 var Costs_op;
 var Costs_House_op{h in House};
 
@@ -191,10 +212,10 @@ subject to Costs_Unit_capex{u in Units} :
  Costs_Unit_inv[u] = (Units_Use[u]*Cost_inv1[u] + Units_Mult[u]*Cost_inv2[u]);
 
 subject to Costs_Unit_replacement:
-Costs_rep= tau* sum{u in Units,n_rep in 1..(n_years/lifetime[u])-1 by 1}( (1/(1 + i_rate))^(n_rep*lifetime[u])*Costs_Unit_inv[u] );
+Costs_rep = tau* sum{u in Units,n_rep in 1..(n_years/lifetime[u])-1 by 1}( (1/(1 + i_rate))^(n_rep*lifetime[u])*Costs_Unit_inv[u]);
 
 subject to Costs_House_capex{h in House}:
-Costs_House_inv[h] =sum{f in FeasibleSolutions} lambda[f,h] * Costs_inv_rep_SPs[f,h] + DHN_inv_house[h];
+Costs_House_inv[h] = sum{f in FeasibleSolutions} lambda[f,h] * Costs_inv_rep_SPs[f,h] + DHN_inv_house[h];
 
 subject to Costs_capex:
 Costs_inv = tau* sum{u in Units} Costs_Unit_inv[u] + Costs_rep + sum{h in House} Costs_House_inv[h];
@@ -352,8 +373,9 @@ Network_supply[l,p,t] <= TransformerCapacity_heat_t[l,p,t] * dp[p] * dt[p];
 subject to TransformerCapacity_demand_t{l in ResourceBalances,p in PeriodStandard,t in Time[p]: l =  'Heat'}:
 Network_demand[l,p,t] <= TransformerCapacity_heat_t[l,p,t] * dp[p] * dt[p];
 
-subject to TransformerCapacity_demand{l in ResourceBalances,p in PeriodStandard,t in Time[p]}:
+subject to TransformerCapacity_demand{l in ResourceBalances diff {'Data'} ,p in PeriodStandard,t in Time[p]}:
 Network_demand[l,p,t] <= TransformerCapacity[l] * dp[p] * dt[p];
+
 
 subject to EMOO_grid_constraint {l in ResourceBalances , p in Period, t in Time[p]: l =  'Electricity'}:
 Network_supply[l,p,t]-Network_demand[l,p,t] <= if EMOO_grid!=0 then EMOO_grid*sum{ts in Time[p]}((Network_supply[l,p,ts]-Network_demand[l,p,ts])*dt[p]/card(Time[p])) else 1e9;
@@ -389,6 +411,7 @@ subject to EMOO_lca_constraint{k in Lca_kpi} :
 lca_tot[k] <= EMOO_lca[k] * Area_tot;
 
 param penalty_ratio default 1e-6;
+param weight default 0;
 var penalties default 0;
 
 subject to penalties_contraints:
@@ -415,3 +438,6 @@ lca_tot["Human_toxicity"] + penalties;
 
 minimize land_use:
 lca_tot["land_use"] + penalties;
+
+minimize COMBEX:
+weight*(Costs_tot + Costs_grid_connection + penalties) +(1-weight)*(GWP_tot + penalties);

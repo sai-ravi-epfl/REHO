@@ -6,6 +6,7 @@
 
 param penalty_ratio default 1e-6;
 var penalties default 0;
+param weight default 1;
 
 subject to penalties_contraints:
 penalties = sum{h in House} Costs_House_cft[h] +
@@ -35,6 +36,9 @@ lca_tot["mine_res"] + penalties;
  
 minimize Human_toxicity:
 lca_tot["Human_toxicity"] + penalties;
+
+minimize COMBEX:
+weight*(tau*(Costs_inv + Costs_rep) + Costs_op + Costs_grid_connection + penalties) +(1-weight)*(GWP_op + GWP_constr + penalties);
 
 #--------------------------------------------------------------------------------------------------------------------#
 # Decomposition

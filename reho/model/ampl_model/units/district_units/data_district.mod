@@ -7,24 +7,24 @@
 # ----------------------------------------- PARAMETERS ---------------------------------------
 
 param DH_efficiency{u in UnitsOfType['DataHeat']} default 0.96;		# 90-96% of energy is recovered from server
-param DH_partload_min{u in UnitsOfType['DataHeat']} default 0.1;
-param DH_partload_max{u in UnitsOfType['DataHeat']} default 1;
 param DC_heat_recovery{u in UnitsOfType['DataHeat']} default 1;
+
+
 # ---------------------------------------- CONSTRAINTS ---------------------------------------
 
 # Data flow processed
 subject to DH_d1{ u in UnitsOfType['DataHeat'], p in Period, t in Time[p]}:
-        Units_supply['Data',u,p,t] = Units_demand['Electricity',u,p,t];
+        Units_supply['Data',u,p,t] = 1.3*Units_demand['Electricity',u,p,t];
 
-subject to DH_d2{ u in UnitsOfType['DataHeat'], p in Period, t in Time[p]}:
-        Units_demand['Electricity',u,p,t] = elec_demand_datacentre['Electricity',p,t];
+#subject to DH_d2{ u in UnitsOfType['DataHeat'], p in Period, t in Time[p]}:
+#       Units_demand['Electricity',u,p,t] = data_EUD['Data',p,t];
+
 
 # Heat produced from electricity (thermal output = electrical input * DH_thermal_efficiency)
 subject to DH_EB_c1{u in UnitsOfType['DataHeat'] ,p in Period,t in Time[p]}:
-        Units_supply['Heat',u,p,t] = DC_heat_recovery[u]*DH_efficiency[u]*elec_demand_datacentre['Electricity',p,t]; #kW
+        Units_supply['Heat',u,p,t] = DC_heat_recovery[u]*DH_efficiency[u]*Units_demand['Electricity',u,p,t]; #*elec_demand_datacentre['Electricity',p,t]; #kW
 
-/*
+
 subject to DH_c1{u in UnitsOfType['DataHeat'],p in Period,t in Time[p]}:
-        Units_supply['Heat',u,p,t]<= Units_Mult[u]*DH_partload_max[u];
+        Units_supply['Data',u,p,t]<= 0.327*Units_Mult[u];
 
-*/

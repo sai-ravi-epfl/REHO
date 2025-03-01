@@ -262,6 +262,11 @@ def data_centre_profiles(value):
     df_D = value['DataLoad']
     return df_D.to_numpy()
 
+def temp_irr_profiles(value):
+    df_T = value['Text']
+    df_Irr = value['Irr']
+    return df_T.to_numpy(), df_Irr.to_numpy()
+
 def get_metric(cluster):
     if 'E' in cluster['Attributes']:
         return 'GWP100a'

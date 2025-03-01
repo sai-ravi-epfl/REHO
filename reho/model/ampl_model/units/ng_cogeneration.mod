@@ -8,8 +8,7 @@
 #	1. part-load efficiencies
 #-References : 
 #	[1] V. Vukašinović et al., Review of efficiencies of cogeneration units using [...], International journal of Green Energy, 2016. DOI 10.1080/15435075.2014.962032
-#   [2] Viessmann products - Vitowin 300 & Vitobloc 200 (ESS) 
-
+#   [2] Viessmann products - Vitowin 300 & Vitobloc 200 (ESS)
 param NG_Cogeneration_partload_max{u in UnitsOfType['NG_Cogeneration']} default 1;
 param NG_Cogeneration_partload_min{u in UnitsOfType['NG_Cogeneration']} default 0.5;
 param NG_Cogeneration_E_efficiency_nom{u in UnitsOfType['NG_Cogeneration']} default 0.27;

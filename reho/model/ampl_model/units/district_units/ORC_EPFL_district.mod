@@ -23,3 +23,5 @@ Units_demand['Heat',u,p,t] =  Units_supply['Heat',v,p,t];
 subject to ORC_c1{u in UnitsOfType['ORC_EPFL_district'] ,p in Period,t in Time[p]}:
 Units_supply['Electricity',u,p,t] <= Units_Mult[u];
 
+#subject to Heat_LT_at_condensor{u in UnitsOfType['ORC_EPFL_district'], v in UnitsOfType['DataHeat'], p in Period, t in Time[p]}:
+#Units_supply['Heat_LT',u,p,t] =  Units_supply['Heat',v,p,t];

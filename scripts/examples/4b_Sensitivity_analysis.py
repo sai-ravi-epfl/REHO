@@ -13,7 +13,7 @@ if __name__ == '__main__':
     qbuildings_data = reader.read_db(transformer=234, nb_buildings=1)
 
     # Select clustering options for weather data
-    cluster = {'Location': 'Geneva', 'Attributes': ['T', 'I', 'W'], 'Periods': 10, 'PeriodDuration': 24}
+    cluster = {'Location': 'Geneva', 'Attributes': ['T', 'I', 'W'], 'Periods': 10, 'PeriodDuration': 24, 'custom_weather': '/Users/ravi/Desktop/PhD/My_Reho_Qgis_files/Reho_Sai_Fork/scripts/examples/data/profiles/Sion.csv' }
 
     # Set scenario
     scenario = dict()

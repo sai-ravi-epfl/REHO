@@ -133,6 +133,8 @@ class SensitivityAnalysis:
             sample = sampler.gen_samples(self.sampling_parameters)
             l_bounds_values = [bound[0] for bound in self.problem["bounds"]]
             u_bounds_values = [bound[1] for bound in self.problem["bounds"]]
+            print(f"Lower bounds: {l_bounds_values}")
+            print(f"Upper bounds: {u_bounds_values}")
             sampling = qmc.scale(sample, l_bounds_values, u_bounds_values)
         else:
             sampling = None
@@ -173,6 +175,7 @@ class SensitivityAnalysis:
         scenario = self.reho.scenario
         district_units = len(self.reho.infrastructure.UnitsOfDistrict) != 0  # True or False
         units = infrastructure.initialize_units(scenario, grids, district_data=district_units)
+        district_units_csv = units['district_units']
         n_houses = len(self.reho.buildings_data)
 
         # Modify the attributes of the model and run SA
@@ -193,6 +196,16 @@ class SensitivityAnalysis:
                     grids["Wood"]["Cost_supply_cst"] = value
                 elif parameter == 'Oil_retail':
                     grids["Oil"]["Cost_supply_cst"] = value
+                elif parameter == 'Data_retail':
+                    grids["Data"]["Cost_supply_cst"] = value
+                elif parameter == 'Data_feedin':
+                    grids["Data"]["Cost_demand_cst"] = value
+                elif parameter == 'Data_cap':
+                    district_units_csv[4]["Units_Fmax"] = value
+
+
+
+
 
                 elif "___" in parameter:
                     for unit_id in range(len(units['building_units'])):
