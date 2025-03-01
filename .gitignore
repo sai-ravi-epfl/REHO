@@ -307,6 +307,9 @@ pip-selfcheck.json
 documentation/_build
 documentation/sections/_autosummary
 
+# EV
+EVs/
+
 # Scripts
 scripts/**/*
 !scripts/template/**/*
