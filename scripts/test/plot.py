@@ -2,7 +2,7 @@ from reho.plotting import plotting
 import pandas as pd
 
 
-results = pd.read_pickle(r'C:\Users\there\Desktop\REHO2\scripts\template\results\ALL_EPFL_BAU.pickle')
+results = pd.read_pickle(r'/scripts/template_Sai\results\ALL_EPFL_BAU.pickle')
 
 #plotting.plot_performance(results, plot='costs', indexed_on='Scn_ID', label='EN_long').show()
 #plotting.plot_performance(results, plot='gwp', indexed_on='Scn_ID', label='EN_long').show()

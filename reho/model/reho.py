@@ -491,7 +491,7 @@ class REHO(MasterProblem):
         df = df.sort_index(level='Layer')
         df = df.drop('Network', level='Hub')
 
-        df_network = pd.DataFrame(self.infrastructure.grids.keys(), columns=["Layer"])  # build a df template
+        df_network = pd.DataFrame(self.infrastructure.grids.keys(), columns=["Layer"])  # build a df template_Sai
         df_network["Hub"] = "Network"
         df_network = df_network.set_index(["Layer", "Hub"])
         df_network[df.columns] = float("nan")

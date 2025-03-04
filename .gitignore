@@ -29,7 +29,7 @@ wheels/
 MANIFEST
 
 # PyInstaller
-#  Usually these files are written by a python script from a template
+#  Usually these files are written by a python script from a template_Sai
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
 *.manifest
 *.spec
@@ -309,9 +309,9 @@ documentation/sections/_autosummary
 
 # Scripts
 scripts/**/*
-!scripts/template/**/*
+!scripts/template_Sai/**/*
 !scripts/examples/**/*
 !scripts/test/**/*
 
 # results
-manipluateLoadDC/template/results/
+manipluateLoadDC/template_Sai/results/

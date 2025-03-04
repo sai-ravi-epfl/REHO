@@ -1,21 +1,22 @@
 from reho.model.reho import *
 from reho.plotting import plotting
 from reho.model.preprocessing.clustering import Clustering
+from scripts.templates.switchLoad.afterClustering.data_heat_switch_init_after_clustering import *
 
 if __name__ == '__main__':
 
     # Set building parameters
     # you can as well define your district from a csv file instead of reading the database
     reader = QBuildingsReader()
-    n_house = 1
-    qbuildings_data = reader.read_csv(buildings_filename='/Users/ravi/REHO/scripts/template_Sai/data/EPFL_2.csv', nb_buildings= n_house)
+    n_house = 53
+    qbuildings_data = reader.read_csv(buildings_filename=r'/manipulateLoadDC/template_Sai/data/EPFL_2.csv', nb_buildings= n_house)
     #reader.establish_connection('Suisse')
     #qbuildings_data = reader.read_db(transformer=3216, egid=[280001550])
     # Select weather data
     cluster = {'Location': 'Pully', 'Attributes': ['I', 'T','E','D'], 'Periods': 10, 'PeriodDuration': 24}
-    attributes = ['Irr', 'Text', 'Weekday', 'DataLoad']
-    weather_file = '/Users/ravi/Desktop/PhD/My_Reho_Qgis_files/Reho_Sai_Fork/scripts/template_Sai/data/profiles/pully.csv'
-    weather.data_centre_profile(size = 50)
+    attributes = ['Irr', 'Text', 'Weekday','DataLoad']
+    weather_file = r'/scripts/template_Sai/data/profiles/pully.csv'
+    weather.data_centre_profile(size = 288)
     df_annual = weather.read_custom_weather(weather_file)
     df_annual = df_annual[attributes]
     nb_clusters = [10]
@@ -23,8 +24,21 @@ if __name__ == '__main__':
     cl.run_clustering()
     val_cls = weather.generate_output_data(cl, attributes, "Pully")
     data_centre_heat_profile = weather.data_centre_profiles(val_cls)
-    # Set scenario
 
+
+    # manipulate data_center_heat_profile according to SH
+    path_to_load_profile_dat = r'/scripts/template_Sai/data/clustering/D_Pully_10_24_T_I_W_D.dat'
+    path_to_excel_file_BAU = r'/scripts/template_Sai/results/ALL_EPFL_BAU_gwp.xlsx'
+    model_path_SH = r'/scripts/template_Theresa/switchLoad/afterClustering/data_heat_switch_after_clustering_use.mod'
+    output_single_column_dat_path_SH = r'/scripts/template_Sai/data/clustering/D_Pully_10_24_T_I_W_D.dat'
+
+    total_SH, shifted_load_df_SH, heating_data, all_values_SH = process_and_optimize_data_space_heating(path_to_load_profile_dat, path_to_excel_file_BAU, model_path_SH, output_single_column_dat_path_SH)
+
+    # take all_values_gwp and convert it to same form as data_centre_heat_profile which is 'numpy.ndarray'
+    data_centre_heat_profile = np.array(all_values_SH)
+
+
+    # Set scenario
     scenario = dict()
     scenario['Objective'] = 'GWP'
     scenario['name'] = 'gwp'
@@ -47,19 +61,32 @@ if __name__ == '__main__':
     #parameters = {}
 
     # Set method options
-    method = {'building-scale': True,'save_stream_t': True, 'use_dynamic_emission_profiles': True, 'save_streams': True, 'ORC_all_the_time': False} #, 'use_pv_orientation': True
+    method = {'building-scale': True,'save_stream_t': True, 'use_dynamic_emission_profiles': True, 'save_streams': True, 'ORC_all_the_time':False} #, 'use_pv_orientation': True
     # Run optimization
     reho = REHO(qbuildings_data=qbuildings_data, units=units,parameters=parameters, grids=grids, cluster=cluster, scenario=scenario, method=method, solver ='gurobi') #parameters=parameters,
     reho.single_optimization()
+
+    # plot
+    import uuid
+    tmp_folder = Path("../../../template_Sai/tmp")
+    tmp_folder.mkdir(exist_ok=True)
     #plotting.plot_composite_curve(reho.results["totex"][0], cluster, plot= True, periods =["Yearly"]) #,"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"
     #plotting.yearly_demand_plot(reho.results["totex"][0], cluster, plot=True)
     # Save results
-    filename='ALL_EPFL_ORC_2MW_DC'
+    filename='ALL_EPFL_ORC_switch_SH_288kW_DC_53'
     reho.save_results(format=['xlsx', 'pickle'], filename=filename)
     #plotting.plot_performance(reho.results, plot='costs', indexed_on='Scn_ID', label='EN_long').show()
-   # plotting.plot_performance(reho.results, plot='gwp', indexed_on='Scn_ID', label='EN_long').show()
-    plotting.plot_sankey(reho.results['gwp'][0], label='EN_long', color='ColorPastel').show()
-    #plotting.plot_profiles(reho.results,['PV'], resolution='daily')
+    #plotting.plot_performance(reho.results, plot='gwp', indexed_on='Scn_ID', label='EN_long').show()
+    sankey = plotting.plot_sankey(reho.results['gwp'][0], label='EN_long', color='ColorPastel')
+    sankey.write_html(tmp_folder / f"sankey-{uuid.uuid4()}.html", auto_open=True)
+    performance = plotting.plot_performance(reho.results, plot='costs', indexed_on='Scn_ID', label='EN_long')
+    performance.write_html(tmp_folder / f"performance-{uuid.uuid4()}.html", auto_open=True)
+    plot_performance = plotting.plot_performance(reho.results, plot='gwp', indexed_on='Scn_ID', label='EN_long')
+    plot_performance.write_html(tmp_folder / f"plot_performance-{uuid.uuid4()}.html", auto_open=True)
+
+
+
+    # plotting.plot_profiles(reho.results,['PV'], resolution='daily')
     # Construct the full file path
     # plotting.yearly_demand_plot(filename)
 
