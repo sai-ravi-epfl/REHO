@@ -140,7 +140,7 @@ def get_weather_data(qbuildings_data):
 def read_custom_weather(path_to_weather_file,  weeks = False):
     """
     From the current directory, looks for a custom weather file.
-    This file should be a .csv with the same structure as the template_Sai provided in ``reho/scripts/template_Sai/data/profiles/``.
+    This file should be a .csv with the same structure as the template provided in ``reho/scripts/template/data/profiles/``.
     """
 
     df = file_reader(path_handler(path_to_weather_file))
@@ -262,20 +262,44 @@ def data_centre_profiles(value):
     df_D = value['DataLoad']
     return df_D.to_numpy()
 
+def temp_irr_profiles(value):
+    df_T = value['Text']
+    df_Irr = value['Irr']
+    return df_T.to_numpy(), df_Irr.to_numpy()
+
 def get_metric(cluster):
     if 'E' in cluster['Attributes']:
         return 'GWP100a'
     else:
         return 'method 1'
 
-def data_centre_profile(size): # size to be mentioned in kW # This part is still using old_shifting shifting data of data centre, need to update this part with Theresa's work
-    file_path_original = os.path.join(path_to_weather, 'yearly_data_centre_profile_repeated_normal.csv')
-    df_load_profile = pd.read_csv(file_path_original)
+def data_centre_profile(size): # size to be mentioned in kW # This part is still using old data of data centre, need to update this part with Theresa's work
+    file_path= path_to_profiles+'/yearly_data_centre_profile_repeated2.csv'
+    df_load_profile = pd.read_csv(file_path)
     df_load_profile = df_load_profile['Load_Profile'].div(288).mul(size)  # profile data created by observing trend from this study: https://arxiv.org/abs/1804.00703
     path = os.path.join(path_to_weather, 'yearly_data_centre_profile_repeated.csv')
     df_load_profile.to_csv(path)
-
-
+    '''
+    data_centre_profile_week = '/data_centre_hourly_week.csv'
+    file_path = path_to_profiles+data_centre_profile_week
+    df_load_profile = pd.read_csv(file_path)
+    df_load_profile= df_load_profile['Load_Profile'].div(50).mul(size) #profile data created by observing trend from this study: https://arxiv.org/abs/1804.00703
+    df_load_annual = pd.concat([df_load_profile]*70).to_frame().reset_index()
+    df_load_annual = df_load_annual['Load_Profile'].to_frame()
+# Replace with your actual data
+# Repeat data for the entire year (8760 hours)
+# Prepare data in the format for CSV
+    csv_data = []
+    for hour in range(8760):
+        value = df_load_annual['Load_Profile'][hour]  # Repeat data cyclically
+        csv_data.append([hour + 1, value])  # Hour starts from 1
+    csv_filename = path_to_weather + '/yearly_data_centre_profile_repeated.csv'
+    with open(csv_filename, mode='w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(['Hour', 'Load_Profile'])  # Header row
+        writer.writerows(csv_data)
+        
+    '''
 def write_dat_files( attributes, location, values_cluster, index_inter, cluster):
     """
     Writes the clustering results computed from ``generate_output_data`` as .dat files.
@@ -870,7 +894,7 @@ def plot_LDC(cl, save_fig):
 if __name__ == '__main__':
     cm = plt.cm.get_cmap('Spectral_r')
 
-    weather_file = '../../../scripts/template_Sai/data/profiles/pully.csv'
+    weather_file = '../../../scripts/template/data/profiles/pully.csv'
     Attributes = ['Text', 'Irr','Emissions', 'DataLoad','Cost_supply_elec']
     #nb_clusters = [10]
     nb_clusters = [10,12,14,15,18,20,30,35]

@@ -52,8 +52,6 @@ path_to_clustering = os.path.join(os.getcwd(), 'data', 'clustering')
 path_to_configurations = os.path.join(os.getcwd(), 'results', 'configurations')
 path_to_profiles = os.path.join(os.getcwd(), 'data', 'profiles')
 path_to_buildings_csv = os.path.join(os.getcwd(), 'data', 'buildings_csv')
-path_to_results = os.path.join(os.getcwd(), 'results')
-path_to_switchLoad = os.path.join(os.getcwd(), 'switchLoad')
 
 def path_handler(path_given):
     """To handle the path to csv file, absolute path or not"""

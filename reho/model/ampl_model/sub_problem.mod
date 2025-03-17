@@ -124,6 +124,7 @@ param Grids_flowrate_in{l in ResourceBalances, h in HousesOfLayer[l]} >=0 defaul
 param Grids_flowrate_out{l in ResourceBalances, h in HousesOfLayer[l]}>=0 default 0;
 
 param Domestic_electricity{h in House, p in Period, t in Time[p]} >= 0 default 0;
+#param data_EUD{h in House, p in Period, t in Time[p]}>= 0 default 0;
 
 var Units_supply{l in ResourceBalances, u in UnitsOfLayer[l], p in Period, t in Time[p]} >= 0, <= Units_flowrate_out[l,u]; 
 var Units_demand{l in ResourceBalances, u in UnitsOfLayer[l], p in Period, t in Time[p]} >= 0, <= Units_flowrate_in[l,u];
@@ -134,6 +135,12 @@ var Grid_demand{l in ResourceBalances, h in HousesOfLayer[l], p in Period, t in 
 
 var Network_supply{l in ResourceBalances, p in Period, t in Time[p]} >= 0, <= sum{h in HousesOfLayer[l]} Grids_flowrate_out[l,h]; 
 var Network_demand{l in ResourceBalances, p in Period, t in Time[p]} >= 0, <= sum{h in HousesOfLayer[l]} Grids_flowrate_in[l,h]; 
+
+
+#adding a constraint to impose a data demand on buildings
+#subject to MB_data{h in House, p in Period, t in Time[p]}:
+#	Grid_supply['Data',h,p,t] + sum {i in MB_Units['Data',h]} Units_supply['Data',i,p,t] = Grid_demand['Data',h,p,t] + data_EUD[h,p,t] + sum {j in MB_Units['Data',h]} Units_demand['Data',j,p,t];
+
 
 subject to MB_electricity{h in House, p in Period, t in Time[p]}:
 	Grid_supply['Electricity',h,p,t] + sum {i in MB_Units['Electricity',h]} Units_supply['Electricity',i,p,t] = Grid_demand['Electricity',h,p,t] + Domestic_electricity[h,p,t] + sum {j in MB_Units['Electricity',h]} Units_demand['Electricity',j,p,t];

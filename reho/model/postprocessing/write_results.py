@@ -154,8 +154,6 @@ def get_df_Results_from_SP(ampl, scenario, method, buildings_data, filter=True):
         df_Unit_t.index.names = ['Layer', 'Unit', 'Period', 'Time']
         df_Unit_t = df_Unit_t.sort_index()
 
-        df_Unit_t.to_csv('C:/Users/there/Desktop/df_unit_t_withDHNHEX.csv')
-
         return df_Unit, df_Unit_t
 
     def set_df_storage(ampl):
@@ -579,13 +577,11 @@ def get_df_Results_from_MP(ampl, binary=False, method=None, district=None, read_
         for layer, units in district.UnitsOfLayer.items():
             [district_l_u.append((layer, unit)) for unit in units if unit in units_districts]
         df_Unit_t = df_Unit_t.reset_index(level=['Period', 'Time']).loc[district_l_u, :]
-        df_Unit_t.to_csv('C:/Users/there/Desktop/df_unit_t.csv')
-
         df_Results["df_Unit_t"] = df_Unit_t.reset_index().set_index(['Layer', 'Unit', 'Period', 'Time']).sort_index()
     else:
         df_Results["df_Unit_t"] = pd.DataFrame()
 
-    #df_Unit_t.to_excel('/Users/ravi/Desktop/PhD/My_Reho_Qgis_files/Reho_Sai_Fork/scripts/template_Sai/results/master_prob_no_filter.xlsx')
+    #df_Unit_t.to_excel('/Users/ravi/Desktop/PhD/My_Reho_Qgis_files/Reho_Sai_Fork/scripts/template/results/master_prob_no_filter.xlsx')
     # LCA
     if method["save_lca"]:
         LCA_units = get_ampl_data(ampl, 'lca_units', multi_index=True)

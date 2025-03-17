@@ -36,9 +36,11 @@ HeatPump_DHN,Heat pump DHN,HP DHN,"Pompe à chaleur, DHN",#FEA993,salmon,#CD1076
 HeatPump_Geothermal,Heat pump geothermal,HP geo,"Pompe à chaleur, géothermie",#FEA993,salmon,#CD1076,pink
 HeatPump_Geothermal_district,"Heat pump (district, lake source)",District HP geo,PAC géothermie (district),#FEA993,salmon,#CD1076,pink
 HeatPump_Lake,Heat pump lake,HP lake,"Pompe à chaleur, lac",#FEA993,salmon,#CD1076,pink
+HeatPump_DataCentre_district,"Heat pump (district, ORC Condensor - source)",HP DC,PAC géothermie (district),#ff6666,groseille_light,#9A32CD,purple
 ,,,,,,,
 Thermal_grid,Heat from Data centre,Data Centre Heat,Heat de Centre de data lol,#FF8C00,orange,#FF3030,red
 Heat,Heat from DHN,Heat DHN,Chaleur (CAD),#FF8C00,orange,#FF3030,red
+DataCentre_EPFL_district,Data centers,ICT,Centre de données,#ffcc99,skin,#EE00EE,magenta
 ORC_EPFL_district,Electricity generated (ORC),ORC electricty,ORC,#FEA993,salmon,#CD1076,pink
 DHN_in,District heating network,DHN,Réseau de chaleur,#FF8C00,orange,#EEE685,yellowgrey
 DHN_out_district,District heating network,DHN,Réseau de chaleur,#FF8C00,orange,#EEE685,yellowgrey

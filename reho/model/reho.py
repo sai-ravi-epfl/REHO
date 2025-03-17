@@ -475,7 +475,11 @@ class REHO(MasterProblem):
         columns = ["Cost_demand", "Cost_supply", "GWP_demand", "GWP_supply"]
         for h in self.buildings_data.keys():
             for column in columns:
-                df.loc[pd.IndexSlice[:, h, :, :], column] = df_network[column].values
+                values_to_assign = df_network[column].values
+                target_slice = df.loc[pd.IndexSlice[:, h, :, :], column]
+
+                if len(values_to_assign) != len(target_slice):
+                    raise ValueError("Mismatch between target slice length and values length")
 
         df_Grid_t = pd.concat([df, df_network])
 
@@ -491,7 +495,7 @@ class REHO(MasterProblem):
         df = df.sort_index(level='Layer')
         df = df.drop('Network', level='Hub')
 
-        df_network = pd.DataFrame(self.infrastructure.grids.keys(), columns=["Layer"])  # build a df template_Sai
+        df_network = pd.DataFrame(self.infrastructure.grids.keys(), columns=["Layer"])  # build a df template
         df_network["Hub"] = "Network"
         df_network = df_network.set_index(["Layer", "Hub"])
         df_network[df.columns] = float("nan")

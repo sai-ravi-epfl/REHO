@@ -114,7 +114,8 @@ class MasterProblem:
 
         self.lists_MP = {"list_parameters_MP": ['utility_portfolio_min', 'owner_portfolio_min', 'EMOO_totex_renter', 'TransformerCapacity',
                                                 'EV_y', 'EV_plugged_out', 'n_vehicles', 'EV_capacity', 'EV_displacement_init', 'monthly_grid_connection_cost',
-                                                "area_district", "velocity", "density", "delta_enthalpy", "cinv1_dhn", "cinv2_dhn", "TransformerCapacity_heat_t", "elec_demand_datacentre", 'DC_heat_recovery'],
+                                                "area_district", "velocity", "density", "delta_enthalpy", "cinv1_dhn", "cinv2_dhn", "TransformerCapacity_heat_t",
+                                                 'T_ext', 'I_global', 'DC_heat_recovery', 'data_EUD'],
                          "list_constraints_MP": []
                          }
 
@@ -408,6 +409,9 @@ class MasterProblem:
             if "ORC_EPFL_district" in self.infrastructure.UnitsOfDistrict:
                 ampl_MP.read('ORC_EPFL_district.mod')
                 ampl_MP.getConstraint('ORC_all_the_time').drop()
+            if "PV_district" in self.infrastructure.UnitsOfDistrict:
+                ampl_MP.read('PV_district.mod')
+                ampl_MP.getConstraint('Link_DC_to_district_PV').drop()
             if "Battery_district" in self.infrastructure.UnitsOfDistrict:
                 ampl_MP.cd(path_to_units_storage)
                 ampl_MP.read('battery.mod')
@@ -417,6 +421,7 @@ class MasterProblem:
             if "STES_district" in self.infrastructure.UnitsOfDistrict:
                 ampl_MP.cd(path_to_units_storage)
                 ampl_MP.read('STES_ettore.mod')
+
 
 
 
@@ -438,23 +443,23 @@ class MasterProblem:
             df_end = ampl_MP.getParameter('TimeEnd').getValues().toPandas()
             timesteps = int(df_end['TimeEnd'].sum())
             T_source = []
-            max_cap = []
+            #max_cap = []
             for unit in self.infrastructure.UnitsOfType['HeatPump']:
                 if 'district' in unit:
                     if 'DataCentre' in unit:
                         if 'Data' in self.infrastructure.grids.keys():
                             T_source = np.concatenate([T_source, np.repeat(20, timesteps)])
-                            file_path_to_data_centre_profile = path_to_clustering + '/D_' + self.local_data['File_ID'] + '.dat'  # need to make this automatic at some point
-                            data_centre_profile_kW = np.loadtxt(file_path_to_data_centre_profile)
-                            max_cap = data_centre_profile_kW  # in kW data centre source is 288 kW max
+                            #file_path_to_data_centre_profile = path_to_clustering + '/D_' + self.local_data['File_ID'] + '.dat'  # need to make this automatic at some point
+                            #data_centre_profile_kW = np.loadtxt(file_path_to_data_centre_profile)
+                            #max_cap = data_centre_profile_kW  # in kW data centre source is 288 kW max
                         else:
                             T_source = np.concatenate([T_source, np.repeat(20, timesteps)])
-                            max_cap= np.concatenate([max_cap, np.repeat(0, ntimes)])
+                            #max_cap= np.concatenate([max_cap, np.repeat(0, ntimes)])
 
 
                     elif 'Geothermal' in unit:
                         T_source = np.concatenate([T_source, np.repeat(7, timesteps)])
-                        max_cap = np.concatenate([max_cap, np.repeat(1e6, ntimes)]) #also this value, needs to be automatic
+                        #max_cap = np.concatenate([max_cap, np.repeat(1e6, ntimes)]) #also this value, needs to be automatic
 
 
 
@@ -513,16 +518,27 @@ class MasterProblem:
             start_idx = index_of_electricity * len(cost_supply_elec)
             # Update the corresponding slice of cost_demand
             cost_demand[start_idx:start_idx + len(cost_supply_elec)] = cost_supply_elec/ 1000 #in the day ahead market there is only price - info from DESL lab
+            cost_supply[start_idx:start_idx + len(cost_supply_elec)] = (cost_supply_elec - 40)/ 1000
             MP_parameters['Cost_supply_network'] = cost_demand
-            MP_parameters['Cost_demand_network'] = cost_demand
+            MP_parameters['Cost_demand_network'] = cost_supply
+
+
         if self.method['use_dynamic_emission_profiles']:
             ids = self.number_SP_solutions.iloc[-1]
             df = df_Grid_t[['GWP_supply']].xs("Electricity", level="Layer", drop_level=False)
             MP_parameters['GWP_supply'] = df.xs((ids["FeasibleSolution"], ids["House"]), level=("FeasibleSolution", "house"))
-            MP_parameters['GWP_demand'] = MP_parameters['GWP_supply'].rename(columns={"GWP_supply": "GWP_demand"}) * (1-1e-9)
+            MP_parameters['GWP_demand'] = MP_parameters['GWP_supply'].rename(columns={"GWP_supply": "GWP_demand"})
+            # Subtract 0.019 from all values in the "GWP_demand" column
+            MP_parameters['GWP_demand']['GWP_demand'] -= 0.0019
 
         if self.method['ORC_all_the_time']:
             ampl_MP.getConstraint('ORC_all_the_time').restore()
+        else:
+            ampl_MP.getConstraint('HP_EB_c3').drop()
+            ampl_MP.getConstraint('HP_EB_c4').drop()
+
+        if self.method['Link_DC_to_district_PV']:
+            ampl_MP.getConstraint('Link_DC_to_district_PV').restore()
 
         for key in self.lists_MP['list_parameters_MP']:
             if key in self.parameters.keys():
@@ -542,7 +558,7 @@ class MasterProblem:
         for unit in self.infrastructure.UnitsOfType['HeatPump']:
             if 'district' in unit:
                 MP_parameters["T_source"] = T_source
-                MP_parameters["max_cap"] = max_cap
+                #MP_parameters["max_cap"] = max_cap
 
 
         if read_DHN:
