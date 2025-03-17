@@ -167,7 +167,7 @@ total_gwp, shifted_load_df_GWP, gwp_profile = process_and_optimize_data_GWP(path
 
 # Example call for Q_heating
 path_to_excel_file_BAU = r'C:\Users\there\Desktop\REHO2\scripts\template\results\ALL_EPFL_BAU_168h_50kW_gwp.xlsx'
-model_path_use = r'/manipluateLoadDC/template_Theresa/switchLoad/beforeClustering/data_heat_switch_before_clustering_use.mod'
+model_path_use = r'/manipluateLoadDC/template_Theresa/switchLoad/beforeClustering/data_heat_switch_before_clustering_use_no_size_DC.mod'
 output_path_SH = r'C:\\Users\\there\\Desktop\\REHO2\\scripts\\templates\\yearly_data_centre_profile_repeated14.csv'
 
 total_SH, shifted_load_df_SH, heating_data_df = process_and_optimize_data(path_to_load_profile, path_to_excel_file_BAU, model_path_use, output_path_SH, 'House_Q_heating', size)
