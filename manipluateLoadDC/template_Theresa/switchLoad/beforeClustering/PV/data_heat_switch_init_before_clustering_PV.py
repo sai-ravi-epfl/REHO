@@ -69,7 +69,7 @@ output_path = r'C:\Users\there\Desktop\REHO2\manipluateLoadDC\template_Theresa\s
 
 total_PV, shifted_load_df_PV, PV_profile = process_and_optimize_data_PV(path_to_load_profile, path_to_PV, model_path, output_path, size)
 
-
+'''
 # Plotting for GWP
 load_profile = pd.read_csv(path_to_load_profile)
 fig, ax1 = plt.subplots(figsize=(12, 6))
@@ -95,3 +95,4 @@ fig.legend(loc='upper right', bbox_to_anchor=(1, 1), bbox_transform=ax1.transAxe
 filename = 'shifted_load_week_comparison_PV_supply_vs_original.png'
 plt.show()
 fig.savefig(filename, dpi=300)
+'''

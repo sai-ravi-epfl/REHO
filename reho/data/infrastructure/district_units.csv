@@ -10,3 +10,4 @@ DataCentre_EPFL_district,kW,0.1,100000,100000,6000,4,https://www.se.com/ww/en/wo
 ORC_EPFL_district,kWe,0.1,100000,1000,1000,20,,ORC_EPFL_district,Heat/ Electricity/ Heat_LT,,,Heat,Electricity,,,,1.00E-04,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 STES_district,kWh,100,10000,0,0,20,,STES,Heat,,,Heat,Heat,,80,60,0,65,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 PV_district,kWe,0.1,100000,6556,1300,25,`Helvetia Energy <https://www.helvetia-energy.ch/prix-moyen-panneaux-solaires-suisse/>`_,PV,Electricity,,,,Electricity,,,,0.0001,900,0.0001,1636.35,0.0001,112420,0.0001,2538.2,0.0001,9551,0.0001,63095,0.0001,7347,0.0001,44102,0.0001,1409.25,0.0001,2571.4,0.0001,152920,0.0001,68795,0.0001,112.36
+TES_intraday_district,kWh,0.1,100000,0,0,20,,DHN_tank,Heat,,,Heat,Heat,,80,60,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0

@@ -37,7 +37,7 @@ if __name__ == '__main__':
 
     #scenario['Objective'] = 'TOTEX'
     scenario['name'] = 'gwp'
-    scenario['exclude_units'] = ['HeatPump_Geothermal','HeatPump_Air','HeatPump_Lake','HeatPump_Anergy', 'ThermalSolar', 'Battery','STES_district','HeatPump_DataCentre_district', 'DataHeat_DHW', 'DataHeat_SH'] #'OIL_Boiler',  'NG_Boiler','HeatPump_Air', 'HeatPump_Lake''HeatPump_Anergy''DataHeatSH',
+    scenario['exclude_units'] = ['HeatPump_Geothermal','HeatPump_Air','HeatPump_Lake','HeatPump_Anergy', 'ThermalSolar', 'Battery','STES_district','HeatPump_DataCentre_district', 'DataHeat_DHW', 'DataHeat_SH','TES_intraday_district'] #'OIL_Boiler',  'NG_Boiler','HeatPump_Air', 'HeatPump_Lake''HeatPump_Anergy''DataHeatSH',
 
     #
     #

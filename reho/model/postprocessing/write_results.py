@@ -148,9 +148,19 @@ def get_df_Results_from_SP(ampl, scenario, method, buildings_data, filter=True):
             df5 = pd.concat([df5], keys=['Electricity'], names=['Layer'])
             df6 = get_ampl_data(ampl, "EV_displacement", multi_index=True)
             df6 = pd.concat([df6], keys=['Electricity'], names=['Layer'])
-            df_Unit_t = pd.concat([df1, df2, df3, df4, df5, df6], axis=1)
+            if "TES_intraday_district" in [unit for unit, value in ampl.getVariable('Units_Use').instances()]:
+                df7 = get_ampl_data(ampl, 'ITES_E_stored', multi_index=True)
+                df7 = pd.concat([df7], keys=['Heat'], names=['Layer'])
+                df_Unit_t = pd.concat([df1, df2, df3, df4, df5, df6, df7], axis=1)
+            else:
+                df_Unit_t = pd.concat([df1, df2, df3, df4, df5, df6], axis=1)
+        elif "TES_intraday_district" in [unit for unit, value in ampl.getVariable('Units_Use').instances()]:
+            df7 = get_ampl_data(ampl, 'ITES_E_stored', multi_index=True)
+            df7 = pd.concat([df7], keys=['Heat'], names=['Layer'])
+            df_Unit_t = pd.concat([df1, df2, df3, df4, df7], axis=1)
         else:
             df_Unit_t = pd.concat([df1, df2, df3, df4], axis=1)
+
         df_Unit_t.index.names = ['Layer', 'Unit', 'Period', 'Time']
         df_Unit_t = df_Unit_t.sort_index()
 
@@ -569,6 +579,12 @@ def get_df_Results_from_MP(ampl, binary=False, method=None, district=None, read_
             df6 = get_ampl_data(ampl, 'EV_V2V', multi_index=True)
             df6 = pd.concat([df6], keys=['Electricity'], names=['Layer'])
             df_Unit_t = pd.concat([df_Unit_t, df4, df5, df6], axis=1)
+
+        if "TES_intraday_district" in district.UnitsOfDistrict:
+            df7 = get_ampl_data(ampl, 'ITES_E_stored', multi_index=True)
+            df7 = pd.concat([df7], keys=['Heat'], names=['Layer'])
+            df_Unit_t = pd.concat([df_Unit_t, df7], axis=1)
+
 
         df_Unit_t.index.names = ['Layer', 'Unit', 'Period', 'Time']
 

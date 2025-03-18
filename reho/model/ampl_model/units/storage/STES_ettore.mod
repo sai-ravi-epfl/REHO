@@ -14,7 +14,7 @@ param STES_initial_SOC{u in UnitsOfType['STES']} default 0.5;  # Initial SOC as 
 param STES_max_SOC{u in UnitsOfType['STES']} default 0.8; 
 param rate_limit{u in UnitsOfType['STES']} default 0.1; 
 var STES_E_stored_IP{u in UnitsOfType['STES'], hy in Year} >= 0;
-v
+
 
 #--Hourly Energy balance (valid for inter-period storage)
 subject to STES_energy_balance_IP{u in UnitsOfType['STES'], hy in Year}:

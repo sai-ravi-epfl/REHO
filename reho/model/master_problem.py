@@ -421,6 +421,9 @@ class MasterProblem:
             if "STES_district" in self.infrastructure.UnitsOfDistrict:
                 ampl_MP.cd(path_to_units_storage)
                 ampl_MP.read('STES_ettore.mod')
+            if "TES_intraday_district" in self.infrastructure.UnitsOfDistrict:
+                ampl_MP.cd(path_to_units_storage)
+                ampl_MP.read('TES_intraday.mod')
 
 
 
