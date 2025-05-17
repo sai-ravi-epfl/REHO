@@ -136,6 +136,7 @@ class SensitivityAnalysis:
             print(f"Lower bounds: {l_bounds_values}")
             print(f"Upper bounds: {u_bounds_values}")
             sampling = qmc.scale(sample, l_bounds_values, u_bounds_values)
+            print(f"Sampled values: {sampling}")
         else:
             sampling = None
         self.sampling = sampling
@@ -200,8 +201,16 @@ class SensitivityAnalysis:
                     grids["Data"]["Cost_supply_cst"] = value
                 elif parameter == 'Data_feedin':
                     grids["Data"]["Cost_demand_cst"] = value
+                elif parameter == 'Data_GWP':
+                    grids["Data"]["GWP_supply_cst"] = value
                 elif parameter == 'Data_cap':
                     district_units_csv[4]["Units_Fmax"] = value
+                elif parameter == 'Data_min':
+                    district_units_csv[4]["Units_Fmin"] = value
+                elif parameter == 'PV_cap':
+                    district_units_csv[6]["Units_Fmax"] = value
+                elif parameter == 'PV_min':
+                    district_units_csv[6]["Units_Fmin"] = value
 
 
 

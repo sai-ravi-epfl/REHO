@@ -44,7 +44,7 @@ Units_curtailment['Electricity', u, p,t] <= PVA_inverter_eff[u]*PVA_efficiency[u
 
 
 subject to Link_DC_to_district_PV{u in UnitsOfType['PV'], v in UnitsOfType['DataHeat'], p in Period,t in Time[p]}:
-Units_demand['Electricity', v,p,t] = Units_supply['Electricity', u,p,t]
+Units_supply['Electricity', u,p,t] <= Units_demand['Electricity', v,p,t]
 
 #subject to limits_maximal_PV_to_roof{h in House}:
 #sum{ui in UnitsOfType['ThermalSolar'] inter UnitsOfHouse[h]}(Units_Mult[ui]) + sum{uj in UnitsOfType['PV'] inter UnitsOfHouse[h]} (Units_Mult[uj]/PVA_efficiency_ref[uj]) <= SolarRoofArea[h];

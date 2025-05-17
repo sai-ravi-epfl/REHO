@@ -411,7 +411,7 @@ subject to EMOO_lca_constraint{k in Lca_kpi} :
 lca_tot[k] <= EMOO_lca[k] * Area_tot;
 
 param penalty_ratio default 1e-6;
-param weight default 0;
+param weight default 0.1;
 var penalties default 0;
 
 subject to penalties_contraints:

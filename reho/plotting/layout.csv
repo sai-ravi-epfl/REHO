@@ -70,6 +70,7 @@ solar_premium,Solar premium,SC Premium,Premium auto-consommation,#ffd980,yellow_
 Curtailment,PV curtailment,CU,PV Écrêtement,#664700,yellow_dark,#EEAD0E,darkyellow
 Battery,Battery,Bat,Batterie,#A57300,darkyellow,#76EEC6,turquoise
 EV_district,Electric vehicles,EVs,Véhicules électriques,#7AC5CD,turquoise,#7AC5CD,blue
+PV_district,Photovoltaics district, Solar PV district,Panneaux solaires,#01796F ,deep teal, #01796F,teal
 ,,,,,,,
 Air_Conditioner,Air conditioner,AC,Climatiseur,#00008B,darkblue,#9AC0CD,bluegrey
 Cooling,Fossil-fuel boiler,BO,Chaudière fossile,#00008B,darkblue,#9AC0CD,bluegrey

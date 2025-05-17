@@ -16,7 +16,7 @@ if __name__ == '__main__':
     scenario = dict()
     scenario['Objective'] = 'TOTEX'
     scenario['name'] = 'totex'
-    scenario['exclude_units'] = ['Battery', 'NG_Cogeneration']
+    scenario['exclude_units'] = ['Battery', 'PV']
     scenario['enforce_units'] = []
 
     # Initialize available units and grids
@@ -25,7 +25,6 @@ if __name__ == '__main__':
 
     # Set method options
     method = {'building-scale': True }
-
     # Run optimization
     reho = REHO(qbuildings_data=qbuildings_data, units=units, grids=grids, cluster=cluster, scenario=scenario, method=method, solver="gurobi")
     reho.single_optimization()

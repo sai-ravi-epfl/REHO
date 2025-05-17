@@ -136,10 +136,14 @@ def eud_profiles(buildings_data, cluster, df_SIA_380, df_SIA_2024, df_Timestamp,
     for b in buildings_data:  # iterate over buildings
         # get SIA Profiles
         classes = buildings_data[b]['id_class'].split('/')
+
         if isinstance(buildings_data[b]['ratio'], float):
             ratios = str(buildings_data[b]['ratio'])
+        elif isinstance(buildings_data[b]['ratio'], int):
+            ratios = str(buildings_data[b]['ratio']).split('/')
         else:
             ratios = buildings_data[b]['ratio'].split('/')
+
         status_buildings = buildings_data[b]['status'].split(',')
         np_gain_class = np.zeros(cluster['Periods'] * cluster['PeriodDuration'] + 2)
         np_dhw_class = np.zeros(cluster['Periods'] * cluster['PeriodDuration'] + 2)
@@ -348,6 +352,8 @@ def solar_gains_profile(buildings_data, sia_data, local_data):
         classes = buildings_data[b]['id_class'].split('/')
         if isinstance(buildings_data[b]['ratio'], float):
             ratios = str(buildings_data[b]['ratio'])
+        elif isinstance(buildings_data[b]['ratio'], int):
+            ratios = str(buildings_data[b]['ratio']).split('/')
         else:
             ratios = buildings_data[b]['ratio'].split('/')
         glass_fraction_building = 0

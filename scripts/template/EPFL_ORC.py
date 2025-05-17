@@ -15,10 +15,10 @@ if __name__ == '__main__':
     #reader.establish_connection('Suisse')
     #qbuildings_data = reader.read_db(transformer=3216, egid=[280001550])
     # Select weather data
-    cluster = {'Location': 'Pully', 'Attributes': ['I', 'T','E','D','CS'], 'Periods': 14, 'PeriodDuration': 24}
-    attributes = ['Irr', 'Text', 'Emissions','DataLoad','Cost_supply_elec']
+    cluster = {'Location': 'Pully', 'Attributes': ['I', 'T','E','D', 'CS'], 'Periods': 14, 'PeriodDuration': 24} #,'CS'
+    attributes = ['Irr', 'Text', 'Emissions','DataLoad','Cost_supply_elec'] #
     weather_file = path_to_profiles + '/pully.csv'
-    weather.data_centre_profile(size = 10000)
+    weather.data_centre_profile(size = 10000, shifted = False)
     df_annual = weather.read_custom_weather(weather_file, weeks = cluster['PeriodDuration'] ==168)
     df_annual = df_annual[attributes]
     nb_clusters = [cluster['Periods']]
@@ -27,12 +27,12 @@ if __name__ == '__main__':
     val_cls = weather.generate_output_data(cl, attributes, "Pully",cluster)
     data_centre_heat_profile = weather.data_centre_profiles(val_cls)
     temp_profile, irr_profile = weather.temp_irr_profiles(val_cls)
-    # Set scenario
 
+    # Set scenario
     scenario = dict()
 
     scenario['Objective'] = ['OPEX', 'CAPEX']
-    scenario['nPareto'] = 4
+    scenario['nPareto'] = 2
     #scenario['name'] = 'gwp'
 
     #scenario['Objective'] = 'TOTEX'
@@ -73,7 +73,7 @@ if __name__ == '__main__':
     #plotting.plot_composite_curve(reho.results["totex"][0], cluster, plot= True, periods =["Yearly"]) #,"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"
     #plotting.yearly_demand_plot(reho.results["totex"][0], cluster, plot=True)
     # Save results
-    filename='EPFL_ORC_Pareto_PV_ICT_linked'
+    filename='EPFL_ORC_Pareto_T_NS_inequality'
     reho.save_results(format=['pickle'], filename=filename)
     #plotting.plot_performance(reho.results, plot='costs', indexed_on='Scn_ID', label='EN_long').show()
     #plotting.plot_performance(reho.results, plot='gwp', indexed_on='Scn_ID', label='EN_long').show()

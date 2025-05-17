@@ -18,7 +18,7 @@ if __name__ == '__main__':
     cluster = {'Location': 'Pully', 'Attributes': ['I', 'T','E','D','CS'], 'Periods': 14, 'PeriodDuration': 24}
     attributes = ['Irr', 'Text', 'Emissions','DataLoad', 'Cost_supply_elec']
     weather_file = path_to_profiles+'/pully.csv'
-    weather.data_centre_profile(size = 2000)
+    weather.data_centre_profile(size = 10000)
     df_annual = weather.read_custom_weather(weather_file, weeks = cluster['PeriodDuration'] ==168)
     df_annual = df_annual[attributes]
     nb_clusters = [cluster['Periods']]
@@ -26,14 +26,23 @@ if __name__ == '__main__':
     cl.run_clustering()
     val_cls = weather.generate_output_data(cl, attributes, "Pully",cluster)
     data_centre_heat_profile = weather.data_centre_profiles(val_cls)
+    temp_profile, irr_profile = weather.temp_irr_profiles(val_cls)
     # Set scenario
 
     scenario = dict()
-    scenario['Objective'] = 'GWP'
-    scenario['name'] = 'gwp'
-    scenario['exclude_units'] = ['HeatPump_Geothermal','HeatPump_Anergy','HeatPump_DHN', 'ElectricalHeater_SH', 'ThermalSolar', 'Battery','HeatPump_Lake', 'HeatPump_Air','ORC_EPFL_district','STES_district','HeatPump_DataCentre_district','DHN_out_district',"data_consumer_district"] #'OIL_Boiler',  'NG_Boiler','HeatPump_Air', 'HeatPump_Lake''HeatPump_Anergy''DataHeatSH',
+    #scenario['Objective'] = 'GWP'
+    #scenario['name'] = 'gwp'
 
-    #
+    scenario['Objective'] = ['OPEX', 'CAPEX']
+    scenario['nPareto'] = 4
+    #scenario['name'] = 'gwp'
+
+    #scenario['Objective'] = 'TOTEX'
+    scenario['name'] = 'gwp'
+
+
+    scenario['exclude_units'] = ['HeatPump_Geothermal','HeatPump_Anergy','HeatPump_DHN', 'ElectricalHeater_SH', 'ThermalSolar', 'Battery','HeatPump_Lake',
+                                 'HeatPump_Air','ORC_EPFL_district','STES_district','HeatPump_DataCentre_district','DHN_out_district',"data_consumer_district", 'PV_district','DataHeat_DHW','DataHeat_SH'] #'OIL_Boiler',  'NG_Boiler','HeatPump_Air', 'HeatPump_Lake''HeatPump_Anergy''DataHeatSH',
     #
     scenario['enforce_units'] = ['Battery_district'] #'HeatPump_Geothermal_district','DHN_out_district','Battery_district','PV_district',
     #scenario["specific"] = ["enforce_PV_max"]
@@ -46,23 +55,24 @@ if __name__ == '__main__':
                                             "Heat": {}})
 
     units = infrastructure.initialize_units(scenario, grids, district_data= True)
-
-    parameters = {'n_vehicles': np.array([0.0]), 'T_DHN_supply_cst': np.repeat(70.0, n_house),'T_DHN_return_cst': np.repeat(60.0, n_house),  'data_EUD': data_centre_heat_profile, "TransformerCapacity": np.array([1e8,1e8, 0]),  'DC_heat_recovery': 0} #, 'Network_supply_heat': np.array([0.0])
+    DW_params = {'max_iter': 2}
+    parameters = {'n_vehicles': np.array([0.0]), 'T_DHN_supply_cst': np.repeat(67.0, n_house),'T_DHN_return_cst': np.repeat(55.0, n_house),  'data_EUD': data_centre_heat_profile, "TransformerCapacity": np.array([1e8,1e8, 0]),  'DC_heat_recovery': 0, 'T_ext' : temp_profile , 'I_global': irr_profile} #, 'Network_supply_heat': np.array([0.0])
     #parameters = {}
 
     # Set method options
-    method = {'building-scale': True,'save_stream_t': True, 'use_dynamic_emission_profiles': True, 'save_streams': True,'ORC_all_the_time': False} #, 'use_pv_orientation': True
+    method = {'district-scale': True,'save_stream_t': True, 'use_dynamic_emission_profiles': True, 'save_streams': True,'ORC_all_the_time': False} #, 'use_pv_orientation': True
     # Run optimization
-    reho = REHO(qbuildings_data=qbuildings_data, units=units,parameters=parameters, grids=grids, cluster=cluster, scenario=scenario, method=method, solver ='gurobi') #parameters=parameters,
-    reho.single_optimization()
+    reho = REHO(qbuildings_data=qbuildings_data, units=units,parameters=parameters, grids=grids, cluster=cluster, scenario=scenario, method=method, solver ='gurobi', DW_params=DW_params) #parameters=parameters,
+    reho.generate_pareto_curve()
+    #reho.single_optimization()
     #plotting.plot_composite_curve(reho.results["totex"][0], cluster, plot= True, periods =["Yearly"]) #,"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"
     #plotting.yearly_demand_plot(reho.results["totex"][0], cluster, plot=True)
     # Save results
-    filename='ALL_EPFL_BAU_14_TD'
+    filename='EPFL_BAU_Pareto_CI'
     reho.save_results(format=['xlsx', 'pickle'], filename=filename)
     #plotting.plot_performance(reho.results, plot='costs', indexed_on='Scn_ID', label='EN_long').show()
-    plotting.plot_performance(reho.results, plot='gwp', indexed_on='Scn_ID', label='EN_long').show()
-    plotting.plot_sankey_1(reho.results['gwp'][0], label='EN_long', color='ColorPastel').show()
+    #plotting.plot_performance(reho.results, plot='gwp', indexed_on='Scn_ID', label='EN_long').show()
+    #plotting.plot_sankey_1(reho.results['gwp'][0], label='EN_long', color='ColorPastel').show()
     #plotting.plot_profiles(reho.results,['PV'], resolution='daily')
     # Construct the full file path
     # plotting.yearly_demand_plot(filename)

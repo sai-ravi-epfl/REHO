@@ -10,7 +10,19 @@ import pvlib
 import geopandas as gpd
 from pyproj import Transformer
 import csv
+import matplotlib.gridspec as gridspec
+from matplotlib.lines import Line2D  # ✅ Fix here
 
+import matplotlib as mpl
+
+# Set global font to Arial
+mpl.rcParams['font.family'] = 'Arial'
+mpl.rcParams['axes.labelweight'] = 'semibold'
+mpl.rcParams['axes.labelsize'] = 20
+mpl.rcParams['xtick.labelsize'] = 18
+mpl.rcParams['ytick.labelsize'] = 18
+mpl.rcParams['legend.title_fontsize'] = 18
+mpl.rcParams['legend.fontsize'] = 16
 
 __doc__ = """
 Generates the meteorological data (temperature and solar irradiance).
@@ -273,12 +285,17 @@ def get_metric(cluster):
     else:
         return 'method 1'
 
-def data_centre_profile(size): # size to be mentioned in kW # This part is still using old data of data centre, need to update this part with Theresa's work
-    file_path= path_to_profiles+'/yearly_data_centre_profile_repeated2.csv'
+def data_centre_profile(size, shifted = False): # size to be mentioned in kW # This part is still using old data of data centre, need to update this part with Theresa's work
+    if shifted:
+        #file_path= path_to_profiles+'/yearly_data_centre_profile_PV_14clusters_TIEDCS_24h_even.csv' #yearly_data_centre_profile_repeated2 this is the original profile
+        file_path = path_to_profiles + '/shifted_datacentre_profile_sai.csv'
+    else:
+        file_path = path_to_profiles + '/yearly_data_centre_profile_repeated2.csv'
     df_load_profile = pd.read_csv(file_path)
     df_load_profile = df_load_profile['Load_Profile'].div(288).mul(size)  # profile data created by observing trend from this study: https://arxiv.org/abs/1804.00703
     path = os.path.join(path_to_weather, 'yearly_data_centre_profile_repeated.csv')
     df_load_profile.to_csv(path)
+    print("it's done now, you are safe")
     '''
     data_centre_profile_week = '/data_centre_hourly_week.csv'
     file_path = path_to_profiles+data_centre_profile_week
@@ -286,9 +303,9 @@ def data_centre_profile(size): # size to be mentioned in kW # This part is still
     df_load_profile= df_load_profile['Load_Profile'].div(50).mul(size) #profile data created by observing trend from this study: https://arxiv.org/abs/1804.00703
     df_load_annual = pd.concat([df_load_profile]*70).to_frame().reset_index()
     df_load_annual = df_load_annual['Load_Profile'].to_frame()
-# Replace with your actual data
-# Repeat data for the entire year (8760 hours)
-# Prepare data in the format for CSV
+        # Replace with your actual data
+        # Repeat data for the entire year (8760 hours)
+        # Prepare data in the format for CSV
     csv_data = []
     for hour in range(8760):
         value = df_load_annual['Load_Profile'][hour]  # Repeat data cyclically
@@ -298,7 +315,6 @@ def data_centre_profile(size): # size to be mentioned in kW # This part is still
         writer = csv.writer(file)
         writer.writerow(['Hour', 'Load_Profile'])  # Header row
         writer.writerows(csv_data)
-        
     '''
 def write_dat_files( attributes, location, values_cluster, index_inter, cluster):
     """
@@ -642,7 +658,7 @@ def plot_cluster_KPI_separate(df, save_fig):
     else:
         plt.show()
 
-
+"""
 def plot_LDC(cl, save_fig):
     nbr_plot = cl.nbr_opt
     print('plotting for number of typical days: ', nbr_plot)
@@ -681,45 +697,6 @@ def plot_LDC(cl, save_fig):
     # Plotting
     # ------------------------------------------------------------------------
 
-
-    #fig, ax = plt.subplots(5, 1, sharex=True, figsize=(10, 20))
-
-
-    #ax[0].plot(T_org, color='grey', alpha=0.5)
-    #sc = ax[0].scatter(T_clu.index, T_clu.values, s=10, c=res, cmap=cm)
-    '''
-    ax[1].plot(IRR_org, color='grey', alpha=0.5)
-    ax[1].scatter(IRR_clu.index, IRR_clu.values, s=10, c=res, cmap=cm)
-    ax[2].plot(E_org, color='grey', alpha=0.5)
-    ax[2].scatter(E_clu.index, E_clu.values, s=10, c=res, cmap=cm)
-    #ax[3].plot(W_org, color='grey', alpha=0.5)
-    #ax[3].scatter(W_clu.index, W_clu.values, s=10, c=res, cmap=cm)
-    ax[3].plot(D_org, color='grey', alpha=0.5)
-    ax[3].scatter(D_clu.index, D_clu.values, s=10, c=res, cmap=cm)
-
-
-    # set months instead of timestep as xticks
-    plt.xticks(np.arange(8760, step=730), calendar.month_name[1:13], rotation=20)
-
-    ax[0].set_ylabel('temperature [C]')
-    ax[1].set_ylabel('global irradiation [W/m$^2$]')
-    ax[2].set_ylabel('CO2 intensity of grid electricity [gCO2/kWh]')
-    #ax[3].set_ylabel('Weekdays')
-    ax[3].set_ylabel('Data Centre Power consumption profile (kW)')
-  #  ax[2].set_ylabel('global warming potential [gCO2/kWh]')
-    # plt.subplots_adjust(bottom=0.1, right=0.8, top=0.9)
-
-    legend1 = ax[0].legend(*sc.legend_elements(),
-                           loc='upper right', bbox_to_anchor=(1.0, 1.0), title="Period", ncol=2)
-    ax[0].add_artist(legend1)
-
-    if save_fig:
-        plt.tight_layout()
-        format = 'pdf'
-        plt.savefig(('Year_Cluster' + '.' + format), format=format, dpi=300)
-    else:
-        plt.show()
-    '''
     df_T = pd.DataFrame(T_clu)
     df_T['Period'] = res
     df_T = df_T.sort_values(by=['Text'], ignore_index=True, ascending=False)
@@ -731,11 +708,7 @@ def plot_LDC(cl, save_fig):
     df_E = pd.DataFrame(E_clu)
     df_E['Period'] = res
     df_E = df_E.sort_values(by=['Emissions'], ignore_index=True, ascending=False)
-    '''
-    df_W = pd.DataFrame(W_clu)
-    df_W['Period'] = res
-    df_W = df_W.sort_values(by=['Weekday'], ignore_index=True, ascending=False)
-    '''
+
     df_D = pd.DataFrame(D_clu)
     df_D['Period'] = res
     df_D = df_D.sort_values(by=['DataLoad'], ignore_index=True, ascending=False)
@@ -749,51 +722,6 @@ def plot_LDC(cl, save_fig):
     E_sort = E_org.sort_values(ascending=False, ignore_index=True)
     D_sort = D_org.sort_values(ascending=False, ignore_index=True)
     CS_sort = CS_org.sort_values(ascending=False, ignore_index=True)
-    #W_sort = IRR_org.sort_values(ascending=False, ignore_index=True)
-  #  E_sort =  E_org.sort_values(ascending=False, ignore_index=True)
-
-    '''
-    fig, ax = plt.subplots(4, 1, sharex=True, figsize=(10, 8))
-    ax[0].scatter(T_sort.index, T_sort.values, color='grey', alpha=0.5)
-    ax[0].scatter(df_T.index, df_T['Text'], c=df_T['Period'], cmap=cm, s=20)
-
-    ax[1].scatter(IRR_sort.index, IRR_sort.values, color='grey', alpha=0.5)
-    ax[1].scatter(df_Irr.index, df_Irr['Irr'], c=df_Irr['Period'], cmap=cm, s=20)
-
-    ax[2].scatter(E_sort.index, E_sort.values, color='grey', alpha=0.5)
-    ax[2].scatter(df_E.index, df_E['Emissions'], c=df_E['Period'], cmap=cm, s=20)
-
-    #ax[3].scatter(W_sort.index, W_sort.values, color='grey', alpha=0.5)
-    #ax[3].scatter(df_W.index, df_W['Irr'], c=df_W['Period'], cmap=cm, s=20)
-
-    ax[3].scatter(D_sort.index, D_sort.values, color='grey', alpha=0.5)
-    ax[3].scatter(df_D.index, df_D['DataLoad'], c=df_D['Period'], cmap=cm, s=20)
-
-
-
-  #  ax[2].scatter(E_sort.index, E_sort.values, color='grey', alpha=0.5)
-   # ax[2].scatter(df_E.index, df_E['Emissions'], c=df_Irr['Period'], cmap=cm, s=20)
-
-    ax[0].set_ylabel('temperature [C]')
-    ax[1].set_ylabel('global irradiation [W/m$^2$]')
-    ax[2].set_ylabel('CO2 intensity of grid electricity [gCO2/kWh]')
-    #ax[3].set_ylabel('Weekdays')
-    ax[3].set_ylabel('Data Centre Power consumption profile (kW)')
-   # ax[2].set_ylabel('global warming potential [gCO2/kWh]')
-
-    plt.xlabel('Hours [h]')
-
-    legend1 = ax[0].legend(*sc.legend_elements(),
-                           loc='upper right', bbox_to_anchor=(1.0, 1.0), title="Period", ncol=2)
-    ax[0].add_artist(legend1)
-
-    if save_fig:
-        plt.tight_layout()
-        format = 'pdf'
-        plt.savefig(('LDC' + '.' + format), format=format, dpi=300)
-    else:
-        plt.show()
-    '''
 
 
     # Scatter Plot 1: Temperature
@@ -813,7 +741,7 @@ def plot_LDC(cl, save_fig):
     # Create custom legend
     handles = [plt.Line2D([0], [0], marker='o', color=color, linestyle='', markersize=8, label=str(period))
                for period, color in period_to_color.items()]
-    ax.legend(handles=handles, title="Period", loc='upper right', ncol=2)
+    ax.legend(handles=handles, title="Period", loc='upper right', ncol=7)
 
     plt.tight_layout()
     if save_fig:
@@ -832,7 +760,7 @@ def plot_LDC(cl, save_fig):
     ax.set_xlabel('Hours [h]')
     handles = [plt.Line2D([0], [0], marker='o', color=color, linestyle='', markersize=8, label=str(period))
                for period, color in period_to_color.items()]
-    ax.legend(handles=handles, title="Period", loc='upper right', ncol=2)
+    ax.legend(handles=handles, title="Period", loc='upper right', ncol=7)
     plt.tight_layout()
     if save_fig:
         format = 'pdf'
@@ -849,7 +777,7 @@ def plot_LDC(cl, save_fig):
     ax.set_xlabel('Hours [h]')
     handles = [plt.Line2D([0], [0], marker='o', color=color, linestyle='', markersize=8, label=str(period))
                for period, color in period_to_color.items()]
-    ax.legend(handles=handles, title="Period", loc='upper right', ncol=2)
+    ax.legend(handles=handles, title="Period", loc='upper right', ncol=7)
     plt.tight_layout()
     if save_fig:
         format = 'pdf'
@@ -866,7 +794,7 @@ def plot_LDC(cl, save_fig):
     ax.set_xlabel('Hours [h]')
     handles = [plt.Line2D([0], [0], marker='o', color=color, linestyle='', markersize=8, label=str(period))
                for period, color in period_to_color.items()]
-    ax.legend(handles=handles, title="Period", loc='upper right', ncol=2)
+    ax.legend(handles=handles, title="Period", loc='upper right', ncol=7)
     plt.tight_layout()
     if save_fig:
         format = 'pdf'
@@ -883,7 +811,7 @@ def plot_LDC(cl, save_fig):
     ax.set_xlabel('Hours [h]')
     handles = [plt.Line2D([0], [0], marker='o', color=color, linestyle='', markersize=8, label=str(period))
                for period, color in period_to_color.items()]
-    ax.legend(handles=handles, title="Period", loc='upper right', ncol=2)
+    ax.legend(handles=handles, title="Period", loc='upper right', ncol=7)
     plt.tight_layout()
     if save_fig:
         format = 'pdf'
@@ -891,13 +819,169 @@ def plot_LDC(cl, save_fig):
     else:
         plt.show()
 
+    # Create a figure with a 3-row, 2-column GridSpec layout
+    fig = plt.figure(figsize=(15, 12))
+    gs = gridspec.GridSpec(3, 2, figure=fig, height_ratios=[1, 1, 1])  # Equal heights for all rows
+
+    # Define the 5 plots
+    plot_data = [
+        (T_sort, df_T, 'Text', 'Temperature [C]'),
+        (IRR_sort, df_Irr, 'Irr', 'Global Irradiation [W/m$^2$]'),
+        (E_sort, df_E, 'Emissions', 'CO2 Intensity of Grid Electricity [gCO2/kWh]'),
+        (D_sort, df_D, 'DataLoad', 'Data Center Power Consumption [kW]'),
+        (CS_sort, df_CS, 'Cost_supply_elec', 'Supply Cost of Electricity')
+    ]
+
+    # Create the first four plots in a 2x2 grid (Top 2 rows)
+    axes = []
+    for i in range(5):
+        ax = fig.add_subplot(gs[i // 2, i % 2])  # Assign subplot positions
+        sorted_data, clustered_df, col_name, ylabel = plot_data[i]
+        ax.scatter(sorted_data.index, sorted_data.values, color='grey', alpha=0.5)  # Background scatter
+        ax.scatter(clustered_df.index, clustered_df[col_name],
+                   c=[period_to_color[p] for p in clustered_df['Period']], s=20)  # Colored scatter
+        ax.set_ylabel(ylabel)
+        ax.set_xlabel('Hours [h]')
+
+        # Custom legend
+        handles = [plt.Line2D([0], [0], marker='o', color=color, linestyle='', markersize=8, label=str(period))
+                   for period, color in period_to_color.items()]
+        ax.legend(handles=handles, title="Period", loc='upper right', ncol=7)
+        axes.append(ax)
+
+
+    # Adjust layout
+    plt.tight_layout()
+    #plt.suptitle('Load Duration Curves for Key Variables', fontsize=16, fontweight='bold')
+
+    # Save the figure
+    plt.savefig('LDC_combined.png', format='png', dpi=300)
+
+    # Show the combined plot
+    plt.show()
+
+"""
+def draw_bold_ticks(ax, fontsize=18, weight='semibold'):
+    for label in ax.get_xticklabels():
+        label.set_fontsize(fontsize)
+        label.set_fontweight(weight)
+    for label in ax.get_yticklabels():
+        label.set_fontsize(fontsize)
+        label.set_fontweight(weight)
+
+def plot_LDC(cl, save_fig):
+    nbr_plot = cl.nbr_opt
+    print('plotting for number of typical days: ', nbr_plot)
+
+    # get original, not clustered data
+    T_org = cl.data_org['Text']
+    IRR_org = cl.data_org['Irr']
+    E_org = cl.data_org['Emissions']
+    D_org = cl.data_org['DataLoad']
+    CS_org = cl.data_org['Cost_supply_elec']
+
+    # get clustered data and undo normalization
+    df_clu = cl.attr_clu.xs(str(nbr_plot), axis=1)
+    T_clu = df_clu['Text'] * (T_org.max() - T_org.min()) + T_org.min()
+    IRR_clu = df_clu['Irr'] * (IRR_org.max() - IRR_org.min()) + IRR_org.min()
+    E_clu = df_clu['Emissions'] * (E_org.max() - E_org.min()) + E_org.min()
+    D_clu = df_clu['DataLoad'] * (D_org.max() - D_org.min()) + D_org.min()
+    CS_clu = df_clu['Cost_supply_elec'] * (CS_org.max() - CS_org.min()) + CS_org.min()
+
+    # get assigned typical period
+    res = cl.results['idx'][str(nbr_plot)]
+    for i, d in enumerate(res.unique()):
+        res = np.where(res == d, i + 1, res)
+    res = np.repeat(res, cl.pd)
+
+    # handle modulo
+    modulo = cl.data_org.shape[0] % cl.pd
+    res = np.append(res, np.repeat(int(nbr_plot) + 1, modulo))
+
+    def prepare_df(data_clu, data_org, colname):
+        df = pd.DataFrame(data_clu)
+        df['Period'] = res
+        df = df.sort_values(by=[colname], ignore_index=True, ascending=False)
+        org_sorted = data_org.sort_values(ascending=False, ignore_index=True)
+        return df, org_sorted
+
+    df_T, T_sort = prepare_df(T_clu, T_org, 'Text')
+    df_Irr, IRR_sort = prepare_df(IRR_clu, IRR_org, 'Irr')
+    df_E, E_sort = prepare_df(E_clu, E_org, 'Emissions')
+    df_D, D_sort = prepare_df(D_clu, D_org, 'DataLoad')
+    df_CS, CS_sort = prepare_df(CS_clu, CS_org, 'Cost_supply_elec')
+
+    colormap = plt.get_cmap('tab20')
+    unique_periods = np.unique(df_T['Period'])
+    colors = colormap(np.linspace(0, 1, len(unique_periods)))
+    period_to_color = dict(zip(unique_periods, colors))
+
+    # Plot specs
+    plot_data = [
+        (T_sort, df_T, 'Text', 'Temperature [C]'),
+        (IRR_sort, df_Irr, 'Irr', 'Global Irradiation [W/m$^2$]'),
+        (E_sort, df_E, 'Emissions', 'CO2 Intensity of Grid Electricity [gCO2/kWh]'),
+        (D_sort, df_D, 'DataLoad', 'Data Center Power Consumption [kW]'),
+        (CS_sort, df_CS, 'Cost_supply_elec', 'Supply Cost of Electricity')
+    ]
+
+    # Individual plots
+    for sorted_data, clustered_df, col_name, ylabel in plot_data:
+        fig, ax = plt.subplots(figsize=(10, 6))
+        ax.scatter(sorted_data.index, sorted_data.values, color='grey', alpha=0.5)
+        ax.scatter(clustered_df.index, clustered_df[col_name],
+                   c=[period_to_color[p] for p in clustered_df['Period']], s=20)
+
+        ax.set_ylabel(ylabel, fontsize=18, fontweight='semibold')
+        ax.set_xlabel('Hours [h]', fontsize=18, fontweight='semibold')
+        draw_bold_ticks(ax)
+
+        handles = [Line2D([0], [0], marker='o', color=color, linestyle='', markersize=8, label=str(period))
+                   for period, color in period_to_color.items()]
+        ax.legend(handles=handles, title="Period", loc='upper right', ncol=7,
+                  prop={'weight': 'semibold', 'size': 15},
+                  title_fontproperties={'weight': 'semibold', 'size': 18})
+
+        plt.tight_layout()
+        if save_fig:
+            format = 'png'
+            plt.savefig(f"{col_name}_{cl.nb_clusters[0]}.{format}", format=format, dpi=300)
+        else:
+            plt.show()
+
+    # Combined plot
+    fig = plt.figure(figsize=(15, 12))
+    gs = gridspec.GridSpec(3, 2, figure=fig, height_ratios=[1, 1, 1])
+
+    for i in range(5):
+        ax = fig.add_subplot(gs[i // 2, i % 2])
+        sorted_data, clustered_df, col_name, ylabel = plot_data[i]
+        ax.scatter(sorted_data.index, sorted_data.values, color='grey', alpha=0.5)
+        ax.scatter(clustered_df.index, clustered_df[col_name],
+                   c=[period_to_color[p] for p in clustered_df['Period']], s=20)
+        ax.set_ylabel(ylabel, fontsize=16, fontweight='semibold')
+        ax.set_xlabel('Hours [h]', fontsize=16, fontweight='semibold')
+        draw_bold_ticks(ax)
+
+        handles = [Line2D([0], [0], marker='o', color=color, linestyle='', markersize=8, label=str(period))
+                   for period, color in period_to_color.items()]
+        ax.legend(handles=handles, title="Period", loc='upper right', ncol=7,
+                  prop={'weight': 'semibold', 'size': 18},
+                  title_fontproperties={'weight': 'semibold', 'size': 18})
+
+    plt.tight_layout()
+    plt.savefig('LDC_combined.png', format='png', dpi=300)
+    plt.show()
+
+
+
 if __name__ == '__main__':
     cm = plt.cm.get_cmap('Spectral_r')
 
     weather_file = '../../../scripts/template/data/profiles/pully.csv'
     Attributes = ['Text', 'Irr','Emissions', 'DataLoad','Cost_supply_elec']
     #nb_clusters = [10]
-    nb_clusters = [10,12,14,15,18,20,30,35]
+    nb_clusters = [10,12,14,16,18,20,30,35]
 
     df_annual = read_custom_weather(weather_file, weeks = False)
     print(df_annual)
@@ -907,7 +991,7 @@ if __name__ == '__main__':
     cl.run_clustering()
 
 
-    plot_cluster_KPI_separate(cl.kpis_clu, save_fig=False)
-    plot_LDC(cl, save_fig= False)
+    #plot_cluster_KPI_separate(cl.kpis_clu, save_fig=False)
+    plot_LDC(cl, save_fig= True)
     cluster = {'Location': 'Pully', 'Attributes': ['I', 'T', 'E', 'D','CS'], 'Periods':cl.nbr_opt, 'PeriodDuration': 24}
     generate_output_data(cl, Attributes, "Pully", cluster)
