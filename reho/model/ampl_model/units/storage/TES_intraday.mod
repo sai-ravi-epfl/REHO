@@ -35,6 +35,5 @@ Units_supply['Heat',u,p,t]*dt[p] <= (ITES_limit_ch[u]-ITES_limit_di[u])*Units_Mu
 
 #--Cyclic
 subject to ITES_E_stored_cyclic{u in UnitsOfType['DHN_tank'],p in Period}:
-(ITES_E_stored[u,p,first(Time[p])] - ITES_efficiency[u]*ITES_E_stored[u,p,last(Time[p])]) =
-	(ITES_eff_ch[u]*Units_demand['Heat',u,p,last(Time[p])] - (1/ITES_eff_di[u])*Units_supply['Heat',u,p,last(Time[p])])*dt[p];
+(ITES_E_stored[u,p,first(Time[p])] - ITES_efficiency[u]*ITES_E_stored[u,p,last(Time[p])]) = (ITES_eff_ch[u]*Units_demand['Heat',u,p,last(Time[p])] - (1/ITES_eff_di[u])*Units_supply['Heat',u,p,last(Time[p])])*dt[p];
 
