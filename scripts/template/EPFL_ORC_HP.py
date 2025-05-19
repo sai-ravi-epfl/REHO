@@ -17,7 +17,7 @@ if __name__ == '__main__':
     cluster = {'Location': 'Pully', 'Attributes': ['I', 'T', 'D','E','CS'], 'Periods': 14, 'PeriodDuration': 24, 'custom_weather': path_to_profiles + '/pully.csv' }
     attributes = ['Irr', 'Text', 'DataLoad','Emissions','Cost_supply_elec']
     weather_file = path_to_profiles + '/pully.csv'
-    weather.data_centre_profile(size=10000)
+    weather.data_centre_profile(size=8000, shifted = False)
     df_annual = weather.read_custom_weather(weather_file, weeks = cluster['PeriodDuration'] ==168)
     df_annual = df_annual[attributes]
     nb_clusters = [cluster['Periods']]
@@ -31,15 +31,15 @@ if __name__ == '__main__':
     # Set scenario
     scenario = dict()
 
-    scenario['Objective'] = ['OPEX', 'CAPEX']
-    scenario['nPareto'] = 4
+    #scenario['Objective'] = ['OPEX', 'CAPEX']
+    #scenario['nPareto'] = 4
     #scenario['name'] = 'gwp'
 
-    #scenario['Objective'] = 'GWP'
+    scenario['Objective'] = 'OPEX'
     scenario['name'] = 'gwp'
     scenario['exclude_units'] = ['HeatPump_Geothermal','HeatPump_Air','HeatPump_Lake','HeatPump_Anergy','ThermalSolar', 'Battery', 'DHN_out_district','STES_district', 'DataHeat_DHW','DataHeat_SH'] #'OIL_Boiler',  'NG_Boiler','HeatPump_Air', 'HeatPump_Lake''HeatPump_Anergy''DataHeatSH',
 
-    scenario['enforce_units'] = [] #'HeatPump_Geothermal_district','DHN_out_district','Battery_district','PV_district','ORC_EPFL_district'
+    scenario['enforce_units'] = ['ORC_EPFL_district','Battery_district', 'TES_intraday_district'] #'HeatPump_Geothermal_district','DHN_out_district','Battery_district','PV_district','ORC_EPFL_district'
     scenario["specific"] = ['enforce_DHN']
 
     # Initialize available units and grids
@@ -54,12 +54,12 @@ if __name__ == '__main__':
     parameters = {'n_vehicles': np.array([0.0]), 'T_DHN_supply_cst': np.repeat(67.0, n_house),'T_DHN_return_cst': np.repeat(55.0, n_house),'TransformerCapacity': np.array([1e8,1e8,0,0]),'data_EUD': data_centre_heat_profile, 'T_ext' : temp_profile , 'I_global': irr_profile}
 
     # Set method options
-    method = {'district-scale': True,'save_stream_t': True, 'use_dynamic_emission_profiles': True, 'save_streams': True, 'ORC_all_the_time': True, "Link_DC_to_district_PV": True} #, 'use_pv_orientation': True
+    method = {'building-scale': True,'save_stream_t': True, 'use_dynamic_emission_profiles': True, 'save_streams': True, 'ORC_all_the_time': True, "Link_DC_to_district_PV": False} #, 'use_pv_orientation': True
     #DW_params = {'max_iter': 2}
     # Run optimization
     reho = REHO(qbuildings_data=qbuildings_data, units=units,parameters=parameters, grids=grids, cluster=cluster, scenario=scenario, method=method, solver ='gurobi') #parameters=parameters,
-    reho.generate_pareto_curve()
-    # reho.single_optimization()
+    # reho.generate_pareto_curve()
+    reho.single_optimization()
 
     '''
     SA = SensitivityAnalysis(reho, SA_type="Monte_Carlo", sampling_parameters= 32)
@@ -68,8 +68,8 @@ if __name__ == '__main__':
     SA.run_SA()
     '''
     # Save results_
-    filename='EPFL_ORC_HP_Pareto_PV_ICT_linked'
-    reho.save_results(format=['pickle'], filename=filename)
+    filename='tank_orc_hp_nt_ns_new_eff'
+    reho.save_results(format=['xlsx','pickle'], filename=filename)
 
 
 

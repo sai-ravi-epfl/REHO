@@ -273,8 +273,12 @@ def get_metric(cluster):
     else:
         return 'method 1'
 
-def data_centre_profile(size): # size to be mentioned in kW # This part is still using old data of data centre, need to update this part with Theresa's work
-    file_path_original = os.path.join(path_to_weather, 'yearly_data_centre_profile_repeated_normal.csv')
+def data_centre_profile(size, shifted = False): # size to be mentioned in kW # This part is still using old data of data centre, need to update this part with Theresa's work
+    if shifted:
+        file_path_original = os.path.join(path_to_weather, 'yearly_data_centre_profile_PV_14clusters_TIEDCS_24h_even.csv')
+    else:
+        file_path_original = os.path.join(path_to_weather, 'yearly_data_centre_profile_repeated_normal.csv')
+    #file_path_original = os.path.join(path_to_weather, 'yearly_data_centre_profile_repeated_normal.csv')
     df_load_profile = pd.read_csv(file_path_original)
     df_load_profile = df_load_profile['Load_Profile'].div(288).mul(size)  # profile data created by observing trend from this study: https://arxiv.org/abs/1804.00703
     path = os.path.join(path_to_weather, 'yearly_data_centre_profile_repeated.csv')

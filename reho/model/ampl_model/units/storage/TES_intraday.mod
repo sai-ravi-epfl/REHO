@@ -7,8 +7,8 @@
 param ITES_eff_ch{u in UnitsOfType['DHN_tank']} 	default 0.9;		#-	[1]
 param ITES_eff_di{u in UnitsOfType['DHN_tank']} 	default 0.9;
 param ITES_limit_ch{u in UnitsOfType['DHN_tank']} default 0.8;			#-	[2] max charging limit
-param ITES_limit_di{u in UnitsOfType['DHN_tank']} default 0.2;			#-	[1] max discharging limit
-param ITES_efficiency{u in UnitsOfType['DHN_tank']} default 0.99997;
+param ITES_limit_ di{u in UnitsOfType['DHN_tank']} default 0.2;			#-	[1] max discharging limit
+param ITES_efficiency{u in UnitsOfType['DHN_tank']} default 0.99652;
 
 var ITES_E_stored{u in UnitsOfType['DHN_tank'],p in Period,t in Time[p]} >= 0;
 
@@ -38,3 +38,10 @@ subject to ITES_E_stored_cyclic{u in UnitsOfType['DHN_tank'],p in Period}:
 (ITES_E_stored[u,p,first(Time[p])] - ITES_efficiency[u]*ITES_E_stored[u,p,last(Time[p])]) =
 	(ITES_eff_ch[u]*Units_demand['Heat',u,p,last(Time[p])] - (1/ITES_eff_di[u])*Units_supply['Heat',u,p,last(Time[p])])*dt[p];
 
+#--fixing start of the period charge each period
+subject to ITES_E_stored_fix_first_hours{u in UnitsOfType['DHN_tank'],p in Period}:
+ITES_E_stored[u,p,first(Time[p])] = Units_Mult[u]*0.4
+	
+
+
+	
