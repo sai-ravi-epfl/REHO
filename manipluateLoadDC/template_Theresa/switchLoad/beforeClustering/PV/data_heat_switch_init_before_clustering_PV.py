@@ -69,6 +69,53 @@ output_path = r'C:\Users\there\Desktop\REHO2\manipluateLoadDC\template_Theresa\s
 
 total_PV, shifted_load_df_PV, PV_profile = process_and_optimize_data_PV(path_to_load_profile, path_to_PV, model_path, output_path, size)
 
+
+# === Dateipfade anpassen ===
+path_to_original = r'C:\Users\there\Desktop\REHO2\manipluateLoadDC\template_Theresa\yearly_data_centre_profile_repeated2.csv'
+path_to_shifted = r'C:\Users\there\Desktop\REHO2\manipluateLoadDC\template_Theresa\switchLoad\beforeClustering\PV\yearly_data_centre_profile_PV_16clusters_TIED_24h_new.csv'
+path_to_pv = r'reconstructed_year_16clusters_new.csv'
+
+# === Daten einlesen ===
+original_df = pd.read_csv(path_to_original)
+shifted_df = pd.read_csv(path_to_shifted)
+pv_df = pd.read_csv(path_to_pv, header=None, skiprows=1)
+pv_df.columns = ['Hour', 'PV_supply']
+
+# === Normalisieren ===
+original_norm = original_df['Load_Profile'] / original_df['Load_Profile'].max()
+shifted_norm = shifted_df['Load_Profile'] / shifted_df['Load_Profile'].max()
+pv_norm = pv_df['PV_supply'] / pv_df['PV_supply'].max()
+
+# === Plotbereich definieren ===
+start = 3120
+end = start + 168
+hours = range(start, end)
+
+# === Plot erstellen ===
+plt.figure(figsize=(10, 6))
+plt.plot(hours, original_norm[start:end], label="Original Data Center Load", linestyle='-')
+plt.plot(hours, shifted_norm[start:end], label="Shifted Data Center Load", linestyle='-')
+plt.plot(hours, pv_norm[start:end], label="Irradiation", linestyle='-')
+
+plt.xlabel("Hour of Year", fontsize=14, fontname='Arial')
+plt.ylabel("Normalized Value", fontsize=14, fontname='Arial')
+# legend in right corner
+plt.legend(loc='upper right', fontsize=11)
+
+
+
+plt.xticks(fontsize=12, fontname='Arial')
+plt.yticks(fontsize=12, fontname='Arial')
+plt.tight_layout()
+plt.ylim(bottom=0)
+plt.xlim(left=start)
+
+# === Plot speichern ===
+plt.savefig("shifted_load_vs_irradiation_week.png", dpi=900)
+plt.show()
+
+
+
 '''
 # Plotting for GWP
 load_profile = pd.read_csv(path_to_load_profile)
