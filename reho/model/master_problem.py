@@ -10,6 +10,8 @@ import reho.model.infrastructure as infrastructure
 import reho.model.postprocessing.write_results as write_results
 from reho.model.preprocessing.local_data import *
 from reho.model.sub_problem import *
+from amplpy import AMPL, add_to_path
+
 
 __doc__ = """
 File for handling data and optimization for an AMPL master problem.
@@ -363,7 +365,8 @@ class MasterProblem:
             ampl_MP = AMPL()
         else:
             try:
-                ampl_MP = AMPL(Environment(os.environ["AMPL_PATH"]))
+                add_to_path(os.environ["AMPL_PATH"])
+                ampl_MP = AMPL()
             except:
                 raise Exception("AMPL_PATH is not defined. Please include a .env file at the project root (e.g., AMPL_PATH='C:/AMPL')")
 

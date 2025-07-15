@@ -14,7 +14,7 @@ param DC_heat_recovery{u in UnitsOfType['DataHeat']} default 1;
 
 # Data flow processed
 subject to DH_d1{ u in UnitsOfType['DataHeat'], p in Period, t in Time[p]}:
-        Units_supply['Data',u,p,t] = 1.3*Units_demand['Electricity',u,p,t];
+        Units_supply['Data',u,p,t] = Units_demand['Electricity',u,p,t]/1.3;
 
 #subject to DH_d2{ u in UnitsOfType['DataHeat'], p in Period, t in Time[p]}:
 #       Units_demand['Electricity',u,p,t] = data_EUD['Data',p,t];

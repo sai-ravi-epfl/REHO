@@ -1,7 +1,7 @@
 import itertools as itertools
 import logging
 
-from amplpy import AMPL, Environment
+from amplpy import AMPL, Environment, add_to_path
 
 import reho.model.preprocessing.EV_profile_generator as EV_gen
 import reho.model.preprocessing.buildings_profiles as buildings_profiles
@@ -117,7 +117,8 @@ class SubProblem:
             ampl = AMPL()
         else:
             try:
-                ampl = AMPL(Environment(os.environ["AMPL_PATH"]))
+                add_to_path(os.environ["AMPL_PATH"])
+                ampl = AMPL()
             except:
                 raise Exception("AMPL_PATH is not defined. Please include a .env file at the project root (e.g., AMPL_PATH='C:/AMPL')")
 
